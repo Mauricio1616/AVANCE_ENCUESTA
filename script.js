@@ -395,6 +395,524 @@ function closeResetModal() {
     document.getElementById('reset-modal').classList.remove('flex');
 }
 
+function closeSurveyCompletedModal() {
+    document.getElementById('survey-completed-modal').classList.add('hidden');
+    document.getElementById('survey-completed-modal').classList.remove('flex');
+    if(inputRegistro) {
+        inputRegistro.value = '';
+        inputRegistro.focus();
+    }
+}
+
+function showSurveyCompletedModal(registro, nombre = '', apellido = '') {
+    const modal = document.getElementById('survey-completed-modal');
+    const registroSpan = document.getElementById('modal-registro');
+    const nombreSpan = document.getElementById('modal-nombre');
+    const apellidoSpan = document.getElementById('modal-apellido');
+    
+    registroSpan.textContent = registro;
+    nombreSpan.textContent = nombre || 'No disponible';
+    apellidoSpan.textContent = apellido || 'No disponible';
+    
+    // Guardar datos en variables globales para el PDF
+    window.datosModalRegistro = registro;
+    window.datosModalNombre = nombre;
+    window.datosModalApellido = apellido;
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+async function descargarReportePDF() {
+    try {
+        console.log('📥 Iniciando descarga de reporte PDF...');
+        
+        const registro = window.datosModalRegistro;
+        if (!registro) {
+            alert('Error: No se encontró el registro');
+            return;
+        }
+        
+        // Obtener datos de Firebase
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        
+        const q = query(
+            collection(window.db, 'encuestas_estudiantes'),
+            where('personal.registro', '==', registro)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            alert('No se encontraron datos de la encuesta');
+            return;
+        }
+        
+        const data = querySnapshot.docs[0].data();
+        
+        // Crear PDF con jsPDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+        
+        const pageHeight = doc.internal.pageSize.height;
+        const pageWidth = doc.internal.pageSize.width;
+        let yPos = 15;
+        
+        // === ENCABEZADO ===
+        // Fondo azul oscuro
+        doc.setFillColor(31, 41, 55);
+        doc.rect(0, 0, pageWidth, 35, 'F');
+        
+        // Título principal
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(255, 255, 255);
+        doc.text('REPORTE DE ENCUESTA', 20, 15);
+        doc.text('Carrera de Psicología - UAGRM', 20, 23);
+        
+        // Línea divisora
+        doc.setDrawColor(220, 38, 38);
+        doc.setLineWidth(1);
+        doc.line(0, 35, pageWidth, 35);
+        
+        // === DATOS PERSONALES ===
+        yPos = 45;
+        doc.setTextColor(31, 41, 55);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text('📋 DATOS PERSONALES', 15, yPos);
+        
+        // Caja de datos personales
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, yPos + 3, 180, 50, 'FD');
+        
+        yPos += 8;
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(10);
+        
+        const datosPersonales = data.personal || {};
+        const datosArray = [
+            { label: 'Registro:', valor: datosPersonales.registro },
+            { label: 'Nombre:', valor: datosPersonales.nombre },
+            { label: 'Apellidos:', valor: datosPersonales.Apellidos || datosPersonales.apellidos },
+            { label: 'CI:', valor: datosPersonales.CI },
+            { label: 'Celular:', valor: datosPersonales.celular },
+            { label: 'Correo:', valor: datosPersonales.correo },
+            { label: 'Semestre(s):', valor: Array.isArray(datosPersonales.semestre) ? datosPersonales.semestre.join(', ') : datosPersonales.semestre },
+            { label: 'Carga Académica:', valor: datosPersonales.carga_academica + ' materias' },
+            { label: '¿Trabaja?:', valor: datosPersonales.trabaja },
+            { label: 'Horas de Estudio:', valor: datosPersonales.horas_estudio + ' horas' },
+            { label: 'Avance Académico:', valor: datosPersonales.avance }
+        ];
+        
+        let col1 = 0;
+        datosArray.forEach((campo, idx) => {
+            if (campo.valor) {
+                if (col1 === 0) {
+                    yPos += 6;
+                }
+                doc.setFont('Helvetica', 'bold');
+                doc.setTextColor(59, 130, 246);
+                doc.setFontSize(9);
+                doc.text(campo.label, 20, yPos);
+                doc.setFont('Helvetica', 'normal');
+                doc.setTextColor(31, 41, 55);
+                doc.text(String(campo.valor), 50, yPos);
+                col1++;
+                if (col1 === 2) {
+                    col1 = 0;
+                }
+            }
+        });
+        
+        yPos += 15;
+        
+        // === SECCIÓN 2: MALLA CURRICULAR ===
+        if (yPos > pageHeight - 50) {
+            doc.addPage();
+            yPos = 15;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(31, 41, 55);
+        doc.text('📚 SECCIÓN 2: MALLA CURRICULAR - AVANCE ACADÉMICO', 15, yPos);
+        
+        yPos += 8;
+        
+        // Leyenda de colores
+        const colorLegend = [
+            { color: [16, 185, 129], label: 'Aprobado' },
+            { color: [239, 68, 68], label: 'Reprobado' },
+            { color: [59, 130, 246], label: 'Levantamiento' },
+            { color: [156, 163, 175], label: 'Pendiente' }
+        ];
+        
+        let xLegend = 15;
+        colorLegend.forEach(item => {
+            doc.setFillColor(item.color[0], item.color[1], item.color[2]);
+            doc.rect(xLegend, yPos, 4, 4, 'F');
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(7);
+            doc.setTextColor(31, 41, 55);
+            doc.text(item.label, xLegend + 6, yPos + 3);
+            xLegend += 50;
+        });
+        
+        yPos += 8;
+        
+        // Crear mapa de materias por semestre e id
+        const mallaMap = {};
+        const semesterNames = {};
+        
+        if (data.malla && Array.isArray(data.malla)) {
+            data.malla.forEach(m => {
+                mallaMap[m.id] = m.estado;
+            });
+        }
+        
+        // Datos de semestres (del mismo código de la app)
+        const semesters = [
+            { id: "s1", title: "1er Semestre", subjects: ["Filosofía", "Estadística I", "Sociología I", "Antropología Cultural", "Psicología I", "Biopsicología", "Estrategias de Aprendizaje"] },
+            { id: "s2", title: "2do Semestre", subjects: ["Epistemología", "Estadística II", "Sociología II", "Antropología Cultural Boliviana", "Psicología II", "Psicofisiología"] },
+            { id: "s3", title: "3er Semestre", subjects: ["Investigación I", "Psicología Social", "Psicología Etnoecológica", "Desarrollo Humano I", "Teorías y Sistemas I", "Neuropsicología I", "Aprendizaje"] },
+            { id: "s4", title: "4to Semestre", subjects: ["Investigación II", "Psicología Grupal y Organizacional", "Desarrollo Humano II", "Teorías y Sistemas II", "Neuropsicología II", "Etología"] },
+            { id: "s5", title: "5to Semestre", subjects: ["Investigación III", "Comportamiento y Sociedad", "Psicología de la Personalidad I", "Evaluación Psicológica I", "Psicopatología I", "Psicología Cognitiva I"] },
+            { id: "s6", title: "6to Semestre", subjects: ["Investigación IV", "Diagnóstico de Necesidades", "Psicología de la Personalidad II", "Evaluación Psicológica II", "Psicopatología II", "Psicoanálisis", "Psicología Cognitiva II"] },
+            { id: "s7", title: "7mo Semestre", subjects: ["Investigación V", "Proyectos I", "Tec. de Int. Socio - Organizacional I", "Técnicas Proyectivas", "Tec. de Int. Clínica I", "Tec. de Int. Educativa I"] },
+            { id: "s8", title: "8vo Semestre", subjects: ["Investigación VI", "Proyectos II", "Tec. de Int. Socio - Organizacional II", "Psicodiagnóstico", "Tec. de Int. Clínica II", "Tec. de Int. Educativa II"] },
+            { id: "s9", title: "9no Semestre", subjects: ["Ética Profesional I"] },
+            { id: "s10", title: "10mo Semestre", subjects: ["Ética Profesional II"] }
+        ];
+        
+        const colores = {
+            'aprobado': [16, 185, 129],
+            'reprobado': [239, 68, 68],
+            'levantamiento': [59, 130, 246],
+            'pendiente': [156, 163, 175]
+        };
+        
+        // Mostrar semestres en 2 columnas
+        let semestreCols = [[], []];
+        semesters.forEach((sem, idx) => {
+            semestreCols[idx % 2].push(sem);
+        });
+        
+        // Dibujar semestres en columnas
+        let col = 0;
+        semesters.forEach((sem, semIndex) => {
+            const isNewRow = semIndex > 0 && semIndex % 2 === 0;
+            
+            if (isNewRow && yPos > pageHeight - 60) {
+                doc.addPage();
+                yPos = 15;
+            }
+            
+            if (semIndex % 2 === 0) {
+                yPos += 1;
+            }
+            
+            const xCol = semIndex % 2 === 0 ? 15 : 105;
+            const colWidth = 85;
+            
+            // Encabezado del semestre
+            doc.setFillColor(31, 41, 55);
+            doc.rect(xCol, yPos, colWidth, 5, 'F');
+            
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(8);
+            doc.setTextColor(255, 255, 255);
+            doc.text(sem.title, xCol + 2, yPos + 3);
+            
+            let ySubject = yPos + 5;
+            
+            // Materias del semestre
+            sem.subjects.forEach((subject, idx) => {
+                const id = `${sem.id}-${idx}`;
+                const estado = mallaMap[id] || 'pendiente';
+                const color = colores[estado];
+                
+                // Fondo de la materia según estado
+                doc.setFillColor(color[0], color[1], color[2]);
+                doc.rect(xCol, ySubject, colWidth, 3.5, 'F');
+                
+                // Texto de la materia
+                doc.setFont('Helvetica', 'normal');
+                doc.setFontSize(6.5);
+                doc.setTextColor(255, 255, 255);
+                
+                const textLines = doc.splitTextToSize(subject, colWidth - 2);
+                doc.text(textLines[0] || subject, xCol + 1, ySubject + 2.5);
+                
+                ySubject += 3.5;
+            });
+            
+            if (semIndex % 2 === 1) {
+                yPos = ySubject + 1;
+            }
+        });
+        
+        yPos = yPos + 3;
+        
+        // === RESUMEN DE ESTADÍSTICAS ===
+        if (yPos > pageHeight - 40) {
+            doc.addPage();
+            yPos = 15;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(31, 41, 55);
+        doc.text('📊 RESUMEN DE PROGRESO', 15, yPos);
+        
+        yPos += 8;
+        
+        // Contar materias por estado
+        const estadisticas = {
+            'aprobado': 0,
+            'reprobado': 0,
+            'levantamiento': 0,
+            'pendiente': 0
+        };
+        
+        if (data.malla && Array.isArray(data.malla)) {
+            data.malla.forEach(m => {
+                if (estadisticas[m.estado] !== undefined) {
+                    estadisticas[m.estado]++;
+                }
+            });
+        }
+        
+        const total = Object.values(estadisticas).reduce((a, b) => a + b, 0);
+        const porcentajeAprobado = total > 0 ? Math.round((estadisticas.aprobado / total) * 100) : 0;
+        
+        // Mostrar barras de progreso
+        const estadosResumen = [
+            { label: 'Aprobado', valor: estadisticas.aprobado, color: [16, 185, 129] },
+            { label: 'Pendiente', valor: estadisticas.pendiente, color: [156, 163, 175] },
+            { label: 'Reprobado', valor: estadisticas.reprobado, color: [239, 68, 68] },
+            { label: 'Levantamiento', valor: estadisticas.levantamiento, color: [59, 130, 246] }
+        ];
+        
+        estadosResumen.forEach(item => {
+            // Etiqueta y número
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(31, 41, 55);
+            doc.text(item.label + ':', 15, yPos);
+            doc.text(String(item.valor), 70, yPos);
+            
+            // Barra de progreso
+            const barraAncho = 100 * (item.valor / Math.max(total, 1));
+            doc.setFillColor(item.color[0], item.color[1], item.color[2]);
+            doc.rect(80, yPos - 1.5, barraAncho, 3, 'F');
+            
+            // Borde de la barra
+            doc.setDrawColor(200, 200, 200);
+            doc.rect(80, yPos - 1.5, 100, 3);
+            
+            yPos += 6;
+        });
+        
+        yPos += 2;
+        
+        // Porcentaje total de aprobado
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setFillColor(16, 185, 129);
+        doc.rect(15, yPos, 180, 10, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.text(`✓ Avance Total: ${porcentajeAprobado}% Aprobado (${estadisticas.aprobado}/${total} materias)`, 20, yPos + 6.5);
+        
+        yPos += 15;
+        
+        // === PREGUNTA DE CIERRE (Q10) ===
+        if (yPos > pageHeight - 35) {
+            doc.addPage();
+            yPos = 15;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(31, 41, 55);
+        doc.text('¿Cómo afecta esto tu avance curricular?', 15, yPos);
+        
+        yPos += 5;
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, yPos, 180, 12, 'FD');
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(31, 41, 55);
+        const respuesta = doc.splitTextToSize(data.seccion2_cierre?.q10 || 'No respondida', 170);
+        doc.text(respuesta, 20, yPos + 3);
+        
+        yPos += 15;
+        
+        if (data.seccion2_cierre?.q10_text) {
+            doc.setFont('Helvetica', 'italic');
+            doc.setFontSize(8);
+            doc.setTextColor(107, 114, 128);
+            const textoExpl = doc.splitTextToSize('Explicación: ' + data.seccion2_cierre.q10_text, 170);
+            doc.text(textoExpl, 20, yPos);
+            yPos += textoExpl.length * 4 + 2;
+        }
+        
+        yPos += 5;
+        
+        // === SECCIÓN 3: EXPECTATIVAS ===
+        if (yPos > pageHeight - 40) {
+            doc.addPage();
+            yPos = 15;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(31, 41, 55);
+        doc.text('🎯 SECCIÓN 3: EXPECTATIVAS', 15, yPos);
+        
+        yPos += 7;
+        
+        // Caja de expectativas
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, yPos, 180, 25, 'FD');
+        
+        yPos += 5;
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(59, 130, 246);
+        doc.text('¿Cómo te sientes respecto a la implementación del nuevo currículo?', 20, yPos);
+        
+        yPos += 5;
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(31, 41, 55);
+        const resp11 = doc.splitTextToSize(data.seccion3?.q11 || 'No respondida', 160);
+        doc.text(resp11, 20, yPos);
+        yPos += resp11.length * 4 + 2;
+        
+        yPos += 3;
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(59, 130, 246);
+        doc.text('¿Qué crees que aportará el nuevo currículo?', 20, yPos);
+        
+        yPos += 4;
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(31, 41, 55);
+        const resp12 = doc.splitTextToSize(data.seccion3?.q12 || 'No respondida', 160);
+        doc.text(resp12, 20, yPos);
+        yPos += resp12.length * 4;
+        
+        yPos += 8;
+        
+        // === SECCIÓN 4: MEDIDAS PREFERIDAS ===
+        if (yPos > pageHeight - 40) {
+            doc.addPage();
+            yPos = 15;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(31, 41, 55);
+        doc.text('⚙️ SECCIÓN 4: MEDIDAS DE TRANSICIÓN', 15, yPos);
+        
+        yPos += 8;
+        
+        // Caja de medidas
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        
+        let medidasText = 'Ninguna seleccionada';
+        if (data.seccion4?.q13 && Array.isArray(data.seccion4.q13) && data.seccion4.q13.length > 0) {
+            medidasText = data.seccion4.q13.join(', ');
+        }
+        
+        const lineasMedidas = doc.splitTextToSize('✓ ' + medidasText, 170);
+        const alturaMedidas = lineasMedidas.length * 4 + 4;
+        
+        doc.rect(15, yPos, 180, alturaMedidas, 'FD');
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(31, 41, 55);
+        doc.text(lineasMedidas, 20, yPos + 3);
+        
+        yPos += alturaMedidas + 5;
+        
+        // Prioridad absoluta
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.setFillColor(239, 68, 68);
+        doc.rect(15, yPos, 180, 7, 'F');
+        doc.text('⭐ PRIORIDAD ABSOLUTA: ' + (data.seccion4?.prioridad || 'No especificada'), 20, yPos + 4.5);
+        
+        yPos += 12;
+        
+        // === SECCIÓN 5: PROPUESTA ===
+        if (yPos > pageHeight - 40) {
+            doc.addPage();
+            yPos = 15;
+        }
+        
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(31, 41, 55);
+        doc.text('💡 SECCIÓN 5: PROPUESTA PARA MEJORAR', 15, yPos);
+        
+        yPos += 8;
+        
+        // Caja de propuesta
+        doc.setDrawColor(59, 130, 246);
+        doc.setLineWidth(0.5);
+        doc.setFillColor(220, 240, 255);
+        
+        const propuesta = data.seccion5?.propuesta || 'No respondida';
+        const lineasPropuesta = doc.splitTextToSize(propuesta, 170);
+        const alturaPropuesta = lineasPropuesta.length * 4 + 8;
+        
+        doc.rect(15, yPos, 180, alturaPropuesta, 'FD');
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(31, 41, 55);
+        doc.text(lineasPropuesta, 20, yPos + 4);
+        
+        yPos += alturaPropuesta + 8;
+        
+        // === PIE DE PÁGINA ===
+        doc.setFont('Helvetica', 'italic');
+        doc.setFontSize(8);
+        doc.setTextColor(107, 114, 128);
+        doc.text(`Reporte generado: ${new Date().toLocaleString('es-ES')}`, 15, pageHeight - 8);
+        
+        // Línea divisora al pie
+        doc.setDrawColor(220, 38, 38);
+        doc.setLineWidth(0.5);
+        doc.line(0, pageHeight - 12, pageWidth, pageHeight - 12);
+        
+        // Descargar PDF
+        const nombreArchivo = `Reporte_${datosPersonales.nombre}_${datosPersonales.Apellidos || datosPersonales.apellidos}_${registro}.pdf`;
+        doc.save(nombreArchivo);
+        
+        console.log('✅ PDF descargado correctamente');
+        
+    } catch (err) {
+        console.error('❌ Error al generar PDF:', err);
+        alert('Error al generar el reporte. Intenta nuevamente.');
+    }
+}
+
 function performReset() {
     localStorage.removeItem('mallaCurricularData');
     localStorage.removeItem('surveyCompleted'); // También resetear encuesta
@@ -805,24 +1323,112 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
     console.log(`🔍 Validando: ${registro} → ${existe ? '✅ VÁLIDO' : '❌ NO VÁLIDO'}`);
     
     if (existe) {
-        // Registro válido
-        if(errorDiv) errorDiv.classList.add('hidden');
-        inputElement.classList.remove('invalid');
-        if(submitBtn) submitBtn.disabled = false;
+        // Registro válido - mostrar indicador de carga
+        if(errorDiv) {
+            errorDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Verificando encuestas completadas...</span>';
+            errorDiv.classList.remove('hidden');
+            errorDiv.style.color = '#1e40af';
+        }
         
-        inputElement.style.borderColor = '#10b981';
-        inputElement.style.backgroundColor = '#f0fdf4';
+        // Ahora verificar en Firebase
+        verificarEncuestaCompletada(registro).then(resultado => {
+            console.log(`Firebase respuesta - Ya completada: ${resultado.encontrada}`);
+            
+            if (resultado.encontrada) {
+                // La encuesta ya fue completada
+                console.log(`⚠️ El registro ${registro} ya completó la encuesta`);
+                if(errorDiv) {
+                    errorDiv.innerHTML = '<i class="fas fa-check"></i> <span>Registro válido</span>';
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.style.color = '#059669';
+                }
+                inputElement.style.borderColor = '#10b981';
+                inputElement.style.backgroundColor = '#f0fdf4';
+                if(submitBtn) submitBtn.disabled = false;
+                
+                // Mostrar modal después de un pequeño delay
+                setTimeout(() => {
+                    showSurveyCompletedModal(registro, resultado.nombre, resultado.apellido);
+                }, 300);
+            } else {
+                // La encuesta no ha sido completada - permitir continuar
+                console.log(`✅ El registro ${registro} puede completar la encuesta`);
+                if(errorDiv) errorDiv.classList.add('hidden');
+                inputElement.classList.remove('invalid');
+                if(submitBtn) submitBtn.disabled = false;
+                
+                inputElement.style.borderColor = '#10b981';
+                inputElement.style.backgroundColor = '#f0fdf4';
+            }
+        }).catch(err => {
+            console.error('Error en la validación:', err);
+            // Si hay error en Firebase, permitir continuar (por seguridad)
+            if(errorDiv) errorDiv.classList.add('hidden');
+            inputElement.classList.remove('invalid');
+            if(submitBtn) submitBtn.disabled = false;
+            inputElement.style.borderColor = '#10b981';
+            inputElement.style.backgroundColor = '#f0fdf4';
+        });
     } else {
         // Registro inválido
+        console.log(`❌ Registro ${registro} no está en la base de datos válida`);
         if(errorDiv) {
             errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Usted no está registrado como estudiante de la carrera de Psicología</span>';
             errorDiv.classList.remove('hidden');
+            errorDiv.style.color = '#dc2626';
         }
         inputElement.classList.add('invalid');
         if(submitBtn) submitBtn.disabled = true;
         
         inputElement.style.borderColor = '#ef4444';
         inputElement.style.backgroundColor = '#fef2f2';
+    }
+}
+
+async function verificarEncuestaCompletada(registro) {
+    try {
+        if (!window.db) {
+            console.error('❌ Firebase no está inicializado');
+            return { encontrada: false, nombre: '', apellido: '' };
+        }
+
+        console.log(`🔍 Consultando Firebase por registro: ${registro}`);
+
+        const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+        
+        // Buscar por la ruta anidada personal.registro
+        const q = query(
+            collection(window.db, 'encuestas_estudiantes'),
+            where('personal.registro', '==', registro)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            console.log(`✅ Encuesta encontrada para registro: ${registro}`);
+            console.log(`📊 Documentos encontrados: ${querySnapshot.size}`);
+            
+            // Obtener datos del primer documento encontrado
+            const docData = querySnapshot.docs[0].data();
+            const nombre = docData?.personal?.nombre || '';
+            const apellido = docData?.personal?.Apellidos || docData?.personal?.apellidos || '';
+            
+            console.log(`Nombre: ${nombre}, Apellido: ${apellido}`);
+            
+            return { encontrada: true, nombre, apellido };
+        } else {
+            console.log(`📝 No hay encuesta para registro: ${registro}`);
+            return { encontrada: false, nombre: '', apellido: '' };
+        }
+    } catch (err) {
+        console.error('❌ Error verificando encuesta en Firebase:', err.message);
+        console.error('Detalles del error:', err);
+        
+        if (err.message.includes('permission-denied')) {
+            console.error('⚠️ PROBLEMA: Permisos insuficientes en Firestore. Revisa las reglas de seguridad.');
+        }
+        
+        return { encontrada: false, nombre: '', apellido: '' };
     }
 }
 
