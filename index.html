@@ -10,6 +10,8 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
             rel="stylesheet">
         <link rel="stylesheet" href="style.css">
+        <!-- Librería para generar PDF -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <!-- Scripts de Firebase (Marcador para el Ingeniero) -->
         <script type="module">
         // -------------------------------------------------------------------------
@@ -913,9 +915,14 @@
                     <p class="text-slate-600 mb-6">Tus respuestas han sido
                         registradas exitosamente. Tu opinión es valiosa para la
                         carrera de Psicología.</p>
-                    <button onclick="location.reload()"
-                        class="text-blue-900 font-semibold hover:underline">Volver
-                        al inicio</button>
+                    <div class="flex flex-col gap-3 mb-4">
+                        <button onclick="descargarReportePDF()" 
+                            class="bg-blue-900 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center">
+                            <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
+                        </button>
+                        <button onclick="location.reload()"
+                            class="text-blue-900 font-semibold hover:underline">Volver al inicio</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -956,10 +963,16 @@
                     <p class="text-sm text-red-700 font-bold">⛔ No puedes completar esta encuesta porque el registro <span id="dup-reg-number" class="font-mono bg-red-100 px-2 py-1 rounded">___</span> ya respondio la encuesta.</p>
                 </div>
                 <p class="text-xs text-slate-600 mb-6 bg-yellow-50 p-3 rounded-lg border border-yellow-300 font-medium">📞 Si crees que es un error, contacta a administración.</p>
-                <button onclick="closeDuplicateModal()" 
-                    class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-900 transition transform hover:scale-105 text-lg shadow-lg">
-                    Entendido
-                </button>
+                <div class="flex flex-col gap-2">
+                    <button onclick="descargarReportePDF()" 
+                        class="w-full bg-blue-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center text-sm">
+                        <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
+                    </button>
+                    <button onclick="closeDuplicateModal()" 
+                        class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-900 transition transform hover:scale-105 text-lg shadow-lg">
+                        Entendido
+                    </button>
+                </div>
             </div>
         </div>
 
