@@ -767,7 +767,7 @@ if(editModal) {
 // --- VALIDACIÓN DE REGISTRO UNIVERSITARIO EN TIEMPO REAL ---
 const inputRegistro = document.getElementById('input-registro');
 const errorDiv = document.getElementById('error-registro');
-const submitBtn = document.querySelector('#form-section1 button[type="submit"]');
+const submitBtn = document.querySelector('#submit-form-section1');
 
 let timerValidacion;
 
@@ -782,6 +782,12 @@ if(inputRegistro) {
             errorDiv.classList.add('hidden');
             this.classList.remove('invalid');
             submitBtn.disabled = false;
+            submitBtn.innerHTML = '✓ Continuar <i class="fas fa-arrow-right ml-2"></i>';
+            // Cerrar modal si existe
+            const modal = document.getElementById('duplicate-registry-modal');
+            if(modal && !modal.classList.contains('hidden')) {
+                closeDuplicateModal();
+            }
             return;
         }
         
@@ -789,13 +795,20 @@ if(inputRegistro) {
             errorDiv.classList.remove('hidden');
             this.classList.add('invalid');
             submitBtn.disabled = true;
+            submitBtn.innerHTML = '❌ Formato inválido';
             return;
         }
         
-        // Debounce: 200ms
+        // Mostrar indicador de validación mientras se procesa
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
+        }
+        
+        // Debounce muy corto a 100ms para respuesta más rápida
         timerValidacion = setTimeout(() => {
             validarRegistroEnTiempoReal(registro, this);
-        }, 200);
+        }, 100);
     });
 
     // Validar cuando sale del campo
@@ -817,12 +830,78 @@ if(inputRegistro) {
     });
 }
 
+function closeDuplicateModal() {
+    const modal = document.getElementById('duplicate-registry-modal');
+    if(modal) {
+        modal.classList.remove('animate-in');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+}
+
+function verificarRegistroDuplicado(registro) {
+    return new Promise((resolve) => {
+        console.log('🔥 Iniciando verificación en Firebase para registro:', registro);
+        
+        // Verificar en Firebase si este registro ya completó la encuesta
+        if (window.db && window.firebaseModules) {
+            console.log('✅ Firebase disponible globalmente');
+            
+            const { collection, query, where, getDocs } = window.firebaseModules;
+            
+            if (collection && query && where && getDocs) {
+                try {
+                    const q = query(
+                        collection(window.db, 'encuestas_estudiantes'), 
+                        where('personal.registro', '==', registro)
+                    );
+                    console.log('🔎 Ejecutando consulta Firebase...');
+                    
+                    getDocs(q).then(querySnapshot => {
+                        console.log('📊 Resultado de consulta:', querySnapshot.size, 'documentos encontrados');
+                        
+                        if (!querySnapshot.empty) {
+                            // Ya existe
+                            const docData = querySnapshot.docs[0].data();
+                            const personal = docData.personal || {};
+                            console.log('⚠️ DUPLICADO ENCONTRADO:', personal.nombre, personal.apellidos);
+                            
+                            resolve({
+                                existe: true,
+                                nombre: personal.nombre || '-',
+                                apellidos: personal.apellidos || '-'
+                            });
+                        } else {
+                            console.log('✅ Registro disponible (no hay duplicado)');
+                            resolve({ existe: false });
+                        }
+                    }).catch(err => {
+                        console.error('❌ Error en consulta Firebase:', err);
+                        resolve({ existe: false });
+                    });
+                } catch(err) {
+                    console.error('❌ Error preparando consulta:', err);
+                    resolve({ existe: false });
+                }
+            } else {
+                console.error('❌ Módulos Firebase NO completos');
+                resolve({ existe: false });
+            }
+        } else {
+            console.error('❌ window.db no existe. Disponible:', window.db ? 'db' : 'NO db', window.firebaseModules ? 'modules' : 'NO modules');
+            resolve({ existe: false });
+        }
+    });
+}
+
 function validarRegistroEnTiempoReal(registro, inputElement) {
+    console.log('🚀 VALIDACIÓN INICIADA para registro:', registro);
+    
     // Si aún no se cargaron los registros, esperar
     if (!window.registrosCargados) {
         console.warn('⏳ Aún procesando registros...');
         if(errorDiv) {
-            errorDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Validando registro...</span>';
+            errorDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Cargando base de datos...</span>';
             errorDiv.classList.remove('hidden');
         }
         if(submitBtn) submitBtn.disabled = true;
@@ -831,36 +910,115 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
         const intentar = setInterval(() => {
             if (window.registrosCargados) {
                 clearInterval(intentar);
+                console.log('✅ Registros listos, reintentando validación...');
                 validarRegistroEnTiempoReal(registro, inputElement);
             }
         }, 100);
         return;
     }
     
+    console.log('📊 Registros cargados. Total en memoria:', window.registrosValidos?.size || 0);
+    
     // Validar contra los registros cargados
     const existe = window.registrosValidos && window.registrosValidos.has(registro);
     
-    console.log(`🔍 Validando: ${registro} → ${existe ? '✅ VÁLIDO' : '❌ NO VÁLIDO'}`);
+    console.log(`🔍 Validando: ${registro} → ${existe ? '✅ VÁLIDO EN DATOS.TXT' : '❌ NO VÁLIDO EN DATOS.TXT'}`);
     
     if (existe) {
-        // Registro válido
-        if(errorDiv) errorDiv.classList.add('hidden');
-        inputElement.classList.remove('invalid');
-        if(submitBtn) submitBtn.disabled = false;
-        
-        inputElement.style.borderColor = '#10b981';
-        inputElement.style.backgroundColor = '#f0fdf4';
+        console.log('✅ Registro existe en datos.txt. Verificando duplicado en Firebase...');
+        // Registro válido - Ahora verificar si es duplicado en Firebase INMEDIATAMENTE
+        verificarRegistroDuplicado(registro).then(resultado => {
+            console.log('📌 Resultado Firebase:', resultado);
+            
+            if (resultado.existe) {
+                // MOSTRAR MODAL INMEDIATAMENTE - BLOQUEADOR
+                console.warn('🛑 DUPLICADO ENCONTRADO - Mostrando modal');
+                const modal = document.getElementById('duplicate-registry-modal');
+                console.log('Modal element existe:', !!modal);
+                
+                if(modal) {
+                    // Rellenar datos del usuario que ya respondió
+                    document.getElementById('duplicate-nombre').textContent = resultado.nombre;
+                    document.getElementById('duplicate-apellidos').textContent = resultado.apellidos;
+                    document.getElementById('dup-reg-number').textContent = registro;
+                    
+                    console.log('Nombre:', resultado.nombre);
+                    console.log('Apellidos:', resultado.apellidos);
+                    
+                    // Mostrar modal INMEDIATO sin esperas
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    
+                    console.log('✅ Modal visible - Clases aplicadas');
+                    
+                    // Auto-scroll al modal
+                    setTimeout(() => {
+                        modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 50);
+                }
+                
+                // Mensaje de error prominente
+                if(errorDiv) {
+                    errorDiv.innerHTML = '<i class="fas fa-times-circle"></i> <span style="font-weight: bold;">⚠️ Este registro ya fue utilizado</span>';
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.style.backgroundColor = '#fee2e2';
+                    errorDiv.style.borderColor = '#dc2626';
+                    errorDiv.style.color = '#991b1b';
+                }
+                
+                // BLOQUEAR COMPLETAMENTE
+                inputElement.classList.add('invalid');
+                if(submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.4';
+                    submitBtn.style.cursor = 'not-allowed';
+                    submitBtn.innerHTML = '🚫 Registro no disponible';
+                }
+                
+                // Estilo rojo oscuro
+                inputElement.style.borderColor = '#dc2626';
+                inputElement.style.backgroundColor = '#fef2f2';
+                inputElement.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
+            } else {
+                console.log('✅ Registro disponible (sin duplicado)');
+                // Registro válido y NO duplicado - DESBLOQUEAR
+                const modal = document.getElementById('duplicate-registry-modal');
+                if(modal && !modal.classList.contains('hidden')) {
+                    closeDuplicateModal();
+                }
+                
+                if(errorDiv) errorDiv.classList.add('hidden');
+                inputElement.classList.remove('invalid');
+                if(submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                    submitBtn.innerHTML = '✓ Continuar <i class="fas fa-arrow-right ml-2"></i>';
+                }
+                
+                inputElement.style.borderColor = '#10b981';
+                inputElement.style.backgroundColor = '#f0fdf4';
+                inputElement.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)';
+            }
+        }).catch(err => {
+            console.error('❌ Error en Promise:', err);
+        });
     } else {
-        // Registro inválido
+        console.log('❌ Registro NO existe en datos.txt');
+        // Registro inválido - NO ESTÁ EN LA BASE DE DATOS
         if(errorDiv) {
-            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>Usted no está registrado como estudiante de la carrera de Psicología</span>';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>No estás registrado como estudiante de Psicología</span>';
             errorDiv.classList.remove('hidden');
         }
         inputElement.classList.add('invalid');
-        if(submitBtn) submitBtn.disabled = true;
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '❌ Registro no válido';
+        }
         
         inputElement.style.borderColor = '#ef4444';
         inputElement.style.backgroundColor = '#fef2f2';
+        inputElement.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.2)';
     }
 }
 
@@ -884,6 +1042,21 @@ if(formSection1) {
                 errorDiv.classList.remove('hidden');
                 inputRegistro.classList.add('invalid');
                 console.error('❌ Intento de envío con registro inválido:', registro);
+                return false;
+            }
+            
+            // Verificar si es duplicado (ya respondió)
+            if (submitBtn.disabled && submitBtn.innerHTML.includes('Encuesta ya respondida')) {
+                e.preventDefault();
+                const modal = document.getElementById('duplicate-registry-modal');
+                if(modal && modal.classList.contains('hidden')) {
+                    // Si el modal está oculto, mostrarlo
+                    modal.classList.remove('hidden');
+                    modal.style.display = 'flex';
+                    void modal.offsetWidth;
+                    modal.classList.add('animate-in');
+                }
+                console.error('❌ Intento de reenvío con registro duplicado:', registro);
                 return false;
             }
         }
