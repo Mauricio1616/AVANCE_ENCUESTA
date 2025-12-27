@@ -15,22 +15,60 @@ function goToSection2(e) {
     // --- CORRECCIÓN INTEGRADA: Capturar lista de semestres y campos nuevos ---
     const semestresSeleccionados = formData1.getAll('semestre');
 
+    // Capturar campos "Otro" de radio buttons
+    let anioIngreso = formData1.get('anio_ingreso');
+    if (anioIngreso === 'Otro') {
+        anioIngreso = formData1.get('anio_ingreso_otro') || 'Otro';
+    }
+
+    let modalidadIngreso = formData1.get('modalidad_ingreso');
+    if (modalidadIngreso === 'Otra') {
+        modalidadIngreso = formData1.get('modalidad_ingreso_otra') || 'Otra';
+    }
+
+    let tiempoTerminar = formData1.get('tiempo_terminar');
+    if (tiempoTerminar === 'Otro') {
+        tiempoTerminar = formData1.get('tiempo_terminar_otro') || 'Otro';
+    }
+
+    // Lógica para materias repetidas
+    let repetidoMateria = formData1.get('repetido_materia');
+    let materiasRepetidasNombres = '';
+    if (repetidoMateria === 'Sí') {
+        materiasRepetidasNombres = formData1.get('materias_repetidas_nombres') || '';
+    }
+
     window.surveyData.personal = {
+        // P1-P4
         nombre: formData1.get('nombre') || '',
-        // Se busca 'Apellidos' (como en tu HTML) o 'apellidos' por seguridad
         apellidos: formData1.get('Apellidos') || formData1.get('apellidos') || '',
         CI: formData1.get('CI') || '',
         registro: formData1.get('registro') || '',
+        
+        // P5-P7 (Nuevos)
+        anio_ingreso: anioIngreso || '',
+        modalidad_ingreso: modalidadIngreso || '',
+        tiempo_terminar: tiempoTerminar || '',
+
+        // P8-P9 (Antes 5-6)
         celular: formData1.get('celular') || '',
         correo: formData1.get('correo') || '',
         
-        // Aquí guardamos el ARRAY con todos los semestres marcados
+        // P10 (Antes 7)
         semestre: semestresSeleccionados,
         
+        // P11 (Antes 8)
         carga_academica: formData1.get('carga_academica') || '',
+
+        // P12-P15 (Nuevos)
+        materias_aprobadas: formData1.get('materias_aprobadas') || '',
+        materias_reprobadas: formData1.get('materias_reprobadas') || '',
+        repetido_materia: repetidoMateria || '',
+        materias_repetidas_nombres: materiasRepetidasNombres,
+        materias_dificultad: formData1.get('materias_dificultad') || '',
+
+        // P16-P18 (Antes 9-11)
         trabaja: formData1.get('trabaja') || '',
-        
-        // Campos que faltaban y que impedían que se guardaran en Firebase
         horas_estudio: formData1.get('horas_estudio') || '',
         avance: formData1.get('avance') || ''
     };
@@ -239,7 +277,7 @@ function updateQ14Options() {
     });
 
     if (!hasSelection) {
-        container.innerHTML = '<p class="text-slate-400 italic text-sm">Selecciona opciones en la pregunta 15 primero.</p>';
+        container.innerHTML = '<p class="text-slate-400 italic text-sm">Selecciona opciones en la pregunta 22 primero.</p>';
     }
 }
 

@@ -191,21 +191,25 @@
                                     Actual</h2></div>
                             <form id="form-section1" class="space-y-6"
                                 onsubmit="goToSection2(event)">
+                                <!-- P1 -->
                                 <div><label
                                         class="font-bold text-slate-800 mb-2 block">1.
                                         Nombre</label><input
                                         type="text" name="nombre" required
                                         class="survey-input"></div>
+                                <!-- P2 -->
                                 <div><label
                                         class="font-bold text-slate-800 mb-2 block">2.
                                         Apellidos</label><input
                                         type="text" name="Apellidos" required
                                         class="survey-input"></div>
+                                <!-- P3 -->
                                 <div><label
                                         class="font-bold text-slate-800 mb-2 block">3.
                                         CI-Cédula de Identidad</label><input type="text"
                                         name="CI" required
                                         class="survey-input"></div>                
+                                <!-- P4 -->
                                 <div><label
                                         class="font-bold text-slate-800 mb-2 block">4.
                                         Registro Universitario</label><input
@@ -218,22 +222,70 @@
                                             <span>Usted no está registrado como estudiante de la carrera de Psicología</span>
                                         </div>
                                 </div>
+
+                                <!-- NUEVA P5: AÑO DE INGRESO -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">5. Año de ingreso a la carrera:</label>
+                                    <div class="flex flex-wrap gap-4 text-sm">
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2021" class="accent-blue-900"> 2021</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2022" class="accent-blue-900"> 2022</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2023" class="accent-blue-900"> 2023</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2024" class="accent-blue-900"> 2024</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2025" class="accent-blue-900"> 2025</label>
+                                        <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
+                                            <input type="radio" name="anio_ingreso" value="Otro" id="anio_otro_radio" class="accent-blue-900"> Otro:
+                                            <input type="text" name="anio_ingreso_otro" class="border-b border-slate-300 outline-none w-20 text-sm focus:border-blue-900 bg-transparent" onclick="document.getElementById('anio_otro_radio').checked = true;">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- NUEVA P6: MODALIDAD DE INGRESO -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">6. Modalidad de ingreso:</label>
+                                    <div class="flex flex-wrap gap-4 text-sm">
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="PSA" class="accent-blue-900"> PSA</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="CUP" class="accent-blue-900"> CUP</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="Admisión especial" class="accent-blue-900"> Admisión especial</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="Traslado" class="accent-blue-900"> Traslado</label>
+                                        <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
+                                            <input type="radio" name="modalidad_ingreso" value="Otra" id="mod_otra_radio" class="accent-blue-900"> Otra:
+                                            <input type="text" name="modalidad_ingreso_otra" class="border-b border-slate-300 outline-none w-32 text-sm focus:border-blue-900 bg-transparent" onclick="document.getElementById('mod_otra_radio').checked = true;">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- NUEVA P7: CUÁNDO TERMINAR -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">7. Según tu avance actual, ¿cuándo crees que podrías terminar la carrera?</label>
+                                    <div class="flex flex-col gap-2 text-sm">
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input type="radio" name="tiempo_terminar" value="En 1 año" class="accent-blue-900"> En 1 año</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input type="radio" name="tiempo_terminar" value="En 2 años" class="accent-blue-900"> En 2 años</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input type="radio" name="tiempo_terminar" value="En 3 años" class="accent-blue-900"> En 3 años</label>
+                                        <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded w-fit">
+                                            <input type="radio" name="tiempo_terminar" value="Otro" id="tiempo_otro_radio" class="accent-blue-900"> otro:
+                                            <input type="text" name="tiempo_terminar_otro" class="border-b border-slate-300 outline-none w-40 text-sm focus:border-blue-900 bg-transparent" onclick="document.getElementById('tiempo_otro_radio').checked = true;">
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- P8 (ANTES 5) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">5.
+                                        class="font-bold text-slate-800 mb-2 block">8.
                                         Celular</label><input type="tel"
                                         name="celular" required
                                         class="survey-input"></div>
+                                
+                                <!-- P9 (ANTES 6) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">6.
+                                        class="font-bold text-slate-800 mb-2 block">9.
                                         Correo Electrónico</label><input
                                         type="email" name="correo" required
                                         class="survey-input"></div>
+                                
+                                <!-- P10 (ANTES 7) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">7.
-                                        En que semestres estas actualmente.
-                                        (Marca uno solo si estas nivelado en un
-                                        semestre y no debes materias de otro
-                                        semestre)</label>
+                                        class="font-bold text-slate-800 mb-2 block">10.
+                                        En qué semestre estás actualmente (marca uno solo si estas nivelado en un semestre y no debes materias de otro semestre. Si tienes materias en otros semestres, Marca las opciones necesarias)</label>
                                     <div
                                         class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
                                         <label
@@ -288,8 +340,10 @@
                                             10mo</label>
                                     </div>
                                 </div>
+                                
+                                <!-- P11 (ANTES 8) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">8.
+                                        class="font-bold text-slate-800 mb-2 block">11.
                                         Carga académica registrada este
                                         semestre:</label>
                                         <label
@@ -299,9 +353,53 @@
                                         name="carga_academica" required
                                         class="survey-input"
                                         placeholder="Número de materias"></div>
+
+                                <!-- NUEVA P12: MATERIAS APROBADAS -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">12. ¿Cuántas materias has aprobado en total en todo tu recorrido académico? (coloca un número)</label>
+                                    <input type="number" name="materias_aprobadas" class="survey-input" placeholder="Ej: 25">
+                                </div>
+
+                                <!-- NUEVA P13: MATERIAS REPROBADAS -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has reprobado? (coloca un número)</label>
+                                    <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2">
+                                </div>
+
+                                <!-- NUEVA P14: REPETIDO MATERIA (AUTOCOMPLETADO CONDICIONAL) -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">14. ¿Has repetido alguna materia por tercera vez o más?</label>
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="Sí" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.remove('hidden')"> Sí</label>
+                                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="No" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.add('hidden')"> No</label>
+                                    </div>
+                                    <div id="container-repitencia" class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in">
+                                        <label class="block text-sm font-bold text-slate-700 mb-1">Cual o Cuales</label>
+                                        <!-- Eliminado list="all-subjects" inicial. Se asigna solo al escribir -->
+                                        <input type="text" 
+                                               name="materias_repetidas_nombres" 
+                                               class="survey-input text-sm" 
+                                               placeholder="Escribe el nombre de la o las materias que corresponda"
+                                               oninput="if(this.value.length > 1) this.setAttribute('list', 'all-subjects'); else this.removeAttribute('list');">
+                                    </div>
+                                </div>
+
+                                <!-- NUEVA P15: MATERIAS DIFICULTAD (AUTOCOMPLETADO CONDICIONAL) -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">15. ¿En qué materias has tenido más dificultad?</label>
+                                    <label class="text-slate-600 mb-2 block text-sm">(Escribe y selecciona el nombre de la materia)</label>
+                                    <!-- Eliminado list="all-subjects" inicial. Se asigna solo al escribir -->
+                                    <input type="text" 
+                                           name="materias_dificultad" 
+                                           class="survey-input" 
+                                           placeholder="Escribe para buscar materia..."
+                                           oninput="if(this.value.length > 1) this.setAttribute('list', 'all-subjects'); else this.removeAttribute('list');">
+                                </div>
+                                
+                                <!-- P16 (ANTES 9) -->
                                 <div>
                                     <label
-                                        class="font-bold text-slate-800 mb-2 block">9.
+                                        class="font-bold text-slate-800 mb-2 block">16.
                                         ¿Trabajas mientras estudias?</label>
                                         <label
                                         class="text-slate-800 mb-2 block">(Solo puede escoger Sí o No, no ambas)</label>
@@ -315,21 +413,22 @@
                                                 type="radio" name="trabaja"
                                                 value="No">
                                             No</label></div></div>
+                                
+                                <!-- P17 (ANTES 10) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">10.
+                                        class="font-bold text-slate-800 mb-2 block">17.
                                         ¿Cuántas horas al día puedes dedicar
                                         realmente al estudio?</label>
                                         <label
                                         class="text-slate-800 mb-2 block">(Aquí indicará un número, no se permite letras)</label>
                                         
-                                        
-                                        
-                                        
                                         <input
                                         type="number" name="horas_estudio"
                                         required class="survey-input"></div>
+                                
+                                <!-- P18 (ANTES 11) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">11.
+                                        class="font-bold text-slate-800 mb-2 block">18.
                                         Estado general de avance
                                         académico:</label>
                                     <div class="space-y-2">
@@ -461,7 +560,7 @@
             </div>
         </div>
 
-        <!-- ================= VISTA 3: PREGUNTA 10 (CIERRE SECCIÓN 2) ================= -->
+        <!-- ================= VISTA 3: PREGUNTA 19 (ANTES 12 - CIERRE SECCIÓN 2) ================= -->
         <div id="section2-q10-view"
             class="hidden view-container fixed inset-0 z-[100] bg-slate-100 overflow-y-auto">
             <div
@@ -476,7 +575,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">12.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">19.
                                     ¿Estas materias afectan tu avance hacia el
                                     nuevo currículo?</label>
                                 <div class="space-y-3">
@@ -536,10 +635,10 @@
                     <div class="p-8">
                         <form id="form-section3" onsubmit="goToSection4(event)"
                             class="space-y-8">
-                            <!-- P11 -->
+                            <!-- P20 (ANTES 13) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">13.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">20.
                                     ¿Cómo te sientes respecto a la
                                     implementación del nuevo currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -585,10 +684,10 @@
                                             plan.</div></label>
                                 </div>
                             </div>
-                            <!-- P12 -->
+                            <!-- P21 (ANTES 14) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">14.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
                                     ¿Qué crees que aportará el nuevo
                                     currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -661,10 +760,10 @@
                     <div class="p-8">
                         <form id="form-section4" onsubmit="goToSection5(event)"
                             class="space-y-8">
-                            <!-- P13 -->
+                            <!-- P22 (ANTES 15) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">15.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
                                     Medidas que consideras útiles para tu avance
                                     (selección múltiple):</label>
                                 <div class="space-y-2 text-sm md:text-base"
@@ -716,10 +815,10 @@
                                     </label>
                                 </div>
                             </div>
-                            <!-- P14 (Dinámica) -->
+                            <!-- P23 (ANTES 16) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">16.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">23.
                                     De esas medidas que consideras útiles para
                                     tu avance cual sería Prioridad absoluta
                                     (elige solo una):</label>
@@ -729,7 +828,7 @@
                                 <div id="q14-options"
                                     class="space-y-2 text-sm md:text-base bg-slate-50 p-4 rounded-lg border border-slate-200 min-h-[50px]">
                                     <p class="text-slate-400 italic">Selecciona
-                                        opciones en la pregunta 13 primero.</p>
+                                        opciones en la pregunta 22 primero.</p>
                                 </div>
                             </div>
                             <div class="flex justify-end pt-4"><button
@@ -758,7 +857,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">17.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">24.
                                     Propuesta para mejorar la transición
                                     (respuesta abierta):</label>
                                 <textarea name="propuesta" required
@@ -845,6 +944,9 @@
                 </div>
             </div>
         </div>
+        
+        <!-- DATALIST PARA AUTOCOMPLETADO DE MATERIAS -->
+        <datalist id="all-subjects"></datalist>
 
         <!-- Modal Encuesta Ya Completada -->
         <div id="survey-completed-modal"
@@ -872,5 +974,36 @@
         </div>
 
         <script src="script.js"></script>
+        
+        <!-- SCRIPT INLINE AUXILIAR PARA POBLAR LA LISTA DE MATERIAS -->
+        <!-- Se ejecuta después de cargar script.js para tener acceso a semesterData -->
+        <script>
+            window.addEventListener('load', () => {
+                // Pequeño retardo para asegurar que script.js ha definido semesterData
+                setTimeout(() => {
+                    const datalist = document.getElementById('all-subjects');
+                    if (typeof semesterData !== 'undefined' && datalist) {
+                        const subjects = [];
+                        // Extraer materias de semestres normales
+                        semesterData.forEach(sem => subjects.push(...sem.subjects));
+                        
+                        // Extraer electivas y talleres si existen
+                        if(typeof electivasData !== 'undefined') subjects.push(...electivasData);
+                        if(typeof talleresData !== 'undefined') subjects.push(...talleresData);
+                        
+                        // Ordenar alfabéticamente
+                        subjects.sort();
+                        
+                        // Poblar el datalist
+                        subjects.forEach(subj => {
+                            const opt = document.createElement('option');
+                            opt.value = subj;
+                            datalist.appendChild(opt);
+                        });
+                        console.log("✅ Lista de materias poblada para autocompletado.");
+                    }
+                }, 100);
+            });
+        </script>
     </body>
 </html>
