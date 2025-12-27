@@ -984,17 +984,30 @@
 
                 // Normalización de números arábigos a romanos para validación flexible
                 const normalizeRomanInput = (text) => {
-                    return text
-                        .replace(/\b1\b/g, 'i')
-                        .replace(/\b2\b/g, 'ii')
-                        .replace(/\b3\b/g, 'iii')
-                        .replace(/\b4\b/g, 'iv')
-                        .replace(/\b5\b/g, 'v')
-                        .replace(/\b6\b/g, 'vi')
-                        .replace(/\b7\b/g, 'vii')
-                        .replace(/\b8\b/g, 'viii')
+                    // Reemplazos robustos para variantes de Psicología y otras materias con números
+                    // IMPORTANTE: El orden importa. Primero los números más altos o específicos.
+                    
+                    let normalized = text;
+
+                    // Mapeo específico para "l" y "ll" como "I" y "II" en minúsculas
+                    // Esto ayuda con "psicologia l" -> "psicologia i"
+                    normalized = normalized.replace(/\b(l)\b/gi, 'i');
+                    normalized = normalized.replace(/\b(ll)\b/gi, 'ii');
+
+                    // Mapeo de números arábigos a romanos
+                    normalized = normalized
+                        .replace(/\b10\b/g, 'x')
                         .replace(/\b9\b/g, 'ix')
-                        .replace(/\b10\b/g, 'x');
+                        .replace(/\b8\b/g, 'viii')
+                        .replace(/\b7\b/g, 'vii')
+                        .replace(/\b6\b/g, 'vi')
+                        .replace(/\b5\b/g, 'v')
+                        .replace(/\b4\b/g, 'iv')
+                        .replace(/\b3\b/g, 'iii')
+                        .replace(/\b2\b/g, 'ii')
+                        .replace(/\b1\b/g, 'i');
+
+                    return normalized;
                 };
 
                 // 1. Cargar desde semesterData (script.js) si existe
@@ -1063,22 +1076,22 @@
                     function validateAndAddTag(text) {
                         let lowerText = text.toLowerCase();
                         
-                        // Intentar validación directa
+                        // 1. Intentar validación directa
                         if (validMap.has(lowerText)) {
                             addTagToUI(validMap.get(lowerText));
                             return;
                         }
 
-                        // Intentar con conversión de números arábigos a romanos
+                        // 2. Intentar con conversión de números arábigos y variantes (l, ll) a romanos
                         const romanizedText = normalizeRomanInput(lowerText);
                         if (validMap.has(romanizedText)) {
                             addTagToUI(validMap.get(romanizedText));
                             return;
                         }
 
-                        // Búsqueda aproximada "Empieza con..." o conversión parcial
+                        // 3. Búsqueda aproximada "insensible a acentos"
                         let found = null;
-                        const normalize = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        const normalize = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Quitar acentos
                         const normalizedInput = normalize(lowerText);
                         const normalizedRoman = normalize(romanizedText);
 
