@@ -962,37 +962,74 @@
 
         <script src="script.js"></script>
         
-        <!-- SCRIPT PARA LOGICA DE TAGS (MATERIAS.TXT) -->
+        <!-- SCRIPT PARA LOGICA DE TAGS (MATERIAS.TXT + SEMESTERDATA) -->
         <script>
             window.addEventListener('load', () => {
-                // 1. Cargar materias.txt
-                const validSubjectsSet = new Set();
+                const validSubjectsMap = new Map(); // Lowercase -> Original
                 const datalist = document.getElementById('materias-list');
                 
+                // Función auxiliar para agregar materias al mapa y al datalist
+                const addSubject = (subj) => {
+                    if (!subj) return;
+                    const cleanSubj = subj.trim();
+                    const lowerSubj = cleanSubj.toLowerCase();
+                    
+                    if (cleanSubj && !validSubjectsMap.has(lowerSubj)) {
+                        validSubjectsMap.set(lowerSubj, cleanSubj);
+                        const opt = document.createElement('option');
+                        opt.value = cleanSubj;
+                        datalist.appendChild(opt);
+                    }
+                };
+
+                // Normalización de números arábigos a romanos para validación flexible
+                const normalizeRomanInput = (text) => {
+                    return text
+                        .replace(/\b1\b/g, 'i')
+                        .replace(/\b2\b/g, 'ii')
+                        .replace(/\b3\b/g, 'iii')
+                        .replace(/\b4\b/g, 'iv')
+                        .replace(/\b5\b/g, 'v')
+                        .replace(/\b6\b/g, 'vi')
+                        .replace(/\b7\b/g, 'vii')
+                        .replace(/\b8\b/g, 'viii')
+                        .replace(/\b9\b/g, 'ix')
+                        .replace(/\b10\b/g, 'x');
+                };
+
+                // 1. Cargar desde semesterData (script.js) si existe
+                if (typeof semesterData !== 'undefined') {
+                    semesterData.forEach(sem => sem.subjects.forEach(addSubject));
+                    if(typeof electivasData !== 'undefined') electivasData.forEach(addSubject);
+                    if(typeof talleresData !== 'undefined') talleresData.forEach(addSubject);
+                    if(typeof abordajesData !== 'undefined') {
+                         Object.values(abordajesData).forEach(mod => {
+                             if(mod.sem9) mod.sem9.forEach(s => addSubject(s.name));
+                             if(mod.sem10) mod.sem10.forEach(s => addSubject(s.name));
+                         });
+                    }
+                    console.log(`✅ ${validSubjectsMap.size} materias base cargadas desde el sistema.`);
+                } else {
+                    console.warn('⚠️ semesterData no encontrado. Asegúrate de que script.js cargue correctamente.');
+                }
+
+                // 2. Intentar cargar materias.txt (complementario)
                 fetch('materias.txt')
-                    .then(r => r.ok ? r.text() : Promise.reject('No materias.txt'))
+                    .then(r => r.ok ? r.text() : Promise.resolve(''))
                     .then(text => {
-                        const lines = text.split('\n');
-                        lines.forEach(line => {
-                            const subj = line.trim();
-                            if(subj) {
-                                validSubjectsSet.add(subj.toLowerCase()); // Para validación insensible a mayúsculas
-                                // Poblar datalist para sugerencias visuales
-                                const opt = document.createElement('option');
-                                opt.value = subj; // Mantener formato original visual
-                                datalist.appendChild(opt);
-                            }
-                        });
-                        console.log(`📚 ${validSubjectsSet.size} materias cargadas para validación.`);
-                        
-                        // Inicializar lógica de inputs una vez cargado
-                        setupTagInput('input-q14', 'tags-container-q14', 'hidden-q14', 'error-q14', validSubjectsSet, lines);
-                        setupTagInput('input-q15', 'tags-container-q15', 'hidden-q15', 'error-q15', validSubjectsSet, lines);
+                        if(text) {
+                            const lines = text.split('\n');
+                            lines.forEach(addSubject);
+                            console.log(`📚 Materias actualizadas con archivo externo. Total: ${validSubjectsMap.size}`);
+                        }
+                        // Inicializar inputs
+                        setupTagInput('input-q14', 'tags-container-q14', 'hidden-q14', 'error-q14', validSubjectsMap);
+                        setupTagInput('input-q15', 'tags-container-q15', 'hidden-q15', 'error-q15', validSubjectsMap);
                     })
-                    .catch(err => console.warn('No se pudo cargar materias.txt para validación', err));
+                    .catch(err => console.warn('No se pudo cargar materias.txt', err));
 
                 // Función configuración de Input de Tags
-                function setupTagInput(inputId, containerId, hiddenId, errorId, validSet, originalList) {
+                function setupTagInput(inputId, containerId, hiddenId, errorId, validMap) {
                     const input = document.getElementById(inputId);
                     const container = document.getElementById(containerId);
                     const hidden = document.getElementById(hiddenId);
@@ -1024,23 +1061,51 @@
                     });
 
                     function validateAndAddTag(text) {
-                        // Validar contra el Set
-                        if (validSet.has(text.toLowerCase())) {
-                            // Buscar el nombre con formato original (Mayúsculas/Minúsculas correctas)
-                            const originalName = originalList.find(s => s.toLowerCase() === text.toLowerCase()) || text;
-                            
-                            // Evitar duplicados
-                            if(!tags.includes(originalName)) {
-                                tags.push(originalName);
-                                renderTags();
-                                error.classList.add('hidden');
+                        let lowerText = text.toLowerCase();
+                        
+                        // Intentar validación directa
+                        if (validMap.has(lowerText)) {
+                            addTagToUI(validMap.get(lowerText));
+                            return;
+                        }
+
+                        // Intentar con conversión de números arábigos a romanos
+                        const romanizedText = normalizeRomanInput(lowerText);
+                        if (validMap.has(romanizedText)) {
+                            addTagToUI(validMap.get(romanizedText));
+                            return;
+                        }
+
+                        // Búsqueda aproximada "Empieza con..." o conversión parcial
+                        let found = null;
+                        const normalize = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        const normalizedInput = normalize(lowerText);
+                        const normalizedRoman = normalize(romanizedText);
+
+                        for (const [key, val] of validMap.entries()) {
+                            const normKey = normalize(key);
+                            if (normKey === normalizedInput || normKey === normalizedRoman) {
+                                found = val;
+                                break;
                             }
+                        }
+
+                        if(found) {
+                            addTagToUI(found);
                         } else {
                             // Mostrar error
-                            error.textContent = `❌ "${text}" no es una materia válida.`;
+                            error.textContent = `❌ "${text}" no es una materia válida. Selecciona de la lista.`;
                             error.classList.remove('hidden');
-                            // Ocultar error después de 3 seg
                             setTimeout(() => error.classList.add('hidden'), 3000);
+                        }
+                    }
+
+                    function addTagToUI(originalName) {
+                        // Evitar duplicados
+                        if(!tags.includes(originalName)) {
+                            tags.push(originalName);
+                            renderTags();
+                            error.classList.add('hidden');
                         }
                     }
 
