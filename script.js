@@ -14,6 +14,10 @@ function goToSection2(e) {
 
     // --- CORRECCIÓN INTEGRADA: Capturar lista de semestres y campos nuevos ---
     const semestresSeleccionados = formData1.getAll('semestre');
+    
+    // Capturar lista de materias verano aprobadas y reprobadas (NUEVO P17)
+    const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
+    const veranoReprobadas = formData1.getAll('materias_verano_reprobadas');
 
     // Capturar campos "Otro" de radio buttons
     let anioIngreso = formData1.get('anio_ingreso');
@@ -57,9 +61,6 @@ function goToSection2(e) {
         // P10 (Antes 7)
         semestre: semestresSeleccionados,
 
-        // P10 (Antes 7)
-        semestre: semestresSeleccionados,
-
         // P11 (NUEVO PPA)
         ppa: formData1.get('ppa') || '',
 
@@ -72,8 +73,12 @@ function goToSection2(e) {
         repetido_materia: repetidoMateria || '',
         materias_repetidas_nombres: materiasRepetidasNombres,
         materias_dificultad: formData1.get('materias_dificultad') || '',
+        
+        // P17 (NUEVO) - Materias Verano/Nivelación
+        materias_verano_aprobadas: veranoAprobadas,
+        materias_verano_reprobadas: veranoReprobadas,
 
-        // P17-P19 (Renumerados)
+        // P18-P20 (Renumerados)
         trabaja: formData1.get('trabaja') || '',
         horas_estudio: formData1.get('horas_estudio') || '',
         avance: formData1.get('avance') || ''
@@ -1282,6 +1287,8 @@ function capturarTodosDatos() {
         console.log('📝 Personal vacío, capturando de form-section1...');
         const formData1 = new FormData(form1);
         const semestresSeleccionados = formData1.getAll('semestre');
+        const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
+        const veranoReprobadas = formData1.getAll('materias_verano_reprobadas');
 
         allData.personal = {
             nombre: formData1.get('nombre') || '',
@@ -1301,6 +1308,10 @@ function capturarTodosDatos() {
             repetido_materia: formData1.get('repetido_materia') || '',
             materias_repetidas_nombres: formData1.get('materias_repetidas_nombres') || '',
             materias_dificultad: formData1.get('materias_dificultad') || '',
+            // NUEVO P17
+            materias_verano_aprobadas: veranoAprobadas,
+            materias_verano_reprobadas: veranoReprobadas,
+            // RENUMERADOS
             trabaja: formData1.get('trabaja') || '',
             horas_estudio: formData1.get('horas_estudio') || '',
             avance: formData1.get('avance') || ''
@@ -1415,6 +1426,16 @@ function descargarReportePDF() {
         ? `(${data.materias_repetidas_nombres})`
         : '';
     const matDificultad = data.materias_dificultad || 'Ninguna especificada';
+    
+    // NUEVO P17
+    let veranoAprob = '-';
+    if (data.materias_verano_aprobadas && data.materias_verano_aprobadas.length > 0) {
+        veranoAprob = data.materias_verano_aprobadas.join(', ');
+    }
+    let veranoReprob = '-';
+    if (data.materias_verano_reprobadas && data.materias_verano_reprobadas.length > 0) {
+        veranoReprob = data.materias_verano_reprobadas.join(', ');
+    }
 
     // Datos laborales
     const trabaja = data.trabaja || '-';
@@ -1730,16 +1751,26 @@ function descargarReportePDF() {
                     <div class="label">Tiempo Estimado Finalizacón</div>
                     <div class="value">${tiempoTerminar}</div>
                 </div>
-            <div class="grid-2">
                 <div class="field-box">
                     <div class="label">Repitencia (>3 veces)</div>
                     <div class="value">${repitio} ${repitioCual}</div>
                 </div>
-                 <div class="field-box">
-                    <div class="label">Materias con Dificultad</div>
-                    <div class="value">${matDificultad}</div>
-                </div>
             </div>
+            <div class="field-box" style="margin-bottom:12px;">
+                <div class="label">Materias con Dificultad</div>
+                <div class="value">${matDificultad}</div>
+            </div>
+            
+            <!-- NUEVO BLOQUE P17 -->
+            <div class="field-box" style="margin-bottom:12px; background-color:#eff6ff; padding:8px; border-radius:4px;">
+                <div class="label" style="color:#1e3a8a;">MATERIAS PARA NIVELACIÓN / VERANO (YA APROBADAS)</div>
+                <div class="value" style="border:none; padding-bottom:0;">${veranoAprob}</div>
+            </div>
+            <div class="field-box" style="margin-bottom:12px; background-color:#fef2f2; padding:8px; border-radius:4px;">
+                <div class="label" style="color:#b91c1c;">MATERIAS PARA NIVELACIÓN / VERANO (REPROBADAS)</div>
+                <div class="value" style="border:none; padding-bottom:0;">${veranoReprob}</div>
+            </div>
+
             <div class="grid-2">
                  <div class="field-box">
                     <div class="label">Situación Laboral</div>
