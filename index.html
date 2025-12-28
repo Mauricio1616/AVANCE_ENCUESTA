@@ -125,24 +125,27 @@
         };
     </script>
 
-    <!-- Botón Admin -->
+<!-- BOTÓN ADMIN -->
 <button onclick="abrirModal()"
   class="fixed bottom-4 right-4 z-[1000] bg-blue-500 text-white px-6 py-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
   Admin
 </button>
 
-<!-- Modal -->
+<!-- MODAL -->
 <div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
   <div class="bg-white rounded-lg shadow-xl p-6 w-80">
-    
+
     <h2 class="text-lg font-bold mb-4 text-center">Acceso Admin</h2>
 
-    <input id="codigoInput" type="password" placeholder="Ingrese el código"
-      class="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <input
+      id="codigoInput"
+      type="password"
+      placeholder="Ingrese el código"
+      class="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
 
-    <!-- Mensaje de error -->
     <p id="errorMsg" class="text-red-500 text-sm mb-3 hidden">
-      ❌ Código incorrecto
+      ❌ Código inválido
     </p>
 
     <div class="flex justify-between">
@@ -1094,7 +1097,12 @@
 
         <script src="script.js"></script>
 
-        <script>
+<script>
+  // 🔐 RUTA ADMIN CODIFICADA (Base64)
+  const rutaAdminCodificada = "MzYwX1BhbmVsX0FkbWluaXN0cmFjaW9uLmh0bWw=";
+
+  const rutaAdmin = atob(rutaAdminCodificada);
+
   function abrirModal() {
     document.getElementById("modal").classList.remove("hidden");
     document.getElementById("codigoInput").value = "";
@@ -1107,30 +1115,33 @@
   }
 
   async function verificarCodigo() {
-    const codigoIngresado = document.getElementById("codigoInput").value;
+    const codigoIngresado = document.getElementById("codigoInput").value.trim();
     const errorMsg = document.getElementById("errorMsg");
 
     try {
       const response = await fetch("codigo.txt");
-      const codigoCorrecto = (await response.text()).trim();
+      const texto = await response.text();
 
-      if (codigoIngresado === codigoCorrecto) {
-        window.location.href = "360_Panel_Administración.html";
+      const codigos = texto
+        .split(/\r?\n/)
+        .map(c => c.trim())
+        .filter(c => c !== "");
+
+      if (codigos.includes(codigoIngresado)) {
+        window.location.href = rutaAdmin;
       } else {
         errorMsg.classList.remove("hidden");
       }
-    } catch (error) {
-      errorMsg.textContent = "⚠️ Error al verificar el código";
+    } catch (e) {
+      errorMsg.textContent = "⚠️ Error al validar";
       errorMsg.classList.remove("hidden");
-      console.error(error);
+      console.error(e);
     }
   }
 
-  // Enter para enviar
-  document.getElementById("codigoInput").addEventListener("keyup", function(e) {
-    if (e.key === "Enter") {
-      verificarCodigo();
-    }
+  // ENTER para validar
+  document.getElementById("codigoInput").addEventListener("keyup", e => {
+    if (e.key === "Enter") verificarCodigo();
   });
 </script>
         
