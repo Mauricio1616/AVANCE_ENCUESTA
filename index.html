@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport"
-            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Malla Curricular Interactiva</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-            rel="stylesheet">
-        <link rel="stylesheet" href="style.css">
-        <!-- Librería para generar PDF -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-        <!-- Scripts de Firebase (Marcador para el Ingeniero) -->
-        <script type="module">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Malla Curricular Interactiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería para generar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Scripts de Firebase (Marcador para el Ingeniero) -->
+    <script type="module">
         // -------------------------------------------------------------------------
         // ZONA DE INTEGRACIÓN PARA EL INGENIERO DE SISTEMAS
         // -------------------------------------------------------------------------
@@ -24,12 +22,12 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyCkhGGnoJpAJSs3YC55EzHj2ETGSCvK63w",
-          authDomain: "psiconet-360.firebaseapp.com",
-          projectId: "psiconet-360",
-          storageBucket: "psiconet-360.appspot.com",
-          messagingSenderId: "210998536370",
-          appId: "1:210998536370:web:da23055d04f4491175c1ab"
+            apiKey: "AIzaSyCkhGGnoJpAJSs3YC55EzHj2ETGSCvK63w",
+            authDomain: "psiconet-360.firebaseapp.com",
+            projectId: "psiconet-360",
+            storageBucket: "psiconet-360.appspot.com",
+            messagingSenderId: "210998536370",
+            appId: "1:210998536370:web:da23055d04f4491175c1ab"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -44,77 +42,77 @@
         signInAnonymously(auth).catch(err => console.warn('Auth error:', err));
 
         window.saveSurveyToFirebase = async (data) => {
-          try {
-            const docRef = await addDoc(collection(db, 'encuestas_estudiantes'), {
-              ...data,
-              timestamp: serverTimestamp()
-            });
-            console.log('Guardado en Firestore, id:', docRef.id);
-            return true;
-          } catch (err) {
-            console.error('Error al guardar:', err);
-            return false;
-          }
+            try {
+                const docRef = await addDoc(collection(db, 'encuestas_estudiantes'), {
+                    ...data,
+                    timestamp: serverTimestamp()
+                });
+                console.log('Guardado en Firestore, id:', docRef.id);
+                return true;
+            } catch (err) {
+                console.error('Error al guardar:', err);
+                return false;
+            }
         };
 
         // Cargar registros usando Web Worker
         window.registrosValidos = new Set();
         window.registrosCargados = false;
-        
-        fetch('datos.txt')
-          .then(response => {
-            if (!response.ok) throw new Error('No se pudo cargar datos.txt');
-            return response.text();
-          })
-          .then(texto => {
-            console.log('📥 Archivo cargado:', (texto.length / 1024 / 1024).toFixed(2), 'MB');
-            
-            const worker = new Worker('registros-worker.js');
-            
-            worker.onmessage = function(e) {
-              const { success, cantidad, registros, tiempo } = e.data;
-              
-              if (!success) {
-                console.error('❌ Error en Worker:', e.data.error);
-                return;
-              }
-              
-              // Cargar registros en el Set
-              registros.forEach(r => window.registrosValidos.add(r));
-              window.registrosCargados = true;
-              
-              console.log(`✅ Se cargaron ${cantidad} registros en ${tiempo}ms`);
-              
-              // Disparar evento
-              window.dispatchEvent(new CustomEvent('registrosCargados', {
-                detail: { cantidad: cantidad }
-              }));
-              
-              worker.terminate();
-            };
-            
-            worker.onerror = function(err) {
-              console.error('❌ Error en Worker:', err);
-              window.registrosCargados = false;
-            };
-            
-            worker.postMessage({
-              action: 'cargarRegistros',
-              texto: texto
-            });
-          })
-          .catch(err => {
-            console.error('❌ Error cargando datos.txt:', err);
-            window.registrosValidos = new Set();
-            window.registrosCargados = false;
-          });
-    </script>
-    </head>
-    <body
-        class="bg-slate-50 text-slate-800 h-screen font-sans overflow-hidden relative w-full">
 
-        <!-- VARIABLE GLOBAL PARA ALMACENAR DATOS -->
-        <script>
+        fetch('datos.txt')
+            .then(response => {
+                if (!response.ok) throw new Error('No se pudo cargar datos.txt');
+                return response.text();
+            })
+            .then(texto => {
+                console.log('📥 Archivo cargado:', (texto.length / 1024 / 1024).toFixed(2), 'MB');
+
+                const worker = new Worker('registros-worker.js');
+
+                worker.onmessage = function (e) {
+                    const { success, cantidad, registros, tiempo } = e.data;
+
+                    if (!success) {
+                        console.error('❌ Error en Worker:', e.data.error);
+                        return;
+                    }
+
+                    // Cargar registros en el Set
+                    registros.forEach(r => window.registrosValidos.add(r));
+                    window.registrosCargados = true;
+
+                    console.log(`✅ Se cargaron ${cantidad} registros en ${tiempo}ms`);
+
+                    // Disparar evento
+                    window.dispatchEvent(new CustomEvent('registrosCargados', {
+                        detail: { cantidad: cantidad }
+                    }));
+
+                    worker.terminate();
+                };
+
+                worker.onerror = function (err) {
+                    console.error('❌ Error en Worker:', err);
+                    window.registrosCargados = false;
+                };
+
+                worker.postMessage({
+                    action: 'cargarRegistros',
+                    texto: texto
+                });
+            })
+            .catch(err => {
+                console.error('❌ Error cargando datos.txt:', err);
+                window.registrosValidos = new Set();
+                window.registrosCargados = false;
+            });
+    </script>
+</head>
+
+<body class="bg-slate-50 text-slate-800 h-screen font-sans overflow-hidden relative w-full">
+
+    <!-- VARIABLE GLOBAL PARA ALMACENAR DATOS -->
+    <script>
         window.surveyData = {
             personal: {},
             malla: [],
@@ -124,150 +122,213 @@
             seccion5: {}
         };
     </script>
+    <!-- boton para ir admin.html -->
 
-        <!-- ================= VISTA 1: ENCUESTA INICIAL ================= -->
-        <div id="section1-view"
-            class="view-container fixed inset-0 z-[100] bg-slate-100 overflow-y-auto overflow-x-hidden">
-            <div
-                class="min-h-screen w-full flex flex-col items-center justify-start py-6 px-4 md:py-10">
-                <div
-                    class="w-full max-w-3xl bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden mb-10">
-                    <div class="bg-blue-900 p-6 text-white relative">
-                        <div
-                            class="flex flex-col md:flex-row items-start md:items-center gap-4 mb-2">
-                            <img src="img/Encabezado.png" alt="Logo"
-                                class="h-16 w-auto object-contain bg-white rounded p-1 shadow-sm">
-                            <div>
-                                <h1
-                                    class="text-xl md:text-2xl font-bold leading-tight">Encuesta
-                                    para Estudiantes sobre Situación Académica y
-                                    Transición al Nuevo Currículo</h1>
-                                <p
-                                    class="text-blue-200 text-sm mt-1 font-medium">Carrera
-                                    de Psicología - UAGRM</p>
-                            </div>
+
+    <!-- ================= VISTA 1: ENCUESTA INICIAL ================= -->
+    <div id="section1-view" class="view-container fixed inset-0 z-[100] bg-slate-100 overflow-y-auto overflow-x-hidden">
+        <div class="min-h-screen w-full flex flex-col items-center justify-start py-6 px-4 md:py-10">
+            <div class="w-full max-w-3xl bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden mb-10">
+                <div class="bg-blue-900 p-6 text-white relative">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-4 mb-2">
+                        <img src="img/Encabezado.png" alt="Logo"
+                            class="h-16 w-auto object-contain bg-white rounded p-1 shadow-sm">
+                        <div>
+                            <h1 class="text-xl md:text-2xl font-bold leading-tight">Encuesta
+                                para Estudiantes sobre Situación Académica y
+                                Transición al Nuevo Currículo</h1>
+                            <p class="text-blue-200 text-sm mt-1 font-medium">Carrera
+                                de Psicología - UAGRM</p>
                         </div>
                     </div>
-                    <div class="p-5 md:p-8 space-y-6">
-                        <div
-                            class="bg-slate-50 p-5 rounded-lg border border-slate-200 text-sm space-y-4 text-slate-700">
-                            <div><strong
-                                    class="text-blue-900 block mb-1 text-base"><i
-                                        class="fas fa-bullseye mr-2"></i>Objetivo</strong><p>Conocer
-                                    tu situación actual, tus percepciones sobre
-                                    el proceso de transición curricular y tus
-                                    preferencias para las medidas de
-                                    adaptación.</p></div>
-                            <div><strong
-                                    class="text-blue-900 block mb-1 text-base"><i
-                                        class="fas fa-tasks mr-2"></i>Consigna</strong><p>Te
-                                    invitamos a completar esta encuesta dirigida
-                                    a estudiantes de la carrera de Psicología de
-                                    la UAGRM. Tus respuestas serán de gran
-                                    importancia para comprender la situación
-                                    académica actual y el impacto del proceso de
-                                    transición al nuevo currículo.</p></div>
-                            <div
-                                class="pt-3 border-t border-slate-200 mt-2"><strong
-                                    class="text-red-800 block mb-1 text-base"><i
-                                        class="fas fa-file-contract mr-2"></i>Consentimiento
-                                    informado</strong><p
-                                    class="text-xs md:text-sm text-slate-600 leading-relaxed">La
-                                    participación en esta encuesta es
-                                    voluntaria. <br><span
-                                        class="font-semibold text-slate-800 mt-1 block">La
-                                        información proporcionada será utilizada
-                                        exclusivamente con fines académicos y de
-                                        mejora institucional, garantizando la
-                                        confidencialidad y el anonimato de las
-                                        respuestas. Al continuar con el
-                                        formulario, usted manifiesta su
-                                        consentimiento para participar en la
-                                        presente encuesta.</span></p></div>
+                </div>
+                <div class="p-5 md:p-8 space-y-6">
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-200 text-sm space-y-4 text-slate-700">
+                        <div><strong class="text-blue-900 block mb-1 text-base"><i
+                                    class="fas fa-bullseye mr-2"></i>Objetivo</strong>
+                            <p>Conocer
+                                tu situación actual, tus percepciones sobre
+                                el proceso de transición curricular y tus
+                                preferencias para las medidas de
+                                adaptación.</p>
                         </div>
-                        <div class="space-y-6">
-                            <div class="border-b border-blue-100 pb-2 mb-4"><h2
-                                    class="text-lg md:text-xl font-bold text-blue-900">Sección
-                                    1: Datos Generales / Situación
-                                    Actual</h2></div>
-                            <form id="form-section1" class="space-y-6"
-                                onsubmit="goToSection2(event)">
-                                <!-- P1 -->
-                                <div><label
-                                        class="font-bold text-slate-800 mb-2 block">1.
-                                        Nombre</label><input
-                                        type="text" name="nombre" required
-                                        class="survey-input"></div>
-                                <!-- P2 -->
-                                <div><label
-                                        class="font-bold text-slate-800 mb-2 block">2.
-                                        Apellidos</label><input
-                                        type="text" name="Apellidos" required
-                                        class="survey-input"></div>
-                                <!-- P3 -->
-                                <div><label
-                                        class="font-bold text-slate-800 mb-2 block">3.
-                                        CI-Cédula de Identidad</label><input type="text"
-                                        name="CI" required
-                                        class="survey-input"></div>                
-                                <!-- P4 -->
-                                <div><label
-                                        class="font-bold text-slate-800 mb-2 block">4.
-                                        Registro Universitario</label><input
-                                        type="number" name="registro" required
-                                        id="input-registro"
-                                        class="survey-input"
-                                        placeholder="Ej: 200012345">
-                                        <div id="error-registro" class="hidden mt-2 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm flex items-center gap-2">
-                                            <i class="fas fa-exclamation-circle"></i>
-                                            <span>Usted no está registrado como estudiante de la carrera de Psicología</span>
-                                        </div>
+                        <div><strong class="text-blue-900 block mb-1 text-base"><i
+                                    class="fas fa-tasks mr-2"></i>Consigna</strong>
+                            <p>Te
+                                invitamos a completar esta encuesta dirigida
+                                a estudiantes de la carrera de Psicología de
+                                la UAGRM. Tus respuestas serán de gran
+                                importancia para comprender la situación
+                                académica actual y el impacto del proceso de
+                                transición al nuevo currículo.</p>
+                        </div>
+                        <div class="pt-3 border-t border-slate-200 mt-2"><strong
+                                class="text-red-800 block mb-1 text-base"><i
+                                    class="fas fa-file-contract mr-2"></i>Consentimiento
+                                informado</strong>
+                            <p class="text-xs md:text-sm text-slate-600 leading-relaxed">La
+                                participación en esta encuesta es
+                                voluntaria. <br><span class="font-semibold text-slate-800 mt-1 block">La
+                                    información proporcionada será utilizada
+                                    exclusivamente con fines académicos y de
+                                    mejora institucional, garantizando la
+                                    confidencialidad y el anonimato de las
+                                    respuestas. Al continuar con el
+                                    formulario, usted manifiesta su
+                                    consentimiento para participar en la
+                                    presente encuesta.</span></p>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="border-b border-blue-100 pb-2 mb-4">
+                            <h2 class="text-lg md:text-xl font-bold text-blue-900">Sección
+                                1: Datos Generales / Situación
+                                Actual</h2>
+                        </div>
+                        <form id="form-section1" class="space-y-6" onsubmit="goToSection2(event)">
+                            <!-- P1 -->
+                            <div><label class="font-bold text-slate-800 mb-2 block">1.
+                                    Nombre</label><input type="text" name="nombre" required class="survey-input"></div>
+                            <!-- P2 -->
+                            <div><label class="font-bold text-slate-800 mb-2 block">2.
+                                    Apellidos</label><input type="text" name="Apellidos" required class="survey-input">
+                            </div>
+                            <!-- P3 -->
+                            <div><label class="font-bold text-slate-800 mb-2 block">3.
+                                    CI-Cédula de Identidad</label><input type="text" name="CI" required
+                                    class="survey-input"></div>
+                            <!-- P4 -->
+                            <div><label class="font-bold text-slate-800 mb-2 block">4.
+                                    Registro Universitario</label><input type="number" name="registro" required
+                                    id="input-registro" class="survey-input" placeholder="Ej: 200012345">
+                                <div id="error-registro"
+                                    class="hidden mt-2 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm flex items-center gap-2">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>Usted no está registrado como estudiante de la carrera de Psicología</span>
                                 </div>
+                            </div>
 
-                                <!-- NUEVA P5: AÑO DE INGRESO -->
-                                <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">5. Año de ingreso a la carrera:</label>
-                                    <div class="flex flex-wrap gap-4 text-sm">
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2021" class="accent-blue-900"> 2021</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2022" class="accent-blue-900"> 2022</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2023" class="accent-blue-900"> 2023</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2024" class="accent-blue-900"> 2024</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="anio_ingreso" value="2025" class="accent-blue-900"> 2025</label>
-                                        <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
-                                            <input type="radio" name="anio_ingreso" value="Otro" id="anio_otro_radio" class="accent-blue-900"> Otro:
-                                            <input type="text" name="anio_ingreso_otro" class="border-b border-slate-300 outline-none w-20 text-sm focus:border-blue-900 bg-transparent" onclick="document.getElementById('anio_otro_radio').checked = true;">
-                                        </label>
+                            <!-- NUEVA P5: AÑO DE INGRESO -->
+                            <div>
+                                <label class="font-bold text-slate-800 mb-2 block">5. Año de ingreso a la
+                                    carrera:</label>
+                                <div class="flex flex-wrap gap-4 text-sm">
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="anio_ingreso" value="2021" class="accent-blue-900">
+                                        2021</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="anio_ingreso" value="2022" class="accent-blue-900">
+                                        2022</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="anio_ingreso" value="2023" class="accent-blue-900">
+                                        2023</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="anio_ingreso" value="2024" class="accent-blue-900">
+                                        2024</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="anio_ingreso" value="2025" class="accent-blue-900">
+                                        2025</label>
+                                    <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
+                                        <input type="radio" name="anio_ingreso" value="Otro" id="anio_otro_radio"
+                                            class="accent-blue-900"> Otro:
+                                        <input type="text" name="anio_ingreso_otro"
+                                            class="border-b border-slate-300 outline-none w-20 text-sm focus:border-blue-900 bg-transparent"
+                                            onclick="document.getElementById('anio_otro_radio').checked = true;">
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- boton -->
+                            <!-- Botón Admin -->
+                            <button onclick="abrirModal()"
+                                class="fixed bottom-4 right-4 z-[1000] bg-blue-500 text-white px-6 py-2 rounded-full shadow-lg hover:bg-blue-600 transition-colors">
+                                Admin
+                            </button>
+
+                            <!-- Modal -->
+                            <div id="modal"
+                                class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
+                                <div class="bg-white rounded-lg shadow-xl p-6 w-80 text-center">
+                                    <h2 class="text-lg font-bold mb-4">Acceso Admin</h2>
+
+                                    <input id="codigoInput" type="password" placeholder="Ingrese el código"
+                                        class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                                    <div class="flex justify-between">
+                                        <button onclick="cerrarModal()"
+                                            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                                            Cancelar
+                                        </button>
+
+                                        <button onclick="verificarCodigo()"
+                                            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                            Ingresar
+                                        </button>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- NUEVA P6: MODALIDAD DE INGRESO -->
-                                <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">6. Modalidad de ingreso:</label>
-                                    <div class="flex flex-wrap gap-4 text-sm">
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="PSA" class="accent-blue-900"> PSA</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="CUP" class="accent-blue-900"> CUP</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="Admisión especial" class="accent-blue-900"> Admisión especial</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="modalidad_ingreso" value="Traslado" class="accent-blue-900"> Traslado</label>
-                                        <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
-                                            <input type="radio" name="modalidad_ingreso" value="Otra" id="mod_otra_radio" class="accent-blue-900"> Otra:
-                                            <input type="text" name="modalidad_ingreso_otra" class="border-b border-slate-300 outline-none w-32 text-sm focus:border-blue-900 bg-transparent" onclick="document.getElementById('mod_otra_radio').checked = true;">
-                                        </label>
-                                    </div>
+                            <!-- NUEVA P6: MODALIDAD DE INGRESO -->
+                            <div>
+                                <label class="font-bold text-slate-800 mb-2 block">6. Modalidad de ingreso:</label>
+                                <div class="flex flex-wrap gap-4 text-sm">
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="modalidad_ingreso" value="PSA" class="accent-blue-900">
+                                        PSA</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="modalidad_ingreso" value="CUP" class="accent-blue-900">
+                                        CUP</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="modalidad_ingreso" value="Admisión especial"
+                                            class="accent-blue-900"> Admisión especial</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                            type="radio" name="modalidad_ingreso" value="Traslado"
+                                            class="accent-blue-900"> Traslado</label>
+                                    <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
+                                        <input type="radio" name="modalidad_ingreso" value="Otra" id="mod_otra_radio"
+                                            class="accent-blue-900"> Otra:
+                                        <input type="text" name="modalidad_ingreso_otra"
+                                            class="border-b border-slate-300 outline-none w-32 text-sm focus:border-blue-900 bg-transparent"
+                                            onclick="document.getElementById('mod_otra_radio').checked = true;">
+                                    </label>
                                 </div>
+                            </div>
 
-                                <!-- NUEVA P7: CUÁNDO TERMINAR -->
-                                <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">7. Según tu avance actual, ¿cuándo crees que podrías terminar la carrera?</label>
-                                    <div class="flex flex-col gap-2 text-sm">
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input type="radio" name="tiempo_terminar" value="En 1 año" class="accent-blue-900"> En 1 año</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input type="radio" name="tiempo_terminar" value="En 2 años" class="accent-blue-900"> En 2 años</label>
-                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input type="radio" name="tiempo_terminar" value="En 3 años" class="accent-blue-900"> En 3 años</label>
-                                        <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded w-fit">
-                                            <input type="radio" name="tiempo_terminar" value="Otro" id="tiempo_otro_radio" class="accent-blue-900"> otro:
-                                            <input type="text" name="tiempo_terminar_otro" class="border-b border-slate-300 outline-none w-40 text-sm focus:border-blue-900 bg-transparent" onclick="document.getElementById('tiempo_otro_radio').checked = true;">
-                                        </label>
-                                    </div>
+                            <!-- NUEVA P7: CUÁNDO TERMINAR -->
+                            <div>
+                                <label class="font-bold text-slate-800 mb-2 block">7. Según tu avance actual, ¿cuándo
+                                    crees que podrías terminar la carrera?</label>
+                                <div class="flex flex-col gap-2 text-sm">
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
+                                            type="radio" name="tiempo_terminar" value="En 1 año"
+                                            class="accent-blue-900"> En 1 año</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
+                                            type="radio" name="tiempo_terminar" value="En 2 años"
+                                            class="accent-blue-900"> En 2 años</label>
+                                    <label
+                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
+                                            type="radio" name="tiempo_terminar" value="En 3 años"
+                                            class="accent-blue-900"> En 3 años</label>
+                                    <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded w-fit">
+                                        <input type="radio" name="tiempo_terminar" value="Otro" id="tiempo_otro_radio"
+                                            class="accent-blue-900"> otro:
+                                        <input type="text" name="tiempo_terminar_otro"
+                                            class="border-b border-slate-300 outline-none w-40 text-sm focus:border-blue-900 bg-transparent"
+                                            onclick="document.getElementById('tiempo_otro_radio').checked = true;">
+                                    </label>
                                 </div>
+                            </div>
 
                                 <!-- P8 (ANTES 5) -->
                                 <div><label
@@ -342,9 +403,20 @@
                                     </div>
                                 </div>
                                 
-                                <!-- P11 (ANTES 8) -->
+                                <!-- P11 (NUEVA PPA) -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">11. Promedio Ponderado Anual (PPA) (aprox.):</label>
+                                    <div class="flex flex-wrap gap-4 text-sm">
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="50-59" class="accent-blue-900" required> 50–59</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="60-69" class="accent-blue-900"> 60–69</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="70-79" class="accent-blue-900"> 70–79</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="80+" class="accent-blue-900"> ≥80</label>
+                                    </div>
+                                </div>
+
+                                <!-- P12 (ANTES 11) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">11.
+                                        class="font-bold text-slate-800 mb-2 block">12.
                                         Carga académica registrada este
                                         semestre:</label>
                                         <label
@@ -355,21 +427,21 @@
                                         class="survey-input"
                                         placeholder="Número de materias"></div>
 
-                                <!-- NUEVA P12: MATERIAS APROBADAS -->
+                                <!-- P13 (ANTES 12) -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">12. ¿Cuántas materias has aprobado en total en todo tu recorrido académico? (coloca un número)</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has aprobado en total en todo tu recorrido académico? (coloca un número)</label>
                                     <input type="number" name="materias_aprobadas" class="survey-input" placeholder="Ej: 25">
                                 </div>
 
-                                <!-- NUEVA P13: MATERIAS REPROBADAS -->
+                                <!-- P14 (ANTES 13) -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has reprobado? (coloca un número)</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">14. ¿Cuántas materias has reprobado? (coloca un número)</label>
                                     <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2">
                                 </div>
 
-                                <!-- NUEVA P14: REPETIDO MATERIA (TAG INPUT) -->
+                                <!-- P15 (ANTES 14) - Repetido Materia -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">14. ¿Has repetido alguna materia por tercera vez o más?</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">15. ¿Has repetido alguna materia por tercera vez o más?</label>
                                     <div class="flex items-center gap-4 mb-3">
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="Sí" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.remove('hidden')"> Sí</label>
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="No" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.add('hidden')"> No</label>
@@ -379,59 +451,94 @@
                                         <p class="text-xs text-slate-500 mb-2">Busca y selecciona las materias.</p>
                                         
                                         <!-- Container de Tags -->
-                                        <div id="tags-container-q14" class="flex flex-wrap gap-2 mb-2"></div>
+                                        <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
                                         
                                         <!-- Wrapper relativo para el input y el dropdown -->
                                         <div class="relative">
                                             <input type="text" 
-                                                   id="input-q14"
+                                                   id="input-q15"
                                                    class="survey-input text-sm w-full" 
                                                    placeholder="Escribe para buscar..."
                                                    autocomplete="off">
                                             
                                             <!-- Dropdown Custom -->
-                                            <ul id="dropdown-q14" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                            <ul id="dropdown-q15" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
                                                 <!-- Opciones se llenan dinámicamente js -->
                                             </ul>
                                         </div>
-                                        <p id="error-q14" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+                                        <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
                                         
                                         <!-- Input Oculto Real (El que se envía) -->
-                                        <input type="hidden" name="materias_repetidas_nombres" id="hidden-q14">
+                                        <input type="hidden" name="materias_repetidas_nombres" id="hidden-q15">
                                     </div>
                                 </div>
 
-                                <!-- NUEVA P15: MATERIAS DIFICULTAD (TAG INPUT) -->
+                                <!-- P16 (ANTES 15) - Materias Dificultad -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">15. ¿En qué materias has tenido más dificultad?</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">16. ¿En qué materias has tenido más dificultad?</label>
                                     <label class="text-slate-600 mb-1 block text-sm">Busca y selecciona las materias.</label>
                                     
                                     <!-- Container de Tags -->
-                                    <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
+                                    <div id="tags-container-q16" class="flex flex-wrap gap-2 mb-2"></div>
                                     
                                     <!-- Wrapper relativo para el input y el dropdown -->
                                     <div class="relative">
                                         <input type="text" 
-                                               id="input-q15"
+                                               id="input-q16"
                                                class="survey-input text-sm w-full" 
                                                placeholder="Escribe para buscar..."
                                                autocomplete="off">
                                         
                                         <!-- Dropdown Custom -->
-                                        <ul id="dropdown-q15" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                        <ul id="dropdown-q16" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
                                             <!-- Opciones se llenan dinámicamente js -->
                                         </ul>
                                     </div>
-                                    <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+                                    <p id="error-q16" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
                                     
                                     <!-- Input Oculto Real (El que se envía) -->
-                                    <input type="hidden" name="materias_dificultad" id="hidden-q15">
+                                    <input type="hidden" name="materias_dificultad" id="hidden-q16">
+                                </div>
+
+                                <!-- NUEVA P17: MATERIAS VERANO -->
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <label class="font-bold text-slate-800 mb-3 block">17. MATERIAS RELACIONADAS CON los cursos de verano y la nivelación para la transición</label>
+                                    
+                                    <div class="mb-5">
+                                        <p class="text-sm text-blue-900 font-bold mb-2 border-b border-blue-200 pb-1">Marca solo las que YA aprobaste <span class="font-normal text-slate-600 text-xs">(Si no la cursaste o la reprobaste, deja en blanco)</span>:</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Delito y Sociedad" class="accent-blue-900"> Delito y Sociedad</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicoanálisis I" class="accent-blue-900"> Psicoanálisis I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Terapia Rogeriana / Humanista" class="accent-blue-900"> Terapia Rogeriana / Humanista</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicología Cognitiva I" class="accent-blue-900"> Psicología Cognitiva I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicología Cognitiva II" class="accent-blue-900"> Psicología Cognitiva II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicopatología (I o II)" class="accent-blue-900"> Psicopatología (I o II)</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Teorías y Sistemas I" class="accent-blue-900"> Teorías y Sistemas I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Ética II" class="accent-blue-900"> Ética II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Técnicas Recreativas / Dinámica de Grupo" class="accent-blue-900"> Técnicas Recreativas / Dinámica de Grupo</label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm text-red-800 font-bold mb-2 border-b border-red-200 pb-1">Si reprobaste alguna de estas, selecciona o selecciónalas acá:</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Delito y Sociedad" class="accent-red-700"> Delito y Sociedad</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicoanálisis I" class="accent-red-700"> Psicoanálisis I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Terapia Rogeriana / Humanista" class="accent-red-700"> Terapia Rogeriana / Humanista</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicología Cognitiva I" class="accent-red-700"> Psicología Cognitiva I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicología Cognitiva II" class="accent-red-700"> Psicología Cognitiva II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicopatología (I o II)" class="accent-red-700"> Psicopatología (I o II)</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Teorías y Sistemas I" class="accent-red-700"> Teorías y Sistemas I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Ética II" class="accent-red-700"> Ética II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Técnicas Recreativas / Dinámica de Grupo" class="accent-red-700"> Técnicas Recreativas / Dinámica de Grupo</label>
+                                        </div>
+                                    </div>
                                 </div>
                                 
-                                <!-- P16 (ANTES 9) -->
+                                <!-- P18 (ANTES 17) -->
                                 <div>
                                     <label
-                                        class="font-bold text-slate-800 mb-2 block">16.
+                                        class="font-bold text-slate-800 mb-2 block">18.
                                         ¿Trabajas mientras estudias?</label>
                                         <label
                                         class="text-slate-800 mb-2 block">(Solo puede escoger Sí o No, no ambas)</label>
@@ -446,9 +553,9 @@
                                                 value="No">
                                             No</label></div></div>
                                 
-                                <!-- P17 (ANTES 10) -->
+                                <!-- P19 (ANTES 18) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">17.
+                                        class="font-bold text-slate-800 mb-2 block">19.
                                         ¿Cuántas horas al día puedes dedicar
                                         realmente al estudio?</label>
                                         <label
@@ -458,9 +565,9 @@
                                         type="number" name="horas_estudio"
                                         required class="survey-input"></div>
                                 
-                                <!-- P18 (ANTES 11) -->
+                                <!-- P20 (ANTES 19) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">18.
+                                        class="font-bold text-slate-800 mb-2 block">20.
                                         Estado general de avance
                                         académico:</label>
                                     <div class="space-y-2">
@@ -493,105 +600,93 @@
             </div>
         </div>
 
-        <!-- ================= VISTA 2: MALLA INTERACTIVA ================= -->
-        <div id="section2-app-view"
-            class="hidden h-screen w-full flex flex-col fade-in relative overflow-hidden">
-            <header
-                class="bg-white border-b border-slate-200 shadow-sm z-10 p-3 shrink-0">
+    <!-- ================= VISTA 2: MALLA INTERACTIVA ================= -->
+    <div id="section2-app-view" class="hidden h-screen w-full flex flex-col fade-in relative overflow-hidden">
+        <header class="bg-white border-b border-slate-200 shadow-sm z-10 p-3 shrink-0">
+            <div class="max-w-[95%] mx-auto flex flex-col xl:flex-row justify-between items-center gap-3">
+                <div class="flex items-center justify-between w-full xl:w-auto">
+                    <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2 select-none">
+                        <img src="img/Encabezado.png" alt="Logo" class="h-10 w-auto object-contain">
+                        <span class="bg-red-900 text-white text-xs px-2 py-1 rounded shadow-sm shrink-0">PSI</span>
+                        <span class="truncate">Sección 2.- Avance
+                            Académico</span>
+                    </h1>
+                </div>
+                <!-- Controles -->
                 <div
-                    class="max-w-[95%] mx-auto flex flex-col xl:flex-row justify-between items-center gap-3">
-                    <div
-                        class="flex items-center justify-between w-full xl:w-auto">
-                        <h1
-                            class="text-lg font-bold text-slate-800 flex items-center gap-2 select-none">
-                            <img src="img/Encabezado.png" alt="Logo"
-                                class="h-10 w-auto object-contain">
-                            <span
-                                class="bg-red-900 text-white text-xs px-2 py-1 rounded shadow-sm shrink-0">PSI</span>
-                            <span class="truncate">Sección 2.- Avance
-                                Académico</span>
-                        </h1>
-                    </div>
-                    <!-- Controles -->
-                    <div
-                        class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar shadow-inner">
-                        <button onclick="setTool('aprobado')" id="btn-aprobado"
-                            class="tool-btn flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-medium text-xs whitespace-nowrap"><div
-                                class="w-2.5 h-2.5 rounded-full bg-green-600"></div>
-                            Aprobado</button>
-                        <!-- <button onclick="setTool('reprobado')"
+                    class="flex items-center gap-2 bg-slate-100 p-1 rounded-lg overflow-x-auto max-w-full no-scrollbar shadow-inner">
+                    <button onclick="setTool('aprobado')" id="btn-aprobado"
+                        class="tool-btn flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-medium text-xs whitespace-nowrap">
+                        <div class="w-2.5 h-2.5 rounded-full bg-green-600"></div>
+                        Aprobado
+                    </button>
+                    <!-- <button onclick="setTool('reprobado')"
                             id="btn-reprobado"
                             class="tool-btn flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-medium text-xs whitespace-nowrap"><div
                                 class="w-2.5 h-2.5 rounded-full bg-red-600"></div>
                             Reprobado</button> -->
-                        <!-- <button onclick="setTool('levantamiento')"
+                    <!-- <button onclick="setTool('levantamiento')"
                             id="btn-levantamiento"
                             class="tool-btn flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-medium text-xs whitespace-nowrap"><div
                                 class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
                             Levantamiento</button> -->
-                        <button onclick="setTool('pendiente')"
-                            id="btn-pendiente"
-                            class="tool-btn flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-medium text-xs whitespace-nowrap"><div
-                                class="w-2.5 h-2.5 rounded-full border border-slate-400"></div>
-                            Limpiar</button>
-                    </div>
-
-                    <div
-                        class="flex items-center gap-4 w-full xl:w-auto justify-end">
-                        <div class="flex flex-col items-end min-w-[120px]">
-                            <div
-                                class="text-xs text-slate-500 whitespace-nowrap flex justify-between w-full mb-1">
-                                <span>Avance Global</span>
-                                <span id="progress-text"
-                                    class="font-bold text-blue-900">0%</span>
-                            </div>
-                            <div
-                                class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                <div id="progress-bar"
-                                    class="h-full bg-blue-900 w-0 rounded-full"></div>
-                            </div>
-                        </div>
-                        <!-- Botón Reset Desktop -->
-                        <button onclick="confirmReset()"
-                            class="hidden xl:flex items-center gap-1 text-slate-400 hover:text-red-800 text-xs transition-colors px-2 py-1 hover:bg-red-50 rounded"
-                            title="Borrar todo el progreso">
-                            <i class="fas fa-trash-alt"></i> Reset
-                        </button>
-                    </div>
+                    <button onclick="setTool('pendiente')" id="btn-pendiente"
+                        class="tool-btn flex items-center gap-2 px-3 py-1.5 rounded-md transition-all font-medium text-xs whitespace-nowrap">
+                        <div class="w-2.5 h-2.5 rounded-full border border-slate-400"></div>
+                        Limpiar
+                    </button>
                 </div>
-            </header>
 
-            <main id="malla-container"
-                class="flex-1 w-full overflow-x-auto overflow-y-auto hide-scroll bg-slate-50 p-6 relative mb-16 cursor-grab active:cursor-grabbing">
-                <div class="min-w-max mx-auto space-y-8 pb-10">
-                    <div id="semesters-container" class="flex gap-4 pb-4"></div>
-                    <div class="border-t-2 border-slate-200 pt-6 mt-4">
-                        <div class="flex flex-col gap-4 pl-0 md:pl-4">
-                            <div class="flex gap-3 items-center"><div
-                                    class="w-24 text-right text-xs font-bold text-slate-400 uppercase mr-2">Electivas</div><div
-                                    id="electivas-row"
-                                    class="flex gap-3"></div></div>
-                            <div class="flex gap-3 items-center"><div
-                                    class="w-24 text-right text-xs font-bold text-slate-400 uppercase mr-2">Talleres</div><div
-                                    id="talleres-row"
-                                    class="flex gap-3"></div></div>
+                <div class="flex items-center gap-4 w-full xl:w-auto justify-end">
+                    <div class="flex flex-col items-end min-w-[120px]">
+                        <div class="text-xs text-slate-500 whitespace-nowrap flex justify-between w-full mb-1">
+                            <span>Avance Global</span>
+                            <span id="progress-text" class="font-bold text-blue-900">0%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                            <div id="progress-bar" class="h-full bg-blue-900 w-0 rounded-full"></div>
                         </div>
                     </div>
+                    <!-- Botón Reset Desktop -->
+                    <button onclick="confirmReset()"
+                        class="hidden xl:flex items-center gap-1 text-slate-400 hover:text-red-800 text-xs transition-colors px-2 py-1 hover:bg-red-50 rounded"
+                        title="Borrar todo el progreso">
+                        <i class="fas fa-trash-alt"></i> Reset
+                    </button>
                 </div>
-            </main>
-
-            <!-- Botón Flotante para Continuar -->
-            <div
-                class="absolute bottom-0 left-0 right-0 p-12 bg-white/90 backdrop-blur border-t border-slate-200 flex justify-center z-20">
-                <button onclick="goToSection2Q10()"
-                    class="bg-red-900 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-red-800 transition transform hover:scale-105 flex items-center gap-2 animate-bounce">
-                    Confirmar Avance y Continuar <i
-                        class="fas fa-check-circle"></i>
-                </button>
             </div>
-        </div>
+        </header>
 
-        <!-- ================= VISTA 3: PREGUNTA 19 (ANTES 12 - CIERRE SECCIÓN 2) ================= -->
+        <main id="malla-container"
+            class="flex-1 w-full overflow-x-auto overflow-y-auto hide-scroll bg-slate-50 p-6 relative mb-16 cursor-grab active:cursor-grabbing">
+            <div class="min-w-max mx-auto space-y-8 pb-10">
+                <div id="semesters-container" class="flex gap-4 pb-4"></div>
+                <div class="border-t-2 border-slate-200 pt-6 mt-4">
+                    <div class="flex flex-col gap-4 pl-0 md:pl-4">
+                        <div class="flex gap-3 items-center">
+                            <div class="w-24 text-right text-xs font-bold text-slate-400 uppercase mr-2">Electivas</div>
+                            <div id="electivas-row" class="flex gap-3"></div>
+                        </div>
+                        <div class="flex gap-3 items-center">
+                            <div class="w-24 text-right text-xs font-bold text-slate-400 uppercase mr-2">Talleres</div>
+                            <div id="talleres-row" class="flex gap-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Botón Flotante para Continuar -->
+        <div
+            class="absolute bottom-0 left-0 right-0 p-12 bg-white/90 backdrop-blur border-t border-slate-200 flex justify-center z-20">
+            <button onclick="goToSection2Q10()"
+                class="bg-red-900 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-red-800 transition transform hover:scale-105 flex items-center gap-2 animate-bounce">
+                Confirmar Avance y Continuar <i class="fas fa-check-circle"></i>
+            </button>
+        </div>
+    </div>
+
+        <!-- ================= VISTA 3: PREGUNTA 21 (ANTES 20) ================= -->
         <div id="section2-q10-view"
             class="hidden view-container fixed inset-0 z-[100] bg-slate-100 overflow-y-auto">
             <div
@@ -606,7 +701,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">19.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
                                     ¿Estas materias afectan tu avance hacia el
                                     nuevo currículo?</label>
                                 <div class="space-y-3">
@@ -666,10 +761,10 @@
                     <div class="p-8">
                         <form id="form-section3" onsubmit="goToSection4(event)"
                             class="space-y-8">
-                            <!-- P20 (ANTES 13) -->
+                            <!-- P22 (ANTES 21) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">20.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
                                     ¿Cómo te sientes respecto a la
                                     implementación del nuevo currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -715,10 +810,10 @@
                                             plan.</div></label>
                                 </div>
                             </div>
-                            <!-- P21 (ANTES 14) -->
+                            <!-- P23 (ANTES 22) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">23.
                                     ¿Qué crees que aportará el nuevo
                                     currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -791,10 +886,10 @@
                     <div class="p-8">
                         <form id="form-section4" onsubmit="goToSection5(event)"
                             class="space-y-8">
-                            <!-- P22 (ANTES 15) -->
+                            <!-- P24 (ANTES 23) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">24.
                                     Medidas que consideras útiles para tu avance
                                     (selección múltiple):</label>
                                 <div class="space-y-2 text-sm md:text-base"
@@ -846,10 +941,10 @@
                                     </label>
                                 </div>
                             </div>
-                            <!-- P23 (ANTES 16) -->
+                            <!-- P25 (ANTES 24) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">23.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">25.
                                     De esas medidas que consideras útiles para
                                     tu avance cual sería Prioridad absoluta
                                     (elige solo una):</label>
@@ -859,7 +954,7 @@
                                 <div id="q14-options"
                                     class="space-y-2 text-sm md:text-base bg-slate-50 p-4 rounded-lg border border-slate-200 min-h-[50px]">
                                     <p class="text-slate-400 italic">Selecciona
-                                        opciones en la pregunta 22 primero.</p>
+                                        opciones en la pregunta 24 primero.</p>
                                 </div>
                             </div>
                             <div class="flex justify-end pt-4"><button
@@ -888,7 +983,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">24.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">26.
                                     Propuesta para mejorar la transición
                                     (respuesta abierta):</label>
                                 <textarea name="propuesta" required
@@ -906,43 +1001,39 @@
             </div>
         </div>
 
-        <!-- ================= VISTA 7: GRACIAS ================= -->
-        <div id="thank-you-view"
-            class="hidden view-container fixed inset-0 z-[100] bg-slate-900/90 flex items-center justify-center">
-            <div
-                class="bg-white p-10 rounded-2xl shadow-2xl text-center max-w-md mx-4 fade-in transform scale-100">
-                <!-- Spinner -->
-                <div id="loading-spinner"
-                    class="hidden flex flex-col items-center">
-                    <i
-                        class="fas fa-circle-notch fa-spin text-4xl text-blue-900 mb-4"></i>
-                    <p class="text-slate-600 font-medium">Enviando
-                        respuestas...</p>
-                </div>
-                <!-- Éxito -->
-                <div id="success-msg" class="hidden">
-                    <div
-                        class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"><i
-                            class="fas fa-check text-4xl text-green-600"></i></div>
-                    <h2 class="text-2xl font-bold text-slate-800 mb-2">¡Muchas
-                        Gracias!</h2>
-                    <p class="text-slate-600 mb-6">Tus respuestas han sido
-                        registradas exitosamente. Tu opinión es valiosa para la
-                        carrera de Psicología.</p>
-                    <div class="flex flex-col gap-3 mb-4">
-                        <button onclick="descargarReportePDF()" 
-                            class="bg-blue-900 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center">
-                            <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
-                        </button>
-                        <button onclick="location.reload()"
-                            class="text-blue-900 font-semibold hover:underline">Volver al inicio</button>
-                    </div>
+    <!-- ================= VISTA 7: GRACIAS ================= -->
+    <div id="thank-you-view"
+        class="hidden view-container fixed inset-0 z-[100] bg-slate-900/90 flex items-center justify-center">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl text-center max-w-md mx-4 fade-in transform scale-100">
+            <!-- Spinner -->
+            <div id="loading-spinner" class="hidden flex flex-col items-center">
+                <i class="fas fa-circle-notch fa-spin text-4xl text-blue-900 mb-4"></i>
+                <p class="text-slate-600 font-medium">Enviando
+                    respuestas...</p>
+            </div>
+            <!-- Éxito -->
+            <div id="success-msg" class="hidden">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"><i
+                        class="fas fa-check text-4xl text-green-600"></i></div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">¡Muchas
+                    Gracias!</h2>
+                <p class="text-slate-600 mb-6">Tus respuestas han sido
+                    registradas exitosamente. Tu opinión es valiosa para la
+                    carrera de Psicología.</p>
+                <div class="flex flex-col gap-3 mb-4">
+                    <button onclick="descargarReportePDF()"
+                        class="bg-blue-900 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center">
+                        <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
+                    </button>
+                    <button onclick="location.reload()" class="text-blue-900 font-semibold hover:underline">Volver al
+                        inicio</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modal Editar (Mismo de antes) -->
-        <!-- <div id="edit-modal"
+    <!-- Modal Editar (Mismo de antes) -->
+    <!-- <div id="edit-modal"
             class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center z-[150]">
             <div
                 class="bg-white p-6 rounded-xl shadow-2xl w-96 transform scale-95 transition-all"
@@ -960,59 +1051,96 @@
             </div>
         </div> -->
 
-        <!-- Modal Registro Duplicado -->
-        <div id="duplicate-registry-modal"
-            class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-[200] transition-opacity duration-300">
-            <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center transform scale-100 transition-all duration-300 border-4 border-red-500" id="duplicate-modal-content">
-                <h3 class="text-4xl font-bold text-red-600 mb-3">¡REGISTRO!</h3>
-                <p class="text-red-600 font-bold mb-5 text-xl">Ya Respondio</p>
-                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 my-6 text-left">
-                    <p class="text-base text-slate-700 mb-4"><span class="font-bold text-blue-900 text-lg">👤 Quien respondió:</span> <span id="duplicate-nombre" class="text-blue-900 font-semibold text-lg block mt-1 bg-blue-100 p-2 rounded uppercase">-</span></p>
-                    <p class="text-base text-slate-700"><span class="font-bold text-blue-900 text-lg">📋 Apellidos:</span> <span id="duplicate-apellidos" class="text-blue-900 font-semibold text-lg block mt-1 bg-blue-100 p-2 rounded uppercase">-</span></p>
-                </div>
-                <div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
-                    <p class="text-sm text-red-700 font-bold">⛔ No puedes completar esta encuesta porque el registro <span id="dup-reg-number" class="font-mono bg-red-100 px-2 py-1 rounded">___</span> ya respondio la encuesta.</p>
-                </div>
-                <p class="text-xs text-slate-600 mb-6 bg-yellow-50 p-3 rounded-lg border border-yellow-300 font-medium">📞 Si crees que es un error, contacta a administración.</p>
-                <div class="flex flex-col gap-2">
-                    <button onclick="descargarReportePDF()" 
-                        class="w-full bg-blue-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center text-sm">
-                        <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
-                    </button>
-                    <button onclick="closeDuplicateModal()" 
-                        class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-900 transition transform hover:scale-105 text-lg shadow-lg">
-                        Entendido
-                    </button>
-                </div>
+    <!-- Modal Registro Duplicado -->
+    <div id="duplicate-registry-modal"
+        class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-[200] transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center transform scale-100 transition-all duration-300 border-4 border-red-500"
+            id="duplicate-modal-content">
+            <h3 class="text-4xl font-bold text-red-600 mb-3">¡REGISTRO!</h3>
+            <p class="text-red-600 font-bold mb-5 text-xl">Ya Respondio</p>
+            <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 my-6 text-left">
+                <p class="text-base text-slate-700 mb-4"><span class="font-bold text-blue-900 text-lg">👤 Quien
+                        respondió:</span> <span id="duplicate-nombre"
+                        class="text-blue-900 font-semibold text-lg block mt-1 bg-blue-100 p-2 rounded uppercase">-</span>
+                </p>
+                <p class="text-base text-slate-700"><span class="font-bold text-blue-900 text-lg">📋 Apellidos:</span>
+                    <span id="duplicate-apellidos"
+                        class="text-blue-900 font-semibold text-lg block mt-1 bg-blue-100 p-2 rounded uppercase">-</span>
+                </p>
+            </div>
+            <div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
+                <p class="text-sm text-red-700 font-bold">⛔ No puedes completar esta encuesta porque el registro <span
+                        id="dup-reg-number" class="font-mono bg-red-100 px-2 py-1 rounded">___</span> ya respondio la
+                    encuesta.</p>
+            </div>
+            <p class="text-xs text-slate-600 mb-6 bg-yellow-50 p-3 rounded-lg border border-yellow-300 font-medium">📞
+                Si crees que es un error, contacta a administración.</p>
+            <div class="flex flex-col gap-2">
+                <button onclick="descargarReportePDF()"
+                    class="w-full bg-blue-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center text-sm">
+                    <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
+                </button>
+                <button onclick="closeDuplicateModal()"
+                    class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-900 transition transform hover:scale-105 text-lg shadow-lg">
+                    Entendido
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Modal Confirmar Reset -->
-        <div id="reset-modal"
-            class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center z-[150]">
-            <div class="bg-white p-6 rounded-xl shadow-2xl w-80 text-center">
-                <div
-                    class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl"><i
-                        class="fas fa-exclamation-triangle"></i></div>
-                <h3 class="text-lg font-bold text-slate-800 mb-2">¿Borrar
-                    todo?</h3>
-                <p class="text-sm text-slate-500 mb-6">Se perderá todo el
-                    progreso.</p>
-                <div class="flex gap-2 justify-center">
-                    <button onclick="closeResetModal()"
-                        class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg">Cancelar</button>
-                    <button onclick="performReset()"
-                        class="px-4 py-2 bg-red-600 text-white rounded-lg">Sí,
-                        borrar</button>
-                </div>
+    <!-- Modal Confirmar Reset -->
+    <div id="reset-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center z-[150]">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-80 text-center">
+            <div
+                class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fas fa-exclamation-triangle"></i></div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">¿Borrar
+                todo?</h3>
+            <p class="text-sm text-slate-500 mb-6">Se perderá todo el
+                progreso.</p>
+            <div class="flex gap-2 justify-center">
+                <button onclick="closeResetModal()"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg">Cancelar</button>
+                <button onclick="performReset()" class="px-4 py-2 bg-red-600 text-white rounded-lg">Sí,
+                    borrar</button>
             </div>
         </div>
-        
-        <!-- DATALIST PARA SUGERENCIAS -->
-        <datalist id="materias-list"></datalist>
+    </div>
 
-        <script src="script.js"></script>
-        
+    <!-- DATALIST PARA SUGERENCIAS -->
+    <datalist id="materias-list"></datalist>
 
-    </body>
+    <script src="script.js"></script>
+    <script>
+        function abrirModal() {
+            document.getElementById("modal").classList.remove("hidden");
+            document.getElementById("codigoInput").value = "";
+        }
+
+        function cerrarModal() {
+            document.getElementById("modal").classList.add("hidden");
+        }
+
+        async function verificarCodigo() {
+            const codigoIngresado = document.getElementById("codigoInput").value;
+
+            try {
+                const response = await fetch("codigo.txt");
+                const codigoCorrecto = (await response.text()).trim();
+
+                if (codigoIngresado === codigoCorrecto) {
+                    window.location.href = "360_Panel_Administración.html";
+                } else {
+                    alert("❌ Código incorrecto");
+                }
+            } catch (error) {
+                alert("⚠️ Error al verificar el código");
+                console.error(error);
+            }
+        }
+    </script>
+
+</body>
+
 </html>
