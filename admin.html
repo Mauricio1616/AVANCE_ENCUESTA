@@ -559,6 +559,7 @@
             // Nuevos Gráficos (Añadidos)
             if(document.getElementById('chart-ingreso')) renderChart('chart-ingreso', 'bar', countData('anio_ingreso'), 'Ingreso', '#14b8a6');
             if(document.getElementById('chart-modalidad')) renderChart('chart-modalidad', 'pie', countData('modalidad_ingreso'), 'Modalidad', null);
+            if(document.getElementById('chart-ppa')) renderChart('chart-ppa', 'bar', countData('ppa'), 'Estudiantes', '#8b5cf6'); // <--- NUEVO CHART PPA
             
             // Gráficos P14 y P15 (NUEVOS - Materias Repetidas y Dificultad)
             if(document.getElementById('chart-repetidas')) renderChart('chart-repetidas', 'bar', countCommaSeparated('materias_repetidas_nombres'), 'Veces', '#ef4444');
@@ -590,12 +591,14 @@
             // Nuevos campos P5-P7
             const anioIngreso = getField(student, 'anio_ingreso') || '-';
             const modalidadIngreso = getField(student, 'modalidad_ingreso') || '-';
+            const ppa = getField(student, 'ppa') || '-'; // <--- PPA
             const tiempoTerminar = getField(student, 'tiempo_terminar') || '-';
 
             const semestre = getField(student, 'semestre', 'Semestre');
             const carga = getField(student, 'carga_academica', 'carga') || '-';
             
             // Nuevos campos P12-P15
+
             const matAprob = getField(student, 'materias_aprobadas') || '-';
             const matReprob = getField(student, 'materias_reprobadas') || '-';
             const repitio = getField(student, 'repetido_materia') || '-';
@@ -630,15 +633,15 @@
                         
                         <div><span class="text-slate-500 font-bold block text-xs">P5. Año Ingreso</span> <span class="text-slate-900 font-medium text-blue-800">${anioIngreso}</span></div>
                         <div><span class="text-slate-500 font-bold block text-xs">P6. Modalidad Ingreso</span> <span class="text-slate-900">${modalidadIngreso}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P7. Tiempo Terminar</span> <span class="text-green-700 font-bold">${tiempoTerminar}</span></div>
                         
                         <div><span class="text-slate-500 font-bold block text-xs">P8. Celular</span> <span class="text-slate-900">${celular}</span></div>
                         <div class="col-span-2"><span class="text-slate-500 font-bold block text-xs">P9. Correo</span> <span class="text-slate-900 break-all">${correo}</span></div>
-                        
-                        <div><span class="text-slate-500 font-bold block text-xs">P7. Tiempo para terminar</span> <span class="text-green-700 font-bold">${tiempoTerminar}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P11. PPA</span> <span class="text-slate-900 font-bold text-purple-700">${ppa}</span></div>
                     </div>
                 </div>
 
-                <!-- BLOQUE 2: SITUACIÓN ACADÉMICA (P10-P18) -->
+                <!-- BLOQUE 2: SITUACIÓN ACADÉMICA (P10-P19) -->
                 <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
                     <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
                         <i class="fas fa-graduation-cap"></i> Situación Académica Detallada
@@ -648,32 +651,32 @@
                             <span class="text-slate-500 font-bold block text-xs mb-1">P10. Semestre(s) Actual(es)</span>
                             <div class="flex flex-wrap gap-1">${formatListAsBadges(semestre)}</div>
                         </div>
-                        <div><span class="text-slate-500 font-bold block text-xs">P11. Carga Académica</span> <span class="text-slate-900">${carga} materias</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P12. Carga Académica</span> <span class="text-slate-900">${carga} materias</span></div>
                         
-                        <div class="p-2 bg-green-50 rounded border border-green-100"><span class="text-green-800 font-bold block text-xs">P12. Materias Aprobadas</span> <span class="text-slate-900 text-lg font-bold">${matAprob}</span></div>
-                        <div class="p-2 bg-red-50 rounded border border-red-100"><span class="text-red-800 font-bold block text-xs">P13. Materias Reprobadas</span> <span class="text-slate-900 text-lg font-bold">${matReprob}</span></div>
+                        <div class="p-2 bg-green-50 rounded border border-green-100"><span class="text-green-800 font-bold block text-xs">P13. Materias Aprobadas</span> <span class="text-slate-900 text-lg font-bold">${matAprob}</span></div>
+                        <div class="p-2 bg-red-50 rounded border border-red-100"><span class="text-red-800 font-bold block text-xs">P14. Materias Reprobadas</span> <span class="text-slate-900 text-lg font-bold">${matReprob}</span></div>
                         
                         <div class="md:col-span-2">
-                            <span class="text-slate-500 font-bold block text-xs">P14. ¿Repitió Materia (3ra vez+)?</span> 
+                            <span class="text-slate-500 font-bold block text-xs">P15. ¿Repitió Materia (3ra vez+)?</span> 
                             <span class="text-slate-900 font-medium">${repitio}</span>
                             ${repitio === 'Sí' ? `<span class="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded border border-red-200">Materia(s): ${repitioCual}</span>` : ''}
                         </div>
                         
-                        <div class="md:col-span-2"><span class="text-slate-500 font-bold block text-xs">P15. Materias con Dificultad</span> <span class="text-slate-900 italic">${matDificultad}</span></div>
+                        <div class="md:col-span-2"><span class="text-slate-500 font-bold block text-xs">P16. Materias con Dificultad</span> <span class="text-slate-900 italic">${matDificultad}</span></div>
 
-                        <div><span class="text-slate-500 font-bold block text-xs">P16. ¿Trabaja?</span> <span class="text-slate-900">${trabaja}</span></div>
-                        <div><span class="text-slate-500 font-bold block text-xs">P17. Horas Estudio/Día</span> <span class="text-slate-900">${horas} hrs</span></div>
-                        <div><span class="text-slate-500 font-bold block text-xs">P18. Autopercepción Avance</span> <span class="font-bold text-blue-700">${avance}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P17. ¿Trabaja?</span> <span class="text-slate-900">${trabaja}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P18. Horas Estudio/Día</span> <span class="text-slate-900">${horas} hrs</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P19. Autopercepción Avance</span> <span class="font-bold text-blue-700">${avance}</span></div>
                     </div>
                 </div>
 
-                <!-- BLOQUE 3: MALLA Y AFECTACIÓN (P19) -->
+                <!-- BLOQUE 3: MALLA Y AFECTACIÓN (P20) -->
                 <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
                     <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
-                        <i class="fas fa-th"></i> Malla y Afectación (P19)
+                        <i class="fas fa-th"></i> Malla y Afectación (P20)
                     </h3>
                     <div class="mb-4">
-                        <span class="text-slate-500 font-bold block text-xs mb-1">P19. ¿Afectación por nuevo currículo?</span>
+                        <span class="text-slate-500 font-bold block text-xs mb-1">P20. ¿Afectación por nuevo currículo?</span>
                         <div class="flex items-center gap-2">
                             <span class="text-lg font-bold text-slate-800">${p10_val}</span>
                             ${p10_exp ? `<span class="bg-yellow-50 text-yellow-800 text-xs px-2 py-1 rounded border border-yellow-100 italic">"${p10_exp}"</span>` : ''}
@@ -685,44 +688,44 @@
                     </div>
                 </div>
 
-                <!-- BLOQUE 4: EXPECTATIVAS (P20-P21) -->
+                <!-- BLOQUE 4: EXPECTATIVAS (P21-P22) -->
                 <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
                     <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
-                        <i class="fas fa-lightbulb"></i> Expectativas (P20 - P21)
+                        <i class="fas fa-lightbulb"></i> Expectativas (P21 - P22)
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         <div>
-                            <span class="text-slate-500 font-bold block text-xs">P20. Sentimiento</span>
+                            <span class="text-slate-500 font-bold block text-xs">P21. Sentimiento</span>
                             <span class="text-slate-900">${p11_val}</span>
                         </div>
                         <div>
-                            <span class="text-slate-500 font-bold block text-xs">P21. Aporte Esperado</span>
+                            <span class="text-slate-500 font-bold block text-xs">P22. Aporte Esperado</span>
                             <span class="text-slate-900">${p12_val}</span>
                             ${p12_otra ? `<div class="text-xs text-slate-500 italic mt-1">Detalle: "${p12_otra}"</div>` : ''}
                         </div>
                     </div>
                 </div>
 
-                <!-- BLOQUE 5: MEDIDAS Y PRIORIDAD (P22-P23) -->
+                <!-- BLOQUE 5: MEDIDAS Y PRIORIDAD (P23-P24) -->
                 <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
                     <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
-                        <i class="fas fa-list-check"></i> Medidas y Prioridad (P22 - P23)
+                        <i class="fas fa-list-check"></i> Medidas y Prioridad (P23 - P24)
                     </h3>
                     <div class="mb-4">
-                        <span class="text-slate-500 font-bold block text-xs mb-1">P22. Medidas Solicitadas</span>
+                        <span class="text-slate-500 font-bold block text-xs mb-1">P23. Medidas Solicitadas</span>
                         <div class="flex flex-wrap gap-1">${formatListAsBadges(p13_val)}</div>
                         ${p13_otros ? `<div class="text-xs text-slate-500 italic mt-1 ml-1">Otro: "${p13_otros}"</div>` : ''}
                     </div>
                     <div>
-                        <span class="text-slate-500 font-bold block text-xs mb-1">P23. Prioridad Absoluta</span>
+                        <span class="text-slate-500 font-bold block text-xs mb-1">P24. Prioridad Absoluta</span>
                         <span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-bold border border-purple-100 inline-block">${prioridad}</span>
                     </div>
                 </div>
 
-                <!-- BLOQUE 6: COMENTARIOS FINALES (P24) -->
+                <!-- BLOQUE 6: COMENTARIOS FINALES (P25) -->
                 <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm mb-6">
                     <h3 class="text-yellow-800 font-bold text-sm uppercase border-b border-yellow-200 pb-2 mb-3 flex items-center gap-2">
-                        <i class="fas fa-comment-dots"></i> P24. Comentarios Finales
+                        <i class="fas fa-comment-dots"></i> P25. Comentarios Finales
                     </h3>
                     <p class="text-slate-800 text-sm italic leading-relaxed">"${propuesta}"</p>
                 </div>
@@ -895,59 +898,59 @@
                              <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P10. Estudiantes Cursando por Semestre</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-semestre"></canvas></div>
                         </div>
-                        <!-- NUEVO: Frecuencia de Materias Inscritas (P11 Histograma) -->
+                        <!-- NUEVO: Frecuencia de Materias Inscritas (P12 Histograma) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">Frecuencia de Materias Inscritas (Histograma P11)</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">Frecuencia de Materias Inscritas (Histograma P12)</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-promedio-carga"></canvas></div>
                         </div>
-                        <!-- P14. Repetidas (NUEVO P14) -->
+                        <!-- P15. Repetidas (NUEVO P15) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P14. Top Materias Repetidas (3ra vez+)</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P15. Top Materias Repetidas (3ra vez+)</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-repetidas"></canvas></div>
                         </div>
-                        <!-- P15. Dificultad (NUEVO P15) -->
+                        <!-- P16. Dificultad (NUEVO P16) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P15. Top Materias con Mayor Dificultad</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P16. Top Materias con Mayor Dificultad</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-dificultad"></canvas></div>
                         </div>
-                        <!-- P16. Trabaja (ANTES P9) -->
+                        <!-- P17. Trabaja (ANTES P16) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P16. Situación Laboral</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P17. Situación Laboral</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-trabaja"></canvas></div>
                         </div>
-                        <!-- P17. Horas Estudio (ANTES P10) -->
+                        <!-- P18. Horas Estudio (ANTES P17) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P17. Horas Estudio/Día</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P18. Horas Estudio/Día</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-horas"></canvas></div>
                         </div>
-                        <!-- P18. Avance (ANTES P11) -->
+                        <!-- P19. Avance (ANTES P18) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P18. Autopercepción Avance</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P19. Autopercepción Avance</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-avance"></canvas></div>
                         </div>
-                        <!-- P19. Afectación (ANTES P12) -->
+                        <!-- P20. Afectación (ANTES P19) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P19. ¿Afectación por Malla?</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P20. ¿Afectación por Malla?</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-p10"></canvas></div>
                         </div>
-                        <!-- P20. Sentimiento (ANTES P13) -->
+                        <!-- P21. Sentimiento (ANTES P20) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P20. Sentimiento</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P21. Sentimiento</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-sentiment"></canvas></div>
                         </div>
-                        <!-- P21. Aporte (ANTES P14) -->
+                        <!-- P22. Aporte (ANTES P21) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P21. Aporte Esperado</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P22. Aporte Esperado</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-p12"></canvas></div>
                         </div>
-                        <!-- P22. Medidas (ANTES P15) -->
+                        <!-- P23. Medidas (ANTES P22) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P22. Medidas de Apoyo</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P23. Medidas de Apoyo</h4>
                              <div class="h-48 md:h-60 relative"><canvas id="chart-measures"></canvas></div>
                         </div>
-                        <!-- P23. Prioridad (ANTES P16) -->
+                        <!-- P24. Prioridad (ANTES P23) -->
                         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P23. Prioridad Principal</h4>
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P24. Prioridad Principal</h4>
                              <div class="h-64 relative"><canvas id="chart-priority"></canvas></div>
                         </div>
                     </div>

@@ -57,17 +57,23 @@ function goToSection2(e) {
         // P10 (Antes 7)
         semestre: semestresSeleccionados,
 
-        // P11 (Antes 8)
+        // P10 (Antes 7)
+        semestre: semestresSeleccionados,
+
+        // P11 (NUEVO PPA)
+        ppa: formData1.get('ppa') || '',
+
+        // P12 (Antes P11)
         carga_academica: formData1.get('carga_academica') || '',
 
-        // P12-P15 (Nuevos)
+        // P13-P16 (Renumerados)
         materias_aprobadas: formData1.get('materias_aprobadas') || '',
         materias_reprobadas: formData1.get('materias_reprobadas') || '',
         repetido_materia: repetidoMateria || '',
         materias_repetidas_nombres: materiasRepetidasNombres,
         materias_dificultad: formData1.get('materias_dificultad') || '',
 
-        // P16-P18 (Antes 9-11)
+        // P17-P19 (Renumerados)
         trabaja: formData1.get('trabaja') || '',
         horas_estudio: formData1.get('horas_estudio') || '',
         avance: formData1.get('avance') || ''
@@ -239,6 +245,8 @@ if (q13Checkboxes.length > 0) {
     });
 }
 
+
+
 function updateQ14Options() {
     const container = document.getElementById('q14-options');
     if (!container) return;
@@ -277,7 +285,7 @@ function updateQ14Options() {
     });
 
     if (!hasSelection) {
-        container.innerHTML = '<p class="text-slate-400 italic text-sm">Selecciona opciones en la pregunta 22 primero.</p>';
+        container.innerHTML = '<p class="text-slate-400 italic text-sm">Selecciona opciones en la pregunta 23 primero.</p>';
     }
 }
 
@@ -361,8 +369,9 @@ function init() {
     // Poblar datalist con materias
     populateMateriasList().then(() => {
         // Inicializar Multi-Selects después de cargar materias (incluyendo fetch async)
-        setupMultiSelect('input-q14', 'dropdown-q14', 'tags-container-q14', 'hidden-q14', 'error-q14');
+        // IDs actualizados a Q15 (Rept) y Q16 (Dif)
         setupMultiSelect('input-q15', 'dropdown-q15', 'tags-container-q15', 'hidden-q15', 'error-q15');
+        setupMultiSelect('input-q16', 'dropdown-q16', 'tags-container-q16', 'hidden-q16', 'error-q16');
     });
 }
 
@@ -1285,6 +1294,7 @@ function capturarTodosDatos() {
             celular: formData1.get('celular') || '',
             correo: formData1.get('correo') || '',
             semestre: semestresSeleccionados,
+            ppa: formData1.get('ppa') || '',
             carga_academica: formData1.get('carga_academica') || '',
             materias_aprobadas: formData1.get('materias_aprobadas') || '',
             materias_reprobadas: formData1.get('materias_reprobadas') || '',
@@ -1395,6 +1405,7 @@ function descargarReportePDF() {
     const anioIngreso = data.anio_ingreso || '-';
     const modalidadIngreso = data.modalidad_ingreso || '-';
     const tiempoTerminar = data.tiempo_terminar || '-';
+    const ppa = data.ppa || '-';
     const carga = data.carga_academica || '-';
     const matAprob = data.materias_aprobadas || '-';
     const matReprob = data.materias_reprobadas || '-';
@@ -1700,7 +1711,11 @@ function descargarReportePDF() {
         <!-- Section 2: Historial -->
         <div class="section keep-together">
             <div class="section-header"><span>📊</span> Historial y Rendimiento</div>
-             <div class="grid-3">
+            <div class="grid-3">
+                <div class="field-box">
+                    <div class="label">PPA Aprox.</div>
+                    <div class="value" style="color:#6b21a8; font-weight:700;">${ppa}</div>
+                </div>
                 <div class="field-box">
                     <div class="label">Mat. Aprobadas</div>
                     <div class="value" style="color:#059669; font-weight:700;">${matAprob}</div>
@@ -1709,11 +1724,12 @@ function descargarReportePDF() {
                     <div class="label">Mat. Reprobadas</div>
                     <div class="value" style="color:#dc2626; font-weight:700;">${matReprob}</div>
                 </div>
+            </div>
+            <div class="grid-2">
                 <div class="field-box">
                     <div class="label">Tiempo Estimado Finalizacón</div>
                     <div class="value">${tiempoTerminar}</div>
                 </div>
-            </div>
             <div class="grid-2">
                 <div class="field-box">
                     <div class="label">Repitencia (>3 veces)</div>

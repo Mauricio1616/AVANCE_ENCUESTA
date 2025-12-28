@@ -342,9 +342,20 @@
                                     </div>
                                 </div>
                                 
-                                <!-- P11 (ANTES 8) -->
+                                <!-- P11 (NUEVA PPA) -->
+                                <div>
+                                    <label class="font-bold text-slate-800 mb-2 block">11. Promedio Ponderado Anual (PPA) (aprox.):</label>
+                                    <div class="flex flex-wrap gap-4 text-sm">
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="50-59" class="accent-blue-900" required> 50–59</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="60-69" class="accent-blue-900"> 60–69</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="70-79" class="accent-blue-900"> 70–79</label>
+                                        <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input type="radio" name="ppa" value="80+" class="accent-blue-900"> ≥80</label>
+                                    </div>
+                                </div>
+
+                                <!-- P12 (ANTES 11) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">11.
+                                        class="font-bold text-slate-800 mb-2 block">12.
                                         Carga académica registrada este
                                         semestre:</label>
                                         <label
@@ -355,21 +366,21 @@
                                         class="survey-input"
                                         placeholder="Número de materias"></div>
 
-                                <!-- NUEVA P12: MATERIAS APROBADAS -->
+                                <!-- P13 (ANTES 12) -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">12. ¿Cuántas materias has aprobado en total en todo tu recorrido académico? (coloca un número)</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has aprobado en total en todo tu recorrido académico? (coloca un número)</label>
                                     <input type="number" name="materias_aprobadas" class="survey-input" placeholder="Ej: 25">
                                 </div>
 
-                                <!-- NUEVA P13: MATERIAS REPROBADAS -->
+                                <!-- P14 (ANTES 13) -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has reprobado? (coloca un número)</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">14. ¿Cuántas materias has reprobado? (coloca un número)</label>
                                     <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2">
                                 </div>
 
-                                <!-- NUEVA P14: REPETIDO MATERIA (TAG INPUT) -->
+                                <!-- P15 (ANTES 14) - Repetido Materia -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">14. ¿Has repetido alguna materia por tercera vez o más?</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">15. ¿Has repetido alguna materia por tercera vez o más?</label>
                                     <div class="flex items-center gap-4 mb-3">
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="Sí" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.remove('hidden')"> Sí</label>
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="No" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.add('hidden')"> No</label>
@@ -379,59 +390,59 @@
                                         <p class="text-xs text-slate-500 mb-2">Busca y selecciona las materias.</p>
                                         
                                         <!-- Container de Tags -->
-                                        <div id="tags-container-q14" class="flex flex-wrap gap-2 mb-2"></div>
+                                        <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
                                         
                                         <!-- Wrapper relativo para el input y el dropdown -->
                                         <div class="relative">
                                             <input type="text" 
-                                                   id="input-q14"
+                                                   id="input-q15"
                                                    class="survey-input text-sm w-full" 
                                                    placeholder="Escribe para buscar..."
                                                    autocomplete="off">
                                             
                                             <!-- Dropdown Custom -->
-                                            <ul id="dropdown-q14" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                            <ul id="dropdown-q15" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
                                                 <!-- Opciones se llenan dinámicamente js -->
                                             </ul>
                                         </div>
-                                        <p id="error-q14" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+                                        <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
                                         
                                         <!-- Input Oculto Real (El que se envía) -->
-                                        <input type="hidden" name="materias_repetidas_nombres" id="hidden-q14">
+                                        <input type="hidden" name="materias_repetidas_nombres" id="hidden-q15">
                                     </div>
                                 </div>
 
-                                <!-- NUEVA P15: MATERIAS DIFICULTAD (TAG INPUT) -->
+                                <!-- P16 (ANTES 15) - Materias Dificultad -->
                                 <div>
-                                    <label class="font-bold text-slate-800 mb-2 block">15. ¿En qué materias has tenido más dificultad?</label>
+                                    <label class="font-bold text-slate-800 mb-2 block">16. ¿En qué materias has tenido más dificultad?</label>
                                     <label class="text-slate-600 mb-1 block text-sm">Busca y selecciona las materias.</label>
                                     
                                     <!-- Container de Tags -->
-                                    <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
+                                    <div id="tags-container-q16" class="flex flex-wrap gap-2 mb-2"></div>
                                     
                                     <!-- Wrapper relativo para el input y el dropdown -->
                                     <div class="relative">
                                         <input type="text" 
-                                               id="input-q15"
+                                               id="input-q16"
                                                class="survey-input text-sm w-full" 
                                                placeholder="Escribe para buscar..."
                                                autocomplete="off">
                                         
                                         <!-- Dropdown Custom -->
-                                        <ul id="dropdown-q15" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                        <ul id="dropdown-q16" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
                                             <!-- Opciones se llenan dinámicamente js -->
                                         </ul>
                                     </div>
-                                    <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+                                    <p id="error-q16" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
                                     
                                     <!-- Input Oculto Real (El que se envía) -->
-                                    <input type="hidden" name="materias_dificultad" id="hidden-q15">
+                                    <input type="hidden" name="materias_dificultad" id="hidden-q16">
                                 </div>
                                 
-                                <!-- P16 (ANTES 9) -->
+                                <!-- P17 (ANTES 16) -->
                                 <div>
                                     <label
-                                        class="font-bold text-slate-800 mb-2 block">16.
+                                        class="font-bold text-slate-800 mb-2 block">17.
                                         ¿Trabajas mientras estudias?</label>
                                         <label
                                         class="text-slate-800 mb-2 block">(Solo puede escoger Sí o No, no ambas)</label>
@@ -446,9 +457,9 @@
                                                 value="No">
                                             No</label></div></div>
                                 
-                                <!-- P17 (ANTES 10) -->
+                                <!-- P18 (ANTES 17) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">17.
+                                        class="font-bold text-slate-800 mb-2 block">18.
                                         ¿Cuántas horas al día puedes dedicar
                                         realmente al estudio?</label>
                                         <label
@@ -458,9 +469,9 @@
                                         type="number" name="horas_estudio"
                                         required class="survey-input"></div>
                                 
-                                <!-- P18 (ANTES 11) -->
+                                <!-- P19 (ANTES 18) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">18.
+                                        class="font-bold text-slate-800 mb-2 block">19.
                                         Estado general de avance
                                         académico:</label>
                                     <div class="space-y-2">
@@ -606,7 +617,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">19.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">20.
                                     ¿Estas materias afectan tu avance hacia el
                                     nuevo currículo?</label>
                                 <div class="space-y-3">
@@ -666,10 +677,10 @@
                     <div class="p-8">
                         <form id="form-section3" onsubmit="goToSection4(event)"
                             class="space-y-8">
-                            <!-- P20 (ANTES 13) -->
+                            <!-- P21 (ANTES 20) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">20.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
                                     ¿Cómo te sientes respecto a la
                                     implementación del nuevo currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -715,10 +726,10 @@
                                             plan.</div></label>
                                 </div>
                             </div>
-                            <!-- P21 (ANTES 14) -->
+                            <!-- P22 (ANTES 21) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
                                     ¿Qué crees que aportará el nuevo
                                     currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -791,10 +802,10 @@
                     <div class="p-8">
                         <form id="form-section4" onsubmit="goToSection5(event)"
                             class="space-y-8">
-                            <!-- P22 (ANTES 15) -->
+                            <!-- P23 (ANTES 22) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">23.
                                     Medidas que consideras útiles para tu avance
                                     (selección múltiple):</label>
                                 <div class="space-y-2 text-sm md:text-base"
@@ -846,10 +857,10 @@
                                     </label>
                                 </div>
                             </div>
-                            <!-- P23 (ANTES 16) -->
+                            <!-- P24 (ANTES 23) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">23.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">24.
                                     De esas medidas que consideras útiles para
                                     tu avance cual sería Prioridad absoluta
                                     (elige solo una):</label>
@@ -859,7 +870,7 @@
                                 <div id="q14-options"
                                     class="space-y-2 text-sm md:text-base bg-slate-50 p-4 rounded-lg border border-slate-200 min-h-[50px]">
                                     <p class="text-slate-400 italic">Selecciona
-                                        opciones en la pregunta 22 primero.</p>
+                                        opciones en la pregunta 23 primero.</p>
                                 </div>
                             </div>
                             <div class="flex justify-end pt-4"><button
@@ -888,7 +899,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">24.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">25.
                                     Propuesta para mejorar la transición
                                     (respuesta abierta):</label>
                                 <textarea name="propuesta" required
