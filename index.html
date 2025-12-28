@@ -438,11 +438,46 @@
                                     <!-- Input Oculto Real (El que se envía) -->
                                     <input type="hidden" name="materias_dificultad" id="hidden-q16">
                                 </div>
+
+                                <!-- NUEVA P17: MATERIAS VERANO -->
+                                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                    <label class="font-bold text-slate-800 mb-3 block">17. MATERIAS RELACIONADAS CON los cursos de verano y la nivelación para la transición</label>
+                                    
+                                    <div class="mb-5">
+                                        <p class="text-sm text-blue-900 font-bold mb-2 border-b border-blue-200 pb-1">Marca solo las que YA aprobaste <span class="font-normal text-slate-600 text-xs">(Si no la cursaste o la reprobaste, deja en blanco)</span>:</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Delito y Sociedad" class="accent-blue-900"> Delito y Sociedad</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicoanálisis I" class="accent-blue-900"> Psicoanálisis I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Terapia Rogeriana / Humanista" class="accent-blue-900"> Terapia Rogeriana / Humanista</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicología Cognitiva I" class="accent-blue-900"> Psicología Cognitiva I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicología Cognitiva II" class="accent-blue-900"> Psicología Cognitiva II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Psicopatología (I o II)" class="accent-blue-900"> Psicopatología (I o II)</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Teorías y Sistemas I" class="accent-blue-900"> Teorías y Sistemas I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Ética II" class="accent-blue-900"> Ética II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input type="checkbox" name="materias_verano_aprobadas" value="Técnicas Recreativas / Dinámica de Grupo" class="accent-blue-900"> Técnicas Recreativas / Dinámica de Grupo</label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-sm text-red-800 font-bold mb-2 border-b border-red-200 pb-1">Si reprobaste alguna de estas, selecciona o selecciónalas acá:</p>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Delito y Sociedad" class="accent-red-700"> Delito y Sociedad</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicoanálisis I" class="accent-red-700"> Psicoanálisis I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Terapia Rogeriana / Humanista" class="accent-red-700"> Terapia Rogeriana / Humanista</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicología Cognitiva I" class="accent-red-700"> Psicología Cognitiva I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicología Cognitiva II" class="accent-red-700"> Psicología Cognitiva II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Psicopatología (I o II)" class="accent-red-700"> Psicopatología (I o II)</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Teorías y Sistemas I" class="accent-red-700"> Teorías y Sistemas I</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Ética II" class="accent-red-700"> Ética II</label>
+                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input type="checkbox" name="materias_verano_reprobadas" value="Técnicas Recreativas / Dinámica de Grupo" class="accent-red-700"> Técnicas Recreativas / Dinámica de Grupo</label>
+                                        </div>
+                                    </div>
+                                </div>
                                 
-                                <!-- P17 (ANTES 16) -->
+                                <!-- P18 (ANTES 17) -->
                                 <div>
                                     <label
-                                        class="font-bold text-slate-800 mb-2 block">17.
+                                        class="font-bold text-slate-800 mb-2 block">18.
                                         ¿Trabajas mientras estudias?</label>
                                         <label
                                         class="text-slate-800 mb-2 block">(Solo puede escoger Sí o No, no ambas)</label>
@@ -457,9 +492,9 @@
                                                 value="No">
                                             No</label></div></div>
                                 
-                                <!-- P18 (ANTES 17) -->
+                                <!-- P19 (ANTES 18) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">18.
+                                        class="font-bold text-slate-800 mb-2 block">19.
                                         ¿Cuántas horas al día puedes dedicar
                                         realmente al estudio?</label>
                                         <label
@@ -469,9 +504,9 @@
                                         type="number" name="horas_estudio"
                                         required class="survey-input"></div>
                                 
-                                <!-- P19 (ANTES 18) -->
+                                <!-- P20 (ANTES 19) -->
                                 <div><label
-                                        class="font-bold text-slate-800 mb-2 block">19.
+                                        class="font-bold text-slate-800 mb-2 block">20.
                                         Estado general de avance
                                         académico:</label>
                                     <div class="space-y-2">
@@ -602,7 +637,7 @@
             </div>
         </div>
 
-        <!-- ================= VISTA 3: PREGUNTA 19 (ANTES 12 - CIERRE SECCIÓN 2) ================= -->
+        <!-- ================= VISTA 3: PREGUNTA 21 (ANTES 20) ================= -->
         <div id="section2-q10-view"
             class="hidden view-container fixed inset-0 z-[100] bg-slate-100 overflow-y-auto">
             <div
@@ -617,7 +652,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">20.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
                                     ¿Estas materias afectan tu avance hacia el
                                     nuevo currículo?</label>
                                 <div class="space-y-3">
@@ -677,10 +712,10 @@
                     <div class="p-8">
                         <form id="form-section3" onsubmit="goToSection4(event)"
                             class="space-y-8">
-                            <!-- P21 (ANTES 20) -->
+                            <!-- P22 (ANTES 21) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">21.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
                                     ¿Cómo te sientes respecto a la
                                     implementación del nuevo currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -726,10 +761,10 @@
                                             plan.</div></label>
                                 </div>
                             </div>
-                            <!-- P22 (ANTES 21) -->
+                            <!-- P23 (ANTES 22) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">22.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">23.
                                     ¿Qué crees que aportará el nuevo
                                     currículo?</label>
                                 <div class="space-y-2 text-sm md:text-base">
@@ -802,10 +837,10 @@
                     <div class="p-8">
                         <form id="form-section4" onsubmit="goToSection5(event)"
                             class="space-y-8">
-                            <!-- P23 (ANTES 22) -->
+                            <!-- P24 (ANTES 23) -->
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-4 block">23.
+                                    class="text-lg font-bold text-slate-900 mb-4 block">24.
                                     Medidas que consideras útiles para tu avance
                                     (selección múltiple):</label>
                                 <div class="space-y-2 text-sm md:text-base"
@@ -857,10 +892,10 @@
                                     </label>
                                 </div>
                             </div>
-                            <!-- P24 (ANTES 23) -->
+                            <!-- P25 (ANTES 24) -->
                             <div class="border-t pt-6">
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">24.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">25.
                                     De esas medidas que consideras útiles para
                                     tu avance cual sería Prioridad absoluta
                                     (elige solo una):</label>
@@ -870,7 +905,7 @@
                                 <div id="q14-options"
                                     class="space-y-2 text-sm md:text-base bg-slate-50 p-4 rounded-lg border border-slate-200 min-h-[50px]">
                                     <p class="text-slate-400 italic">Selecciona
-                                        opciones en la pregunta 23 primero.</p>
+                                        opciones en la pregunta 24 primero.</p>
                                 </div>
                             </div>
                             <div class="flex justify-end pt-4"><button
@@ -899,7 +934,7 @@
                             class="space-y-6">
                             <div>
                                 <label
-                                    class="text-lg font-bold text-slate-900 mb-2 block">25.
+                                    class="text-lg font-bold text-slate-900 mb-2 block">26.
                                     Propuesta para mejorar la transición
                                     (respuesta abierta):</label>
                                 <textarea name="propuesta" required
