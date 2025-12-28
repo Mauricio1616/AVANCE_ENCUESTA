@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Admin - Encuesta Psicología</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+            rel="stylesheet">
+
+        <style>
+            .hide-scroll::-webkit-scrollbar { display: none; }
+            .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        </style>
+
+        <!-- Firebase SDKs -->
+        <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyCkhGGnoJpAJSs3YC55EzHj2ETGSCvK63w",
+          authDomain: "psiconet-360.firebaseapp.com",
+          projectId: "psiconet-360",
+          storageBucket: "psiconet-360.firebasestorage.app",
+          messagingSenderId: "210998536370",
+          appId: "1:210998536370:web:da23055d04f4491175c1ab"
+        };
+
+        let db;
+        let allSurveys = [];
+        let isRealData = false;
+        let surveyToDeleteId = null;
+
+        // --- FUNCIÓN DE BÚSQUEDA PROFUNDA ---
+        function getField(doc, ...keys) {
+            if (!doc) return undefined;
+            const data = doc.data ? doc.data() : doc; 
+            const isValid = (val) => val !== undefined && val !== null && val !== "";
+
+            for (const key of keys) {
+                if (isValid(data[key])) return data[key];
+                if (data.personal && isValid(data.personal[key])) return data.personal[key];
+
+                if (typeof key === 'string') {
+                    const lower = key.toLowerCase();
+                    const upper = key.toUpperCase();
+                    const cap = key.charAt(0).toUpperCase() + key.slice(1);
+
+                    if (isValid(data[lower])) return data[lower];
+                    if (isValid(data[upper])) return data[upper];
+                    if (isValid(data[cap])) return data[cap];
+
+                    if (data.personal) {
+                        if (isValid(data.personal[lower])) return data.personal[lower];
+                        if (isValid(data.personal[upper])) return data.personal[upper];
+                        if (isValid(data.personal[cap])) return data.personal[cap];
+                    }
+                }
+            }
+            
+            for (const prop in data) {
+                if (typeof data[prop] === 'object' && data[prop] !== null && !Array.isArray(data[prop]) && prop !== 'personal') {
+                    for (const key of keys) {
+                        if (isValid(data[prop][key])) return data[prop][key];
+                        if (typeof key === 'string' && isValid(data[prop][key.toLowerCase()])) return data[prop][key.toLowerCase()];
+                    }
+                }
+            }
+            return undefined;
+        }
+
+        function formatListAsBadges(val) {
+            if (!val) return '<span class="text-slate-400 italic text-[10px]">Sin datos</span>';
+            let arr = Array.isArray(val) ? val : [String(val)];
+            if (arr.length === 1 && typeof arr[0] === 'string' && arr[0].includes(',')) {
+                 arr = arr[0].split(',').map(s => s.trim());
+            }
+            if (arr.length === 0 || (arr.length === 1 && arr[0] === "")) return '<span class="text-slate-400 italic text-[10px]">Sin selección</span>';
+            return arr.map(item => `<span class="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-200 mr-1 mb-1 whitespace-nowrap">${item}</span>`).join('');
+        }
+
+        async function initAdmin() {
+            try {
+                if(firebaseConfig.apiKey === "TU_API_KEY") throw new Error("Configurar Firebase - API Key no seteada");
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                try {
+                  const colRef = collection(db, "encuestas_estudiantes");
+                  const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+                      if (querySnapshot.size === 0) {
+                          loadDummyData();
+                          isRealData = false;
+                          showStatusMessage('ℹ️ Demo: Base vacía.', 'warning');
+                      } else {
+                          allSurveys = [];
+                          querySnapshot.forEach((doc) => {
+                              allSurveys.push({ id: doc.id, ...doc.data() });
+                          });
+                          // Ordenar por fecha descendente (si existe timestamp)
+                          allSurveys.sort((a, b) => {
+                              const tA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
+                              const tB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
+                              return tB - tA;
+                          });
+                          isRealData = true;
+                          showStatusMessage(`✅ ${allSurveys.length} encuestas`, 'success');
+                      }
+                      updateUI();
+                      populateStudentSelect(); // Actualizar selector
+                  }, (err) => {
+                      console.error('❌ onSnapshot error:', err);
+                      loadDummyData();
+                      isRealData = false;
+                      showStatusMessage('Error conexión.', 'error');
+                      updateUI();
+                      populateStudentSelect();
+                  });
+                  window._adminUnsubscribe = unsubscribe;
+                } catch (e) {
+                  console.error('❌ Error CRÍTICO:', e);
+                  loadDummyData();
+                  isRealData = false;
+                  updateUI();
+                  populateStudentSelect();
+                }
+            } catch (e) {
+                console.error("❌ Error init:", e);
+                loadDummyData();
+                isRealData = false;
+                updateUI();
+                populateStudentSelect();
+            }
+        }
+
+        function showStatusMessage(msg, type = 'info') {
+            const msgDiv = document.getElementById('connection-status');
+            if (msgDiv) {
+                let bgClass = 'bg-blue-50 border-blue-200 text-blue-800';
+                if (type === 'success') bgClass = 'bg-green-50 border-green-200 text-green-800';
+                else if (type === 'warning') bgClass = 'bg-yellow-50 border-yellow-200 text-yellow-800';
+                else if (type === 'error') bgClass = 'bg-red-50 border-red-200 text-red-800';
+                msgDiv.innerHTML = `<div class="${bgClass} px-3 py-2 border rounded text-xs md:text-sm font-medium flex items-center gap-2 truncate"><i class="fas fa-info-circle"></i> ${msg}</div>`;
+            }
+        }
+
+        function loadDummyData() {
+            allSurveys = [
+                { 
+                    id: "demo-1", 
+                    timestamp: { seconds: Date.now()/1000 },
+                    personal: { 
+                        nombre: "Sofía Martínez", 
+                        registro: "220001", 
+                        CI: "1234567 SC", 
+                        celular: "70012345", 
+                        correo: "sofia@mail.com", 
+                        semestre: ["10mo Semestre"], 
+                        carga_academica: "5", 
+                        trabaja: "No", 
+                        horas_estudio: "4", 
+                        avance: "Voy al día",
+                        anio_ingreso: "2021",
+                        modalidad_ingreso: "PSA",
+                        tiempo_terminar: "En 1 año",
+                        materias_aprobadas: "45",
+                        materias_reprobadas: "0",
+                        repetido_materia: "No",
+                        materias_dificultad: "Estadística II, Neuropsicología I",
+                        materias_repetidas_nombres: "Estadística I"
+                    }, 
+                    malla: [{id: "sem-0-0", nombre: "Filosofía", estado: "aprobado"}, {id: "sem-9-0", nombre: "Ética Profesional II", estado: "aprobado"}], 
+                    seccion2_cierre: { q10: "No" }, seccion3: { q11: "Motivado", q12: "Claridad" }, seccion4: { prioridad: "Ninguna (Voy bien)", q13: ["Ninguna"] }, seccion5: { propuesta: "Mantener el ritmo actual." }
+                }
+            ];
+        }
+
+        window.initAdmin = initAdmin;
+        window.getField = getField;
+
+        window.switchTab = (tabName) => {
+            const listBtn = document.getElementById('tab-btn-list');
+            const statsBtn = document.getElementById('tab-btn-stats');
+            const indivBtn = document.getElementById('tab-btn-individual');
+            
+            const listView = document.getElementById('view-list');
+            const statsView = document.getElementById('view-stats');
+            const indivView = document.getElementById('view-individual');
+
+            // Reset classes
+            [listBtn, statsBtn, indivBtn].forEach(btn => {
+                if(btn) {
+                    btn.classList.replace('border-blue-900', 'border-transparent');
+                    btn.classList.replace('text-blue-900', 'text-slate-500');
+                }
+            });
+            [listView, statsView, indivView].forEach(view => {
+                if(view) view.classList.add('hidden');
+            });
+
+            // Activate current
+            if(tabName === 'list') {
+                listBtn.classList.replace('border-transparent', 'border-blue-900'); 
+                listBtn.classList.replace('text-slate-500', 'text-blue-900');
+                listView.classList.remove('hidden'); 
+            } else if (tabName === 'stats') {
+                statsBtn.classList.replace('border-transparent', 'border-blue-900'); 
+                statsBtn.classList.replace('text-slate-500', 'text-blue-900');
+                statsView.classList.remove('hidden'); 
+                setTimeout(renderDashboard, 100);
+            } else if (tabName === 'individual') {
+                indivBtn.classList.replace('border-transparent', 'border-blue-900'); 
+                indivBtn.classList.replace('text-slate-500', 'text-blue-900');
+                indivView.classList.remove('hidden');
+                // Trigger rendering for selected student if any
+                const select = document.getElementById('student-select');
+                if(select && select.value) loadStudentStats();
+            }
+        };
+
+        // --- FUNCIÓN PARA IR AL GRÁFICO INDIVIDUAL DESDE LA LISTA ---
+        window.goToIndividualStats = (studentId) => {
+            // Buscar índice en el array
+            const index = allSurveys.findIndex(s => s.id === studentId);
+            if (index !== -1) {
+                // Cambiar a pestaña individual
+                window.switchTab('individual');
+                
+                // Seleccionar estudiante en el dropdown
+                const select = document.getElementById('student-select');
+                if (select) {
+                    select.value = index;
+                    // Disparar carga
+                    window.loadStudentStats();
+                }
+            } else {
+                alert("Estudiante no encontrado en la lista actual.");
+            }
+        };
+
+        window.confirmDelete = (id) => {
+            surveyToDeleteId = id;
+            const modal = document.getElementById('delete-confirm-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        };
+        window.closeDeleteModal = () => {
+            surveyToDeleteId = null;
+            const modal = document.getElementById('delete-confirm-modal');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        };
+        window.executeDelete = async () => {
+            if (!surveyToDeleteId) return;
+            if (!isRealData) { showStatusMessage('⚠️ Demo: No se puede borrar.', 'warning'); window.closeDeleteModal(); return; }
+            const btn = document.getElementById('btn-confirm-delete');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+            try { await deleteDoc(doc(db, "encuestas_estudiantes", surveyToDeleteId)); showStatusMessage('✅ Borrado.', 'success'); } 
+            catch (error) { showStatusMessage('❌ Error al borrar.', 'error'); } 
+            finally { btn.innerHTML = originalText; btn.disabled = false; window.closeDeleteModal(); }
+        };
+
+        function updateUI() { renderDashboard(); renderTable(); }
+
+        // --- NUEVA LÓGICA: ESTADÍSTICA INDIVIDUAL ---
+        function populateStudentSelect() {
+            const select = document.getElementById('student-select');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- Selecciona un Estudiante --</option>';
+            
+            allSurveys.forEach((s, index) => {
+                const nombre = getField(s, 'nombre', 'Nombre') || 'Anónimo';
+                const registro = getField(s, 'registro', 'Registro') || s.id;
+                const option = document.createElement('option');
+                option.value = index; // Usamos el índice para acceso rápido
+                option.textContent = `${nombre} (${registro})`;
+                select.appendChild(option);
+            });
+        }
+
+        window.loadStudentStats = () => {
+            const select = document.getElementById('student-select');
+            const container = document.getElementById('individual-stats-content');
+            if(!select || !container) return;
+
+            const index = select.value;
+            if (index === "") {
+                container.innerHTML = '<p class="text-center text-slate-400 mt-10">Selecciona un estudiante para ver su reporte detallado.</p>';
+                return;
+            }
+
+            const student = allSurveys[index];
+            if (!student) return;
+
+            // 1. Obtener Semestres Pendientes (P10)
+            const semestresP10 = getField(student, 'semestre', 'Semestre') || [];
+            const semestresArray = Array.isArray(semestresP10) ? semestresP10 : [String(semestresP10)];
+
+            // 2. Calcular materias pendientes por semestre
+            // Mapa de string semestre a índice de columna en la malla (0-9)
+            const semestreMap = {
+                "1er Semestre": 0, "2do Semestre": 1, "3er Semestre": 2, "4to Semestre": 3, "5to Semestre": 4,
+                "6to Semestre": 5, "7mo Semestre": 6, "8vo Semestre": 7, "9no Semestre": 8, "10mo Semestre": 9
+            };
+
+            let pendingHtml = '';
+            
+            if (semestresArray.length === 0 || (semestresArray.length === 1 && semestresArray[0] === '')) {
+                pendingHtml = '<div class="p-4 bg-green-50 rounded border border-green-200 text-green-800">No hay semestres pendientes reportados en P10.</div>';
+            } else {
+                pendingHtml = '<div class="space-y-4">';
+                
+                semestresArray.forEach(semName => {
+                    const colIndex = semestreMap[semName.trim()];
+                    if (colIndex !== undefined) {
+                        // Filtrar malla del estudiante para este semestre y que NO estén aprobadas
+                        const materiasDelSemestre = (student.malla || []).filter(m => {
+                            if (!m.id || !m.id.startsWith('sem-')) return false;
+                            const parts = m.id.split('-');
+                            return parseInt(parts[1]) === colIndex;
+                        });
+
+                        const pendientes = materiasDelSemestre.filter(m => m.estado !== 'aprobado');
+                        
+                        // Si no hay materias guardadas en la malla para este semestre, asumimos que todas están pendientes (caso borde)
+                        // O mostramos las que están marcadas explícitamente como NO aprobadas
+                        
+                        let listaMaterias = '';
+                        if (pendientes.length > 0) {
+                            listaMaterias = `<ul class="list-disc list-inside text-sm text-slate-700 ml-2 mt-1">
+                                ${pendientes.map(m => `<li>${m.nombre} <span class="text-xs text-red-500 font-bold">(${m.estado || 'pendiente'})</span></li>`).join('')}
+                            </ul>`;
+                        } else {
+                            listaMaterias = '<p class="text-xs text-slate-500 italic ml-2">No se detectaron materias específicas sin aprobar en los datos guardados, aunque el semestre fue marcado.</p>';
+                        }
+
+                        pendingHtml += `
+                            <div class="border border-slate-200 rounded-lg p-3 bg-white">
+                                <h5 class="font-bold text-blue-900 border-b border-slate-100 pb-1 mb-1">${semName}</h5>
+                                ${listaMaterias}
+                            </div>
+                        `;
+                    }
+                });
+                pendingHtml += '</div>';
+            }
+
+            // 3. Renderizar vista
+            container.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+                    <!-- Columna Izquierda: Semestres y Materias -->
+                    <div>
+                        <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                            <i class="fas fa-list-ul text-blue-900"></i> Materias Pendientes (Según P10)
+                        </h4>
+                        ${pendingHtml}
+                    </div>
+
+                    <!-- Columna Derecha: Gráfico de Estado (Mudado) -->
+                    <div>
+                        <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-blue-900"></i> Estado Global de Materias (Estudiante)
+                        </h4>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 h-64 relative">
+                            <canvas id="chart-malla-individual"></canvas>
+                        </div>
+                        <div class="mt-4 p-3 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                            <strong>Nota:</strong> Este gráfico refleja el estado de todas las materias registradas en la malla interactiva, excepto "Reprobado" que toma el valor de P13.
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // 4. Renderizar Gráfico Individual
+            setTimeout(() => {
+                const ctx = document.getElementById('chart-malla-individual');
+                if (ctx) {
+                    let mallaStats = { 'Aprobado': 0, 'Reprobado': 0, 'Pendiente': 0 };
+                    
+                    // Calcular Aprobados y Pendientes desde la Malla Interactiva
+                    if (student.malla && Array.isArray(student.malla)) {
+                        student.malla.forEach(m => {
+                            if (m.estado === 'aprobado') mallaStats['Aprobado']++;
+                            // NO sumamos 'reprobado' aquí porque usaremos P13
+                            else if (m.estado === 'reprobado') { /* Ignorar */ }
+                            else mallaStats['Pendiente']++; // Pendiente o Levantamiento
+                        });
+                    }
+                    
+                    // Obtener Reprobados desde P13 explícitamente
+                    const reprobadasP13 = parseInt(getField(student, 'materias_reprobadas')) || 0;
+                    mallaStats['Reprobado'] = reprobadasP13;
+                    
+                    if (chartInstances['chart-malla-individual']) chartInstances['chart-malla-individual'].destroy();
+                    chartInstances['chart-malla-individual'] = new Chart(ctx, {
+                        type: 'bar', // O 'pie' si prefieres
+                        data: {
+                            labels: Object.keys(mallaStats),
+                            datasets: [{
+                                label: 'Cantidad de Materias',
+                                data: Object.values(mallaStats),
+                                backgroundColor: ['#22c55e', '#ef4444', '#cbd5e1'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                }
+            }, 50);
+        };
+
+        function renderTable() {
+            const tbody = document.getElementById('students-table-body');
+            tbody.innerHTML = '';
+            if (allSurveys.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 text-sm">No hay encuestas registradas aún.</td></tr>'; return; }
+
+            allSurveys.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-slate-100 cursor-pointer transition-colors group";
+                tr.onclick = () => openStudentDetail(s);
+                
+                const aprobadas = s.malla ? s.malla.filter(m => m.estado === 'aprobado').length : 0;
+                const avanceVal = getField(s, 'avance', 'Avance'); 
+                // Columna Sentimiento eliminada
+                
+                // Formato Fecha
+                let fecha = "N/A";
+                if (s.timestamp) {
+                    const date = s.timestamp.toDate ? s.timestamp.toDate() : new Date(s.timestamp.seconds * 1000);
+                    if (!isNaN(date.getTime())) {
+                        fecha = date.toLocaleString('es-BO', { 
+                            day: '2-digit', month: '2-digit', year: '2-digit', 
+                            hour: '2-digit', minute: '2-digit' 
+                        });
+                    }
+                }
+                
+                let estadoBadge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold">Sin datos</span>`;
+                if (avanceVal && typeof avanceVal === 'string') {
+                    if(avanceVal.includes('día')) estadoBadge = `<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Al día</span>`;
+                    else if(avanceVal.includes('atrasado') || avanceVal.includes('moderado') || avanceVal.includes('significativo')) estadoBadge = `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>`;
+                }
+                
+                const nombre = getField(s, 'nombre', 'Nombre') || 'Anónimo';
+                const registro = getField(s, 'registro', 'Registro') || '-';
+                const semestreRaw = getField(s, 'semestre', 'Semestre');
+
+                tr.innerHTML = `
+                    <td class="p-2 md:p-4 align-middle text-xs md:text-sm text-slate-500 whitespace-nowrap">${fecha}</td>
+                    <td class="p-2 md:p-4 align-middle">
+                        <div class="font-bold text-slate-800 text-xs md:text-sm leading-tight mb-0.5">${nombre}</div>
+                        <div class="text-[10px] text-slate-500 md:hidden font-mono">${registro}</div>
+                        <div class="md:hidden mt-1">${estadoBadge}</div>
+                    </td>
+                    <td class="p-4 text-slate-600 hidden md:table-cell align-middle text-sm font-mono">${registro}</td>
+                    <td class="p-2 md:p-4 align-middle">
+                        <div class="flex flex-wrap gap-1 max-w-[150px] md:max-w-xs">${formatListAsBadges(semestreRaw)}</div>
+                    </td>
+                    <td class="p-4 hidden md:table-cell align-middle">${estadoBadge}</td>
+                    <td class="p-2 md:p-4 text-slate-600 text-xs md:text-sm align-middle text-center">${aprobadas} <span class="hidden sm:inline">mat.</span></td>
+                    <td class="p-2 md:p-4 text-center align-middle" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="openStudentDetail(${JSON.stringify(s).replace(/"/g, '&quot;')})" class="text-slate-300 hover:text-blue-600 transition-colors" title="Ver Detalle"><i class="fas fa-eye"></i></button>
+                            <button onclick="goToIndividualStats('${s.id}')" class="text-blue-400 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-full transition-all" title="Ver Gráficos"><i class="fas fa-chart-line"></i></button>
+                            <button onclick="confirmDelete('${s.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-full transition-all" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('total-count').innerText = allSurveys.length;
+        }
+
+        const chartInstances = {};
+        function renderDashboard() {
+            const countData = (fieldKeys) => {
+                const counts = {};
+                allSurveys.forEach(s => {
+                    let val = getField(s, ...(Array.isArray(fieldKeys) ? fieldKeys : [fieldKeys]));
+                    if(Array.isArray(val)) { val.forEach(v => { let label = v || "Sin respuesta"; counts[label] = (counts[label] || 0) + 1; }); } 
+                    else { let label = val || "Sin respuesta"; if(label.length > 18) label = label.substring(0, 18) + "..."; counts[label] = (counts[label] || 0) + 1; }
+                });
+                return counts;
+            };
+
+            // Función especializada para contar materias separadas por comas (P14 y P15)
+            const countCommaSeparated = (fieldKey) => {
+                const counts = {};
+                allSurveys.forEach(s => {
+                    const rawText = getField(s, fieldKey) || '';
+                    if (rawText && rawText !== 'Sin respuesta' && rawText !== '-') {
+                        // Dividir por comas, limpiar espacios y contar
+                        const items = rawText.split(',').map(i => i.trim()).filter(i => i !== '');
+                        items.forEach(item => {
+                            counts[item] = (counts[item] || 0) + 1;
+                        });
+                    }
+                });
+                // Ordenar por frecuencia descendente y tomar top 10
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                const result = {};
+                sorted.forEach(([k, v]) => result[k] = v);
+                return result;
+            };
+
+            // Lógica para Histograma de Frecuencia de Carga (P11) - REEMPLAZADO
+            const loadFrequency = {};
+            allSurveys.forEach(s => {
+                let load = parseInt(getField(s, 'carga_academica', 'carga'));
+                if (!isNaN(load) && load > 0) {
+                    // Agrupar mayores a 10 si es necesario, o dejarlos puros
+                    const key = load.toString();
+                    loadFrequency[key] = (loadFrequency[key] || 0) + 1;
+                }
+            });
+            
+            // Ordenar por número de materias (Eje X: 1, 2, 3, 4...)
+            const sortedLoadKeys = Object.keys(loadFrequency).sort((a, b) => parseInt(a) - parseInt(b));
+            const sortedLoadObj = {};
+            sortedLoadKeys.forEach(k => sortedLoadObj[k] = loadFrequency[k]);
+
+
+            const renderChart = (canvasId, type, counts, label, colorHex) => {
+                const canvas = document.getElementById(canvasId); if(!canvas) return;
+                if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
+                chartInstances[canvasId] = new Chart(canvas, {
+                    type: type,
+                    data: { labels: Object.keys(counts), datasets: [{ label: label, data: Object.values(counts), backgroundColor: Array.isArray(colorHex) ? colorHex : (type === 'pie' || type === 'doughnut' ? ['#1e3a8a', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] : colorHex), borderWidth: 1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: type === 'bar' && ['chart-priority','chart-measures', 'chart-repetidas', 'chart-dificultad'].includes(canvasId) ? 'y' : 'x', plugins: { legend: { display: type === 'pie' || type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                });
+            };
+            
+            // Gráficos existentes
+            renderChart('chart-semestre', 'bar', countData(['semestre', 'Semestre']), 'Est', '#3b82f6');
+            
+            // ELIMINADO EL GRÁFICO ORIGINAL DE "CARGA" YA QUE AHORA ES EL HISTOGRAMA EN chart-promedio-carga
+            // Si quieres mantener el original en su posición, descomenta abajo, pero como pediste reemplazar...
+            // renderChart('chart-carga', 'bar', countData(['carga_academica', 'carga']), 'Est', '#0ea5e9');
+            // Como el diseño tenía un hueco para P11, usaré el histograma ahí si lo prefieres, 
+            // PERO tu instrucción decía "borra TOP PROMEDIO... yo me refería a esto en la 11".
+            // Así que usaré el canvas 'chart-promedio-carga' (que es el nuevo slot) para este histograma.
+            
+            // Renderizamos P11 original (si existe el canvas chart-carga) con datos simples o lo ocultamos si es redundante.
+            // Para ser limpio: usaré 'chart-carga' para el histograma y 'chart-promedio-carga' lo usaré para lo mismo o lo quitaré.
+            // Dado que el HTML tiene slots definidos, voy a re-usar el slot nuevo que creamos antes para este propósito.
+            
+            // renderChart('chart-carga', 'bar', countData(['carga_academica', 'carga']), 'Est', '#0ea5e9'); // Mantengo el original por si acaso
+            renderChart('chart-trabaja', 'pie', countData(['trabaja', 'Trabaja']), 'Est', null);
+            renderChart('chart-horas', 'bar', countData(['horas_estudio', 'Horas_estudio', 'horas']), 'Est', '#6366f1');
+            renderChart('chart-avance', 'doughnut', countData(['avance', 'Avance']), 'Est', null);
+            
+            // Nuevos Gráficos (Añadidos)
+            if(document.getElementById('chart-ingreso')) renderChart('chart-ingreso', 'bar', countData('anio_ingreso'), 'Ingreso', '#14b8a6');
+            if(document.getElementById('chart-modalidad')) renderChart('chart-modalidad', 'pie', countData('modalidad_ingreso'), 'Modalidad', null);
+            
+            // Gráficos P14 y P15 (NUEVOS - Materias Repetidas y Dificultad)
+            if(document.getElementById('chart-repetidas')) renderChart('chart-repetidas', 'bar', countCommaSeparated('materias_repetidas_nombres'), 'Veces', '#ef4444');
+            if(document.getElementById('chart-dificultad')) renderChart('chart-dificultad', 'bar', countCommaSeparated('materias_dificultad'), 'Veces', '#f97316');
+
+            // NUEVO GRAFICO HISTOGRAMA DE FRECUENCIA (Reemplazando el de promedio)
+            if(document.getElementById('chart-promedio-carga')) renderChart('chart-promedio-carga', 'bar', sortedLoadObj, 'Estudiantes', '#38bdf8');
+
+            renderChart('chart-p10', 'pie', countData('q10'), 'Res', null);
+            renderChart('chart-sentiment', 'bar', countData('q11'), 'Est', '#8b5cf6');
+            renderChart('chart-p12', 'bar', countData('q12'), 'Est', '#f59e0b');
+            renderChart('chart-measures', 'bar', countData('q13'), 'Votos', '#10b981');
+            renderChart('chart-priority', 'bar', countData('prioridad'), 'Votos', '#ef4444');
+            
+            // El gráfico global ha sido movido a la pestaña individual por solicitud
+        }
+
+        window.openStudentDetail = (student) => {
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('modal-content-body');
+
+            const nombre = getField(student, 'nombre', 'Nombre') || '-';
+            const apellidos = getField(student, 'Apellidos', 'apellidos') || '-';
+            const ci = getField(student, 'CI', 'ci', 'Ci') || '-'; 
+            const registro = getField(student, 'registro', 'Registro') || '-';
+            const celular = getField(student, 'celular', 'Celular') || '-';
+            const correo = getField(student, 'correo', 'Correo') || '-';
+            
+            // Nuevos campos P5-P7
+            const anioIngreso = getField(student, 'anio_ingreso') || '-';
+            const modalidadIngreso = getField(student, 'modalidad_ingreso') || '-';
+            const tiempoTerminar = getField(student, 'tiempo_terminar') || '-';
+
+            const semestre = getField(student, 'semestre', 'Semestre');
+            const carga = getField(student, 'carga_academica', 'carga') || '-';
+            
+            // Nuevos campos P12-P15
+            const matAprob = getField(student, 'materias_aprobadas') || '-';
+            const matReprob = getField(student, 'materias_reprobadas') || '-';
+            const repitio = getField(student, 'repetido_materia') || '-';
+            const repitioCual = getField(student, 'materias_repetidas_nombres') || '';
+            const matDificultad = getField(student, 'materias_dificultad') || '-';
+
+            const trabaja = getField(student, 'trabaja', 'Trabaja') || '-';
+            const horas = getField(student, 'horas_estudio', 'Horas_estudio', 'horas') || '-';
+            const avance = getField(student, 'avance', 'Avance') || '-';
+            
+            const p10_val = getField(student, 'q10') || '-';
+            const p10_exp = getField(student.seccion2_cierre, 'explicacion') || '';
+            const p11_val = getField(student, 'q11') || '-';
+            const p12_val = getField(student, 'q12') || '-';
+            const p12_otra = getField(student.seccion3, 'q12_otra') || '';
+            const p13_val = getField(student, 'q13');
+            const p13_otros = getField(student.seccion4, 'q13_otros') || '';
+            const prioridad = getField(student, 'prioridad') || '-';
+            const propuesta = getField(student, 'propuesta') || getField(student.seccion5, 'propuesta') || 'Sin comentarios.';
+
+            let html = `
+                <!-- BLOQUE 1: DATOS PERSONALES (P1-P6 y Nuevos) -->
+                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+                    <h3 class="text-blue-900 font-bold text-sm uppercase border-b border-blue-200 pb-2 mb-3 flex items-center gap-2">
+                        <i class="fas fa-id-badge"></i> Datos Personales y de Ingreso
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                        <div><span class="text-slate-500 font-bold block text-xs">P1. Nombre</span> <span class="text-slate-900">${nombre}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P2. Apellidos</span> <span class="text-slate-900">${apellidos}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P3. CI</span> <span class="text-slate-900">${ci}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P4. Registro</span> <span class="font-mono text-slate-900">${registro}</span></div>
+                        
+                        <div><span class="text-slate-500 font-bold block text-xs">P5. Año Ingreso</span> <span class="text-slate-900 font-medium text-blue-800">${anioIngreso}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P6. Modalidad Ingreso</span> <span class="text-slate-900">${modalidadIngreso}</span></div>
+                        
+                        <div><span class="text-slate-500 font-bold block text-xs">P8. Celular</span> <span class="text-slate-900">${celular}</span></div>
+                        <div class="col-span-2"><span class="text-slate-500 font-bold block text-xs">P9. Correo</span> <span class="text-slate-900 break-all">${correo}</span></div>
+                        
+                        <div><span class="text-slate-500 font-bold block text-xs">P7. Tiempo para terminar</span> <span class="text-green-700 font-bold">${tiempoTerminar}</span></div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 2: SITUACIÓN ACADÉMICA (P10-P18) -->
+                <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
+                    <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                        <i class="fas fa-graduation-cap"></i> Situación Académica Detallada
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div class="md:col-span-2">
+                            <span class="text-slate-500 font-bold block text-xs mb-1">P10. Semestre(s) Actual(es)</span>
+                            <div class="flex flex-wrap gap-1">${formatListAsBadges(semestre)}</div>
+                        </div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P11. Carga Académica</span> <span class="text-slate-900">${carga} materias</span></div>
+                        
+                        <div class="p-2 bg-green-50 rounded border border-green-100"><span class="text-green-800 font-bold block text-xs">P12. Materias Aprobadas</span> <span class="text-slate-900 text-lg font-bold">${matAprob}</span></div>
+                        <div class="p-2 bg-red-50 rounded border border-red-100"><span class="text-red-800 font-bold block text-xs">P13. Materias Reprobadas</span> <span class="text-slate-900 text-lg font-bold">${matReprob}</span></div>
+                        
+                        <div class="md:col-span-2">
+                            <span class="text-slate-500 font-bold block text-xs">P14. ¿Repitió Materia (3ra vez+)?</span> 
+                            <span class="text-slate-900 font-medium">${repitio}</span>
+                            ${repitio === 'Sí' ? `<span class="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded border border-red-200">Materia(s): ${repitioCual}</span>` : ''}
+                        </div>
+                        
+                        <div class="md:col-span-2"><span class="text-slate-500 font-bold block text-xs">P15. Materias con Dificultad</span> <span class="text-slate-900 italic">${matDificultad}</span></div>
+
+                        <div><span class="text-slate-500 font-bold block text-xs">P16. ¿Trabaja?</span> <span class="text-slate-900">${trabaja}</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P17. Horas Estudio/Día</span> <span class="text-slate-900">${horas} hrs</span></div>
+                        <div><span class="text-slate-500 font-bold block text-xs">P18. Autopercepción Avance</span> <span class="font-bold text-blue-700">${avance}</span></div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 3: MALLA Y AFECTACIÓN (P19) -->
+                <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
+                    <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                        <i class="fas fa-th"></i> Malla y Afectación (P19)
+                    </h3>
+                    <div class="mb-4">
+                        <span class="text-slate-500 font-bold block text-xs mb-1">P19. ¿Afectación por nuevo currículo?</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-bold text-slate-800">${p10_val}</span>
+                            ${p10_exp ? `<span class="bg-yellow-50 text-yellow-800 text-xs px-2 py-1 rounded border border-yellow-100 italic">"${p10_exp}"</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-2 border border-slate-200 overflow-x-auto">
+                        <p class="text-xs text-center text-slate-400 mb-2 font-bold uppercase">Estado de Materias Registrado</p>
+                        ${renderFullMalla(student.malla)}
+                    </div>
+                </div>
+
+                <!-- BLOQUE 4: EXPECTATIVAS (P20-P21) -->
+                <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
+                    <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                        <i class="fas fa-lightbulb"></i> Expectativas (P20 - P21)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-slate-500 font-bold block text-xs">P20. Sentimiento</span>
+                            <span class="text-slate-900">${p11_val}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-500 font-bold block text-xs">P21. Aporte Esperado</span>
+                            <span class="text-slate-900">${p12_val}</span>
+                            ${p12_otra ? `<div class="text-xs text-slate-500 italic mt-1">Detalle: "${p12_otra}"</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 5: MEDIDAS Y PRIORIDAD (P22-P23) -->
+                <div class="bg-white p-4 rounded-lg border border-slate-200 mb-6 shadow-sm">
+                    <h3 class="text-slate-700 font-bold text-sm uppercase border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                        <i class="fas fa-list-check"></i> Medidas y Prioridad (P22 - P23)
+                    </h3>
+                    <div class="mb-4">
+                        <span class="text-slate-500 font-bold block text-xs mb-1">P22. Medidas Solicitadas</span>
+                        <div class="flex flex-wrap gap-1">${formatListAsBadges(p13_val)}</div>
+                        ${p13_otros ? `<div class="text-xs text-slate-500 italic mt-1 ml-1">Otro: "${p13_otros}"</div>` : ''}
+                    </div>
+                    <div>
+                        <span class="text-slate-500 font-bold block text-xs mb-1">P23. Prioridad Absoluta</span>
+                        <span class="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-bold border border-purple-100 inline-block">${prioridad}</span>
+                    </div>
+                </div>
+
+                <!-- BLOQUE 6: COMENTARIOS FINALES (P24) -->
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 shadow-sm mb-6">
+                    <h3 class="text-yellow-800 font-bold text-sm uppercase border-b border-yellow-200 pb-2 mb-3 flex items-center gap-2">
+                        <i class="fas fa-comment-dots"></i> P24. Comentarios Finales
+                    </h3>
+                    <p class="text-slate-800 text-sm italic leading-relaxed">"${propuesta}"</p>
+                </div>
+            `;
+
+            content.innerHTML = html;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        function renderFullMalla(mallaData) {
+            if (!mallaData || mallaData.length === 0) return '<p class="text-center text-slate-400 italic text-xs py-2">Sin materias.</p>';
+            
+            const columns = {};
+            for(let i=0; i<10; i++) columns[i] = [];
+            
+            mallaData.forEach(m => {
+                if (m.id && m.id.startsWith("sem-")) columns[parseInt(m.id.split('-')[1])].push(m);
+                else if (m.id && (m.id.startsWith("elec-") || m.id.startsWith("taller-"))) { if(!columns[10]) columns[10]=[]; columns[10].push(m); }
+                else if (m.id && m.id.startsWith("mod9-")) { if(!columns[8]) columns[8]=[]; columns[8].push(m); }
+                else if (m.id && m.id.startsWith("mod10-")) { if(!columns[9]) columns[9]=[]; columns[9].push(m); }
+            });
+
+            let html = '<div class="flex gap-2 overflow-x-auto pb-2 min-w-full">';
+            for (let i = 0; i <= 10; i++) {
+                if (!columns[i] || columns[i].length === 0) continue; 
+                let semTitle = (i < 10) ? `${i+1}º` : "E/T";
+                html += `<div class="flex flex-col gap-1 w-20 shrink-0"><div class="text-center text-[9px] font-bold text-slate-400 uppercase border-b border-slate-300 pb-0.5 mb-0.5">${semTitle}</div>`;
+                
+                columns[i].forEach(m => {
+                    let bgClass = "bg-white border-slate-200 text-slate-400";
+                    let icon = "";
+                    if (m.estado === 'aprobado') { bgClass = "bg-green-100 border-green-300 text-green-900 font-bold"; icon = '<i class="fas fa-check text-[8px] opacity-60"></i>'; }
+                    else if (m.estado === 'reprobado') { bgClass = "bg-red-100 border-red-300 text-red-900"; icon = '<i class="fas fa-times text-[8px] opacity-60"></i>'; }
+                    else if (m.estado === 'levantamiento') { bgClass = "bg-blue-100 border-blue-300 text-blue-900"; icon = '<i class="fas fa-arrow-up text-[8px] opacity-60"></i>'; }
+                    
+                    html += `<div class="p-1 rounded border text-[9px] flex items-center justify-center text-center h-10 relative leading-none ${bgClass}" title="${m.nombre}">${m.nombre.substring(0,15)}${m.nombre.length>15?'...':''} <div class="absolute top-0.5 right-0.5">${icon}</div></div>`;
+                });
+                html += `</div>`;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        window.closeModal = () => {
+            const modal = document.getElementById('detail-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        document.getElementById('detail-modal')?.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('detail-modal')) window.closeModal();
+        });
+        document.getElementById('delete-confirm-modal')?.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('delete-confirm-modal')) window.closeDeleteModal();
+        });
+
+        initAdmin();
+    </script>
+    </head>
+    <body
+        class="bg-slate-100 text-slate-800 h-screen h-[100dvh] overflow-hidden flex flex-col font-sans text-sm md:text-base">
+
+        <!-- Header Admin -->
+        <header
+            class="bg-blue-900 text-white p-3 md:p-4 shadow-md flex justify-between items-center z-10 shrink-0">
+            <div class="flex items-center gap-2 md:gap-3">
+                <div
+                    class="bg-white p-1 rounded h-8 w-8 md:h-10 md:w-10 flex items-center justify-center text-blue-900 shadow">
+                    <i class="fas fa-university text-base md:text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-base md:text-lg font-bold leading-tight">Admin Psicología</h1>
+                    <p class="text-blue-200 text-[10px] md:text-xs hidden sm:block">Resultados en Tiempo Real</p>
+                </div>
+            </div>
+            <div
+                class="bg-blue-800 px-3 py-1 md:px-4 md:py-2 rounded-lg text-xs md:text-sm shadow-inner border border-blue-700 whitespace-nowrap">
+                Total: <span id="total-count"
+                    class="font-bold text-white text-base md:text-lg ml-1">0</span>
+            </div>
+        </header>
+
+        <!-- Navegación de Pestañas -->
+        <div class="bg-white border-b border-slate-200 px-2 md:px-4 pt-2 md:pt-4 flex gap-4 md:gap-6 z-10 overflow-x-auto hide-scroll">
+            <button onclick="switchTab('list')" id="tab-btn-list" class="pb-2 md:pb-3 border-b-2 border-blue-900 text-blue-900 font-bold text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+                <i class="fas fa-list"></i> Lista
+            </button>
+            <!-- PESTAÑA RENOMBRADA -->
+            <button onclick="switchTab('stats')" id="tab-btn-stats" class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+                <i class="fas fa-chart-pie"></i> Estadísticas Gral.
+            </button>
+            <!-- NUEVA PESTAÑA -->
+            <button onclick="switchTab('individual')" id="tab-btn-individual" class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+                <i class="fas fa-user-chart"></i> Estadística Indiv.
+            </button>
+        </div>
+
+        <div class="flex flex-1 overflow-hidden relative">
+
+            <!-- VISTA 1: Lista -->
+            <main id="view-list" class="absolute inset-0 flex flex-col bg-slate-50 overflow-y-auto">
+                <!-- Barra superior -->
+                <div
+                    class="p-3 md:p-4 border-b border-slate-200 bg-white flex justify-between items-center shrink-0 shadow-sm sticky top-0 z-10">
+                    <h2
+                        class="font-bold text-slate-700 flex items-center gap-2 text-sm md:text-base"><i
+                            class="fas fa-users text-blue-900"></i> Encuestas</h2>
+                    <button onclick="initAdmin()"
+                        class="text-blue-600 hover:text-blue-800 text-xs md:text-sm flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-blue-50">
+                        <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Actualizar</span>
+                    </button>
+                </div>
+
+                <!-- Estado de Conexión -->
+                <div id="connection-status" class="px-3 pt-3 shrink-0"></div>
+
+                <!-- Tabla -->
+                <div class="flex-1 p-2 md:p-6 overflow-x-auto">
+                    <div
+                        class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-full">
+                        <table class="w-full text-left border-collapse">
+                            <thead
+                                class="bg-slate-50 border-b border-slate-200 text-[10px] md:text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                                <tr>
+                                    <th class="p-2 md:p-4">Fecha</th>
+                                    <th class="p-2 md:p-4">Estudiante</th>
+                                    <th class="p-4 hidden md:table-cell">Registro</th>
+                                    <th class="p-2 md:p-4">Semestre</th>
+                                    <th class="p-4 hidden md:table-cell">Estado</th>
+                                    <th class="p-2 md:p-4 text-center">Mat.</th>
+                                    <th class="p-2 md:p-4 text-center">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="students-table-body"
+                                class="text-xs md:text-sm divide-y divide-slate-100 bg-white">
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center">
+                                        <i class="fas fa-spinner fa-spin text-blue-900 text-2xl"></i>
+                                        <p class="text-slate-500 mt-2">Cargando...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-center text-[10px] md:text-xs text-slate-400 mt-4 mb-2">Orden: Más recientes primero.</p>
+                </div>
+            </main>
+
+            <!-- VISTA 2: Estadísticas Generales (RENOMBRADO) -->
+            <div id="view-stats" class="absolute inset-0 overflow-y-auto bg-slate-50 p-4 md:p-6 hidden">
+                <div class="max-w-7xl mx-auto pb-10">
+                    <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
+                        <i class="fas fa-chart-bar text-blue-900"></i> Estadísticas Generales
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        <!-- P5. Año Ingreso (NUEVO) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P5. Año de Ingreso</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-ingreso"></canvas></div>
+                        </div>
+                        <!-- P6. Modalidad (NUEVO) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P6. Modalidad de Ingreso</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-modalidad"></canvas></div>
+                        </div>
+                        <!-- P10. Semestre (ANTES P7) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P10. Estudiantes Cursando por Semestre</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-semestre"></canvas></div>
+                        </div>
+                        <!-- NUEVO: Frecuencia de Materias Inscritas (P11 Histograma) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">Frecuencia de Materias Inscritas (Histograma P11)</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-promedio-carga"></canvas></div>
+                        </div>
+                        <!-- P14. Repetidas (NUEVO P14) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P14. Top Materias Repetidas (3ra vez+)</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-repetidas"></canvas></div>
+                        </div>
+                        <!-- P15. Dificultad (NUEVO P15) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P15. Top Materias con Mayor Dificultad</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-dificultad"></canvas></div>
+                        </div>
+                        <!-- P16. Trabaja (ANTES P9) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P16. Situación Laboral</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-trabaja"></canvas></div>
+                        </div>
+                        <!-- P17. Horas Estudio (ANTES P10) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P17. Horas Estudio/Día</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-horas"></canvas></div>
+                        </div>
+                        <!-- P18. Avance (ANTES P11) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P18. Autopercepción Avance</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-avance"></canvas></div>
+                        </div>
+                        <!-- P19. Afectación (ANTES P12) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P19. ¿Afectación por Malla?</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-p10"></canvas></div>
+                        </div>
+                        <!-- P20. Sentimiento (ANTES P13) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P20. Sentimiento</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-sentiment"></canvas></div>
+                        </div>
+                        <!-- P21. Aporte (ANTES P14) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P21. Aporte Esperado</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-p12"></canvas></div>
+                        </div>
+                        <!-- P22. Medidas (ANTES P15) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P22. Medidas de Apoyo</h4>
+                             <div class="h-48 md:h-60 relative"><canvas id="chart-measures"></canvas></div>
+                        </div>
+                        <!-- P23. Prioridad (ANTES P16) -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3">
+                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P23. Prioridad Principal</h4>
+                             <div class="h-64 relative"><canvas id="chart-priority"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 3: Estadística Individual (NUEVA) -->
+            <div id="view-individual" class="absolute inset-0 overflow-y-auto bg-slate-50 p-4 md:p-6 hidden">
+                <div class="max-w-7xl mx-auto pb-10">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <h2 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-user-chart text-blue-900"></i> Estadística Individual
+                        </h2>
+                        <!-- Selector de Estudiante -->
+                        <div class="w-full md:w-auto">
+                            <select id="student-select" onchange="loadStudentStats()" class="w-full md:w-80 p-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                                <option value="">-- Cargando estudiantes... --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor dinámico de estadísticas individuales -->
+                    <div id="individual-stats-content" class="space-y-6">
+                        <div class="text-center py-10 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">
+                            <i class="fas fa-search text-3xl mb-2 opacity-50"></i>
+                            <p>Selecciona un estudiante del listado para ver su análisis detallado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Modal Detalle -->
+        <div id="detail-modal"
+            class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden z-50 items-center justify-center p-0 md:p-4 transition-opacity duration-300">
+            <div
+                class="bg-white md:rounded-xl shadow-2xl w-full h-full md:h-auto md:max-w-4xl md:max-h-[95vh] flex flex-col transform transition-all scale-100 overflow-hidden">
+                <!-- Modal Header -->
+                <div
+                    class="p-4 border-b border-slate-100 flex justify-between items-center bg-white md:rounded-t-xl sticky top-0 z-10 shadow-sm shrink-0">
+                    <h3
+                        class="font-bold text-base md:text-lg text-slate-800 flex items-center gap-2">
+                        <span
+                            class="bg-blue-100 text-blue-800 p-1.5 md:p-2 rounded-full h-8 w-8 flex items-center justify-center"><i
+                                class="fas fa-user-graduate text-sm"></i></span>
+                        Reporte Individual
+                    </h3>
+                    <button onclick="closeModal()"
+                        class="text-slate-400 hover:text-red-500 transition-colors w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 active:bg-red-100">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div id="modal-content-body"
+                    class="p-4 md:p-6 overflow-y-auto bg-slate-50 custom-scrollbar flex-1">
+                    <!-- Contenido inyectado por JS -->
+                </div>
+
+                <!-- Modal Footer -->
+                <div
+                    class="p-3 md:p-4 border-t border-slate-100 bg-white md:rounded-b-xl flex justify-end shrink-0 safe-area-pb">
+                    <button onclick="closeModal()"
+                        class="w-full md:w-auto px-6 py-3 md:py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-sm shadow-sm transition-all active:bg-slate-100">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Confirmación Eliminación -->
+        <div id="delete-confirm-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden z-50 items-center justify-center p-4 transition-opacity duration-300">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100 border border-slate-200 mx-4">
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg leading-6 font-medium text-slate-900 mb-2">¿Eliminar encuesta?</h3>
+                    <p class="text-sm text-slate-500 mb-6">
+                        Esta acción borrará permanentemente el registro.
+                    </p>
+                    <div class="flex gap-3 justify-center">
+                        <button onclick="window.closeDeleteModal()" class="flex-1 px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
+                            Cancelar
+                        </button>
+                        <button id="btn-confirm-delete" onclick="window.executeDelete()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-trash-alt text-xs"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+</html>

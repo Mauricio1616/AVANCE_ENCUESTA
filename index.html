@@ -10,8 +10,8 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
             rel="stylesheet">
         <link rel="stylesheet" href="style.css">
-        <!-- jsPDF para generación de reportes -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <!-- Librería para generar PDF -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <!-- Scripts de Firebase (Marcador para el Ingeniero) -->
         <script type="module">
         // -------------------------------------------------------------------------
@@ -20,7 +20,7 @@
         // Aquí se deben importar las librerías de Firebase y configurar la conexión.
         // La función window.saveSurveyToFirebase(data) es llamada al final de la encuesta.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -36,8 +36,9 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Exponer db en window para que script.js lo pueda usar
+        // Exponer GLOBALMENTE para que script.js pueda acceder
         window.db = db;
+        window.firebaseModules = { collection, query, where, getDocs };
 
         // Iniciar sesión anónimo (recomendado para permitir escritura segura desde el cliente)
         signInAnonymously(auth).catch(err => console.warn('Auth error:', err));
@@ -366,34 +367,65 @@
                                     <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2">
                                 </div>
 
-                                <!-- NUEVA P14: REPETIDO MATERIA (AUTOCOMPLETADO CONDICIONAL) -->
+                                <!-- NUEVA P14: REPETIDO MATERIA (TAG INPUT) -->
                                 <div>
                                     <label class="font-bold text-slate-800 mb-2 block">14. ¿Has repetido alguna materia por tercera vez o más?</label>
                                     <div class="flex items-center gap-4 mb-3">
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="Sí" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.remove('hidden')"> Sí</label>
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="No" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.add('hidden')"> No</label>
                                     </div>
-                                    <div id="container-repitencia" class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in">
+                                    <div id="container-repitencia" class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in relative">
                                         <label class="block text-sm font-bold text-slate-700 mb-1">Cual o Cuales</label>
-                                        <!-- Eliminado list="all-subjects" inicial. Se asigna solo al escribir -->
-                                        <input type="text" 
-                                               name="materias_repetidas_nombres" 
-                                               class="survey-input text-sm" 
-                                               placeholder="Escribe el nombre de la o las materias que corresponda"
-                                               oninput="if(this.value.length > 1) this.setAttribute('list', 'all-subjects'); else this.removeAttribute('list');">
+                                        <p class="text-xs text-slate-500 mb-2">Busca y selecciona las materias.</p>
+                                        
+                                        <!-- Container de Tags -->
+                                        <div id="tags-container-q14" class="flex flex-wrap gap-2 mb-2"></div>
+                                        
+                                        <!-- Wrapper relativo para el input y el dropdown -->
+                                        <div class="relative">
+                                            <input type="text" 
+                                                   id="input-q14"
+                                                   class="survey-input text-sm w-full" 
+                                                   placeholder="Escribe para buscar..."
+                                                   autocomplete="off">
+                                            
+                                            <!-- Dropdown Custom -->
+                                            <ul id="dropdown-q14" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                                <!-- Opciones se llenan dinámicamente js -->
+                                            </ul>
+                                        </div>
+                                        <p id="error-q14" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+                                        
+                                        <!-- Input Oculto Real (El que se envía) -->
+                                        <input type="hidden" name="materias_repetidas_nombres" id="hidden-q14">
                                     </div>
                                 </div>
 
-                                <!-- NUEVA P15: MATERIAS DIFICULTAD (AUTOCOMPLETADO CONDICIONAL) -->
+                                <!-- NUEVA P15: MATERIAS DIFICULTAD (TAG INPUT) -->
                                 <div>
                                     <label class="font-bold text-slate-800 mb-2 block">15. ¿En qué materias has tenido más dificultad?</label>
-                                    <label class="text-slate-600 mb-2 block text-sm">(Escribe y selecciona el nombre de la materia)</label>
-                                    <!-- Eliminado list="all-subjects" inicial. Se asigna solo al escribir -->
-                                    <input type="text" 
-                                           name="materias_dificultad" 
-                                           class="survey-input" 
-                                           placeholder="Escribe para buscar materia..."
-                                           oninput="if(this.value.length > 1) this.setAttribute('list', 'all-subjects'); else this.removeAttribute('list');">
+                                    <label class="text-slate-600 mb-1 block text-sm">Busca y selecciona las materias.</label>
+                                    
+                                    <!-- Container de Tags -->
+                                    <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
+                                    
+                                    <!-- Wrapper relativo para el input y el dropdown -->
+                                    <div class="relative">
+                                        <input type="text" 
+                                               id="input-q15"
+                                               class="survey-input text-sm w-full" 
+                                               placeholder="Escribe para buscar..."
+                                               autocomplete="off">
+                                        
+                                        <!-- Dropdown Custom -->
+                                        <ul id="dropdown-q15" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                            <!-- Opciones se llenan dinámicamente js -->
+                                        </ul>
+                                    </div>
+                                    <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+                                    
+                                    <!-- Input Oculto Real (El que se envía) -->
+                                    <input type="hidden" name="materias_dificultad" id="hidden-q15">
                                 </div>
                                 
                                 <!-- P16 (ANTES 9) -->
@@ -450,9 +482,8 @@
                                     </div>
                                 </div>
                                 <div class="pt-6 border-t flex justify-end">
-                                    <button type="submit"
-                                        class="bg-red-900 text-white font-bold py-3 px-6 rounded-lg shadow hover:bg-red-800 transition">Continuar
-                                        a Sección 2.- Avance Académico <i
+                                    <button type="submit" id="submit-form-section1"
+                                        class="bg-red-900 text-white font-bold py-3 px-6 rounded-lg shadow hover:bg-red-800 transition transform hover:scale-105">✓ Continuar a Sección 2.- Avance Académico <i
                                             class="fas fa-arrow-right ml-2"></i></button>
                                 </div>
                             </form>
@@ -898,15 +929,20 @@
                     <p class="text-slate-600 mb-6">Tus respuestas han sido
                         registradas exitosamente. Tu opinión es valiosa para la
                         carrera de Psicología.</p>
-                    <button onclick="location.reload()"
-                        class="text-blue-900 font-semibold hover:underline">Volver
-                        al inicio</button>
+                    <div class="flex flex-col gap-3 mb-4">
+                        <button onclick="descargarReportePDF()" 
+                            class="bg-blue-900 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center">
+                            <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
+                        </button>
+                        <button onclick="location.reload()"
+                            class="text-blue-900 font-semibold hover:underline">Volver al inicio</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Modal Editar (Mismo de antes) -->
-        <div id="edit-modal"
+        <!-- <div id="edit-modal"
             class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center z-[150]">
             <div
                 class="bg-white p-6 rounded-xl shadow-2xl w-96 transform scale-95 transition-all"
@@ -920,6 +956,33 @@
                         class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded">Cancelar</button>
                     <button onclick="saveEdit()"
                         class="px-6 py-2 bg-blue-900 text-white rounded">Guardar</button>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- Modal Registro Duplicado -->
+        <div id="duplicate-registry-modal"
+            class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden items-center justify-center z-[200] transition-opacity duration-300">
+            <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center transform scale-100 transition-all duration-300 border-4 border-red-500" id="duplicate-modal-content">
+                <h3 class="text-4xl font-bold text-red-600 mb-3">¡REGISTRO!</h3>
+                <p class="text-red-600 font-bold mb-5 text-xl">Ya Respondio</p>
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 my-6 text-left">
+                    <p class="text-base text-slate-700 mb-4"><span class="font-bold text-blue-900 text-lg">👤 Quien respondió:</span> <span id="duplicate-nombre" class="text-blue-900 font-semibold text-lg block mt-1 bg-blue-100 p-2 rounded uppercase">-</span></p>
+                    <p class="text-base text-slate-700"><span class="font-bold text-blue-900 text-lg">📋 Apellidos:</span> <span id="duplicate-apellidos" class="text-blue-900 font-semibold text-lg block mt-1 bg-blue-100 p-2 rounded uppercase">-</span></p>
+                </div>
+                <div class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6">
+                    <p class="text-sm text-red-700 font-bold">⛔ No puedes completar esta encuesta porque el registro <span id="dup-reg-number" class="font-mono bg-red-100 px-2 py-1 rounded">___</span> ya respondio la encuesta.</p>
+                </div>
+                <p class="text-xs text-slate-600 mb-6 bg-yellow-50 p-3 rounded-lg border border-yellow-300 font-medium">📞 Si crees que es un error, contacta a administración.</p>
+                <div class="flex flex-col gap-2">
+                    <button onclick="descargarReportePDF()" 
+                        class="w-full bg-blue-900 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-800 transition flex items-center gap-2 justify-center text-sm">
+                        <i class="fas fa-file-pdf"></i> Descargar Mi Reporte
+                    </button>
+                    <button onclick="closeDuplicateModal()" 
+                        class="w-full bg-slate-800 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-900 transition transform hover:scale-105 text-lg shadow-lg">
+                        Entendido
+                    </button>
                 </div>
             </div>
         </div>
@@ -945,65 +1008,11 @@
             </div>
         </div>
         
-        <!-- DATALIST PARA AUTOCOMPLETADO DE MATERIAS -->
-        <datalist id="all-subjects"></datalist>
-
-        <!-- Modal Encuesta Ya Completada -->
-        <div id="survey-completed-modal"
-            class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center z-[150]">
-            <div class="bg-white p-8 rounded-xl shadow-2xl w-96 text-center transform scale-95 transition-all">
-                <div
-                    class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i
-                        class="fas fa-info-circle"></i></div>
-                <h3 class="text-xl font-bold text-slate-800 mb-3">Encuesta ya Completada</h3>
-                <p class="text-slate-600 mb-2">El registro universitario <span id="modal-registro" class="font-bold text-blue-900"></span> ya ha completado la encuesta anteriormente.</p>
-                <div class="bg-slate-50 p-4 rounded-lg mb-6 border border-slate-200">
-                    <p class="text-sm text-slate-700 mb-2"><strong>Nombres:</strong> <span id="modal-nombre" class="text-slate-900 uppercase"></span></p>
-                    <p class="text-sm text-slate-700"><strong>Apellidos:</strong> <span id="modal-apellido" class="text-slate-900 uppercase"></span></p>
-                </div>
-                <p class="text-sm text-slate-500 mb-6">Si crees que esto es un error, contacta al administrador.</p>
-                <div class="flex gap-2 justify-center">
-                    <button onclick="descargarReportePDF()"
-                        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2">
-                        <i class="fas fa-download"></i> Descargar Reporte
-                    </button>
-                    <button onclick="closeSurveyCompletedModal()"
-                        class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition">Entendido</button>
-                </div>
-            </div>
-        </div>
+        <!-- DATALIST PARA SUGERENCIAS -->
+        <datalist id="materias-list"></datalist>
 
         <script src="script.js"></script>
         
-        <!-- SCRIPT INLINE AUXILIAR PARA POBLAR LA LISTA DE MATERIAS -->
-        <!-- Se ejecuta después de cargar script.js para tener acceso a semesterData -->
-        <script>
-            window.addEventListener('load', () => {
-                // Pequeño retardo para asegurar que script.js ha definido semesterData
-                setTimeout(() => {
-                    const datalist = document.getElementById('all-subjects');
-                    if (typeof semesterData !== 'undefined' && datalist) {
-                        const subjects = [];
-                        // Extraer materias de semestres normales
-                        semesterData.forEach(sem => subjects.push(...sem.subjects));
-                        
-                        // Extraer electivas y talleres si existen
-                        if(typeof electivasData !== 'undefined') subjects.push(...electivasData);
-                        if(typeof talleresData !== 'undefined') subjects.push(...talleresData);
-                        
-                        // Ordenar alfabéticamente
-                        subjects.sort();
-                        
-                        // Poblar el datalist
-                        subjects.forEach(subj => {
-                            const opt = document.createElement('option');
-                            opt.value = subj;
-                            datalist.appendChild(opt);
-                        });
-                        console.log("✅ Lista de materias poblada para autocompletado.");
-                    }
-                }, 100);
-            });
-        </script>
+
     </body>
 </html>
