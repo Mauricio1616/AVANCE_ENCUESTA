@@ -357,6 +357,157 @@ function init() {
             slider.scrollLeft = scrollLeft - walk;
         });
     }
+
+    // Poblar datalist con materias
+    populateMateriasList().then(() => {
+        // Inicializar Multi-Selects después de cargar materias (incluyendo fetch async)
+        setupMultiSelect('input-q14', 'dropdown-q14', 'tags-container-q14', 'hidden-q14', 'error-q14');
+        setupMultiSelect('input-q15', 'dropdown-q15', 'tags-container-q15', 'hidden-q15', 'error-q15');
+    });
+}
+
+// --- POPULAR DATALIST ---
+async function populateMateriasList() {
+    const datalist = document.getElementById('materias-list');
+    if (!datalist) return;
+
+    // Evitar duplicados
+    const uniqueSubjects = new Set();
+    const addFn = (name) => {
+        if (!name) return;
+        const cleanName = name.trim();
+        if (!uniqueSubjects.has(cleanName)) {
+            uniqueSubjects.add(cleanName);
+            const opt = document.createElement('option');
+            opt.value = cleanName;
+            datalist.appendChild(opt);
+        }
+    };
+
+    // 1. Desde variables estáticas
+    semesterData.forEach(sem => sem.subjects.forEach(addFn));
+    electivasData.forEach(addFn);
+    talleresData.forEach(addFn);
+    Object.values(abordajesData).forEach(mod => {
+        if (mod.sem9) mod.sem9.forEach(s => addFn(s.name));
+        if (mod.sem10) mod.sem10.forEach(s => addFn(s.name));
+    });
+
+    // 2. Desde materias.txt (Async)
+    try {
+        const response = await fetch('materias.txt');
+        if (response.ok) {
+            const text = await response.text();
+            if (text) {
+                text.split('\n').forEach(line => addFn(line));
+            }
+        }
+    } catch (e) {
+        console.warn("No se pudo cargar materias.txt", e);
+    }
+}
+
+
+// --- LÓGICA SEARCHABLE MULTI-SELECT ---
+function setupMultiSelect(inputId, dropdownId, tagsContainerId, hiddenInputId, errorId) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    const tagsContainer = document.getElementById(tagsContainerId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    const errorMsg = document.getElementById(errorId);
+    const datalist = document.getElementById('materias-list');
+
+    if (!input || !dropdown || !tagsContainer || !hiddenInput || !datalist) return;
+
+    let selectedTags = [];
+
+    // Helper: Leer opciones actuales (ya pobladas)
+    const getOptions = () => Array.from(datalist.options).map(opt => opt.value);
+
+    input.addEventListener('focus', () => {
+        renderDropdown(getOptions());
+        dropdown.classList.remove('hidden');
+    });
+
+    // Helper de normalización para búsqueda insensible a acentos/mayúsculas
+    const normalize = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    input.addEventListener('input', () => {
+        const query = normalize(input.value.trim());
+        const allOptions = getOptions();
+
+        const filtered = allOptions.filter(opt => normalize(opt).includes(query));
+
+        renderDropdown(filtered);
+        dropdown.classList.remove('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+            input.value = '';
+        }
+    });
+
+    function renderDropdown(options) {
+        dropdown.innerHTML = '';
+        if (options.length === 0) {
+            const li = document.createElement('li');
+            li.className = 'px-4 py-2 text-slate-400 italic cursor-default';
+            li.textContent = 'No encontrado';
+            dropdown.appendChild(li);
+            return;
+        }
+
+        options.forEach(opt => {
+            const li = document.createElement('li');
+            li.className = 'px-4 py-2 hover:bg-blue-50 cursor-pointer text-slate-700 transition-colors';
+            li.textContent = opt;
+            li.addEventListener('click', () => {
+                selectItem(opt);
+            });
+            dropdown.appendChild(li);
+        });
+    }
+
+    function selectItem(item) {
+        if (!selectedTags.includes(item)) {
+            selectedTags.push(item);
+            renderTags();
+            updateHidden();
+            errorMsg.classList.add('hidden');
+        }
+        input.value = '';
+        dropdown.classList.add('hidden');
+        input.focus();
+    }
+
+    function renderTags() {
+        tagsContainer.innerHTML = '';
+        selectedTags.forEach((tag, idx) => {
+            const badge = document.createElement('span');
+            badge.className = 'inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full border border-blue-200 animate-fade-in';
+            badge.innerHTML = `
+                ${tag} 
+                <button type="button" class="text-blue-400 hover:text-red-500 font-bold ml-1 focus:outline-none" data-index="${idx}">&times;</button>
+            `;
+            badge.querySelector('button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeTag(idx);
+            });
+            tagsContainer.appendChild(badge);
+        });
+    }
+
+    function removeTag(index) {
+        selectedTags.splice(index, 1);
+        renderTags();
+        updateHidden();
+    }
+
+    function updateHidden() {
+        hiddenInput.value = selectedTags.join(', ');
+    }
 }
 
 // --- SISTEMA DE GUARDADO (LOCALSTORAGE) ---
@@ -947,6 +1098,14 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
                     document.getElementById('duplicate-nombre').textContent = resultado.nombre;
                     document.getElementById('duplicate-apellidos').textContent = resultado.apellidos;
                     document.getElementById('dup-reg-number').textContent = registro;
+
+                    // Configurar botón de descarga PDF
+                    const btnDownload = document.getElementById('btn-download-duplicate-pdf');
+                    if (btnDownload) {
+                        btnDownload.onclick = () => {
+                            descargarReportePDF(registro);
+                        };
+                    }
 
                     console.log('Nombre:', resultado.nombre);
                     console.log('Apellidos:', resultado.apellidos);

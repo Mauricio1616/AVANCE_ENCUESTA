@@ -374,19 +374,26 @@
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="Sí" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.remove('hidden')"> Sí</label>
                                         <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="repetido_materia" value="No" class="accent-blue-900" onclick="document.getElementById('container-repitencia').classList.add('hidden')"> No</label>
                                     </div>
-                                    <div id="container-repitencia" class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in">
+                                    <div id="container-repitencia" class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in relative">
                                         <label class="block text-sm font-bold text-slate-700 mb-1">Cual o Cuales</label>
-                                        <p class="text-xs text-slate-500 mb-2">Escribe el nombre de la materia y presiona <span class="font-bold">coma ( , )</span> para agregarla.</p>
+                                        <p class="text-xs text-slate-500 mb-2">Busca y selecciona las materias.</p>
                                         
                                         <!-- Container de Tags -->
                                         <div id="tags-container-q14" class="flex flex-wrap gap-2 mb-2"></div>
                                         
-                                        <!-- Input Visual con Datalist para sugerencias -->
-                                        <input type="text" 
-                                               id="input-q14"
-                                               class="survey-input text-sm" 
-                                               placeholder="Escribe materia y pon coma..."
-                                               list="materias-list">
+                                        <!-- Wrapper relativo para el input y el dropdown -->
+                                        <div class="relative">
+                                            <input type="text" 
+                                                   id="input-q14"
+                                                   class="survey-input text-sm w-full" 
+                                                   placeholder="Escribe para buscar..."
+                                                   autocomplete="off">
+                                            
+                                            <!-- Dropdown Custom -->
+                                            <ul id="dropdown-q14" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                                <!-- Opciones se llenan dinámicamente js -->
+                                            </ul>
+                                        </div>
                                         <p id="error-q14" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
                                         
                                         <!-- Input Oculto Real (El que se envía) -->
@@ -397,17 +404,24 @@
                                 <!-- NUEVA P15: MATERIAS DIFICULTAD (TAG INPUT) -->
                                 <div>
                                     <label class="font-bold text-slate-800 mb-2 block">15. ¿En qué materias has tenido más dificultad?</label>
-                                    <label class="text-slate-600 mb-1 block text-sm">Escribe el nombre de la materia y presiona <span class="font-bold">coma ( , )</span> para agregarla.</label>
+                                    <label class="text-slate-600 mb-1 block text-sm">Busca y selecciona las materias.</label>
                                     
                                     <!-- Container de Tags -->
                                     <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
                                     
-                                    <!-- Input Visual con Datalist para sugerencias -->
-                                    <input type="text" 
-                                           id="input-q15"
-                                           class="survey-input text-sm" 
-                                           placeholder="Escribe materia y pon coma..."
-                                           list="materias-list">
+                                    <!-- Wrapper relativo para el input y el dropdown -->
+                                    <div class="relative">
+                                        <input type="text" 
+                                               id="input-q15"
+                                               class="survey-input text-sm w-full" 
+                                               placeholder="Escribe para buscar..."
+                                               autocomplete="off">
+                                        
+                                        <!-- Dropdown Custom -->
+                                        <ul id="dropdown-q15" class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                            <!-- Opciones se llenan dinámicamente js -->
+                                        </ul>
+                                    </div>
                                     <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
                                     
                                     <!-- Input Oculto Real (El que se envía) -->
@@ -928,7 +942,7 @@
         </div>
 
         <!-- Modal Editar (Mismo de antes) -->
-        <div id="edit-modal"
+        <!-- <div id="edit-modal"
             class="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center z-[150]">
             <div
                 class="bg-white p-6 rounded-xl shadow-2xl w-96 transform scale-95 transition-all"
@@ -944,7 +958,7 @@
                         class="px-6 py-2 bg-blue-900 text-white rounded">Guardar</button>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Modal Registro Duplicado -->
         <div id="duplicate-registry-modal"
@@ -1002,193 +1016,6 @@
 
         <script src="script.js"></script>
         
-        <!-- SCRIPT PARA LOGICA DE TAGS (MATERIAS.TXT + SEMESTERDATA) -->
-        <script>
-            window.addEventListener('load', () => {
-                const validSubjectsMap = new Map(); // Lowercase -> Original
-                const datalist = document.getElementById('materias-list');
-                
-                // Función auxiliar para agregar materias al mapa y al datalist
-                const addSubject = (subj) => {
-                    if (!subj) return;
-                    const cleanSubj = subj.trim();
-                    const lowerSubj = cleanSubj.toLowerCase();
-                    
-                    if (cleanSubj && !validSubjectsMap.has(lowerSubj)) {
-                        validSubjectsMap.set(lowerSubj, cleanSubj);
-                        const opt = document.createElement('option');
-                        opt.value = cleanSubj;
-                        datalist.appendChild(opt);
-                    }
-                };
 
-                // Normalización de números arábigos a romanos para validación flexible
-                const normalizeRomanInput = (text) => {
-                    // Reemplazos robustos para variantes de Psicología y otras materias con números
-                    // IMPORTANTE: El orden importa. Primero los números más altos o específicos.
-                    
-                    let normalized = text;
-
-                    // Mapeo específico para "l" y "ll" como "I" y "II" en minúsculas
-                    // Esto ayuda con "psicologia l" -> "psicologia i"
-                    normalized = normalized.replace(/\b(l)\b/gi, 'i');
-                    normalized = normalized.replace(/\b(ll)\b/gi, 'ii');
-
-                    // Mapeo de números arábigos a romanos
-                    normalized = normalized
-                        .replace(/\b10\b/g, 'x')
-                        .replace(/\b9\b/g, 'ix')
-                        .replace(/\b8\b/g, 'viii')
-                        .replace(/\b7\b/g, 'vii')
-                        .replace(/\b6\b/g, 'vi')
-                        .replace(/\b5\b/g, 'v')
-                        .replace(/\b4\b/g, 'iv')
-                        .replace(/\b3\b/g, 'iii')
-                        .replace(/\b2\b/g, 'ii')
-                        .replace(/\b1\b/g, 'i');
-
-                    return normalized;
-                };
-
-                // 1. Cargar desde semesterData (script.js) si existe
-                if (typeof semesterData !== 'undefined') {
-                    semesterData.forEach(sem => sem.subjects.forEach(addSubject));
-                    if(typeof electivasData !== 'undefined') electivasData.forEach(addSubject);
-                    if(typeof talleresData !== 'undefined') talleresData.forEach(addSubject);
-                    if(typeof abordajesData !== 'undefined') {
-                         Object.values(abordajesData).forEach(mod => {
-                             if(mod.sem9) mod.sem9.forEach(s => addSubject(s.name));
-                             if(mod.sem10) mod.sem10.forEach(s => addSubject(s.name));
-                         });
-                    }
-                    console.log(`✅ ${validSubjectsMap.size} materias base cargadas desde el sistema.`);
-                } else {
-                    console.warn('⚠️ semesterData no encontrado. Asegúrate de que script.js cargue correctamente.');
-                }
-
-                // 2. Intentar cargar materias.txt (complementario)
-                fetch('materias.txt')
-                    .then(r => r.ok ? r.text() : Promise.resolve(''))
-                    .then(text => {
-                        if(text) {
-                            const lines = text.split('\n');
-                            lines.forEach(addSubject);
-                            console.log(`📚 Materias actualizadas con archivo externo. Total: ${validSubjectsMap.size}`);
-                        }
-                        // Inicializar inputs
-                        setupTagInput('input-q14', 'tags-container-q14', 'hidden-q14', 'error-q14', validSubjectsMap);
-                        setupTagInput('input-q15', 'tags-container-q15', 'hidden-q15', 'error-q15', validSubjectsMap);
-                    })
-                    .catch(err => console.warn('No se pudo cargar materias.txt', err));
-
-                // Función configuración de Input de Tags
-                function setupTagInput(inputId, containerId, hiddenId, errorId, validMap) {
-                    const input = document.getElementById(inputId);
-                    const container = document.getElementById(containerId);
-                    const hidden = document.getElementById(hiddenId);
-                    const error = document.getElementById(errorId);
-                    
-                    if(!input || !container || !hidden) return;
-
-                    let tags = [];
-
-                    // Evento al escribir
-                    input.addEventListener('keyup', (e) => {
-                        // Detectar Coma (,)
-                        if (e.key === ',' || e.code === 'Comma') {
-                            const val = input.value.replace(',', '').trim(); // Limpiar coma
-                            if(val) {
-                                validateAndAddTag(val);
-                            }
-                            input.value = ''; // Limpiar input siempre al dar coma
-                        }
-                    });
-                    
-                    // Validar también al perder foco si hay texto
-                    input.addEventListener('blur', () => {
-                        const val = input.value.replace(',', '').trim();
-                        if(val) {
-                            validateAndAddTag(val);
-                            input.value = '';
-                        }
-                    });
-
-                    function validateAndAddTag(text) {
-                        let lowerText = text.toLowerCase();
-                        
-                        // 1. Intentar validación directa
-                        if (validMap.has(lowerText)) {
-                            addTagToUI(validMap.get(lowerText));
-                            return;
-                        }
-
-                        // 2. Intentar con conversión de números arábigos y variantes (l, ll) a romanos
-                        const romanizedText = normalizeRomanInput(lowerText);
-                        if (validMap.has(romanizedText)) {
-                            addTagToUI(validMap.get(romanizedText));
-                            return;
-                        }
-
-                        // 3. Búsqueda aproximada "insensible a acentos"
-                        let found = null;
-                        const normalize = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Quitar acentos
-                        const normalizedInput = normalize(lowerText);
-                        const normalizedRoman = normalize(romanizedText);
-
-                        for (const [key, val] of validMap.entries()) {
-                            const normKey = normalize(key);
-                            if (normKey === normalizedInput || normKey === normalizedRoman) {
-                                found = val;
-                                break;
-                            }
-                        }
-
-                        if(found) {
-                            addTagToUI(found);
-                        } else {
-                            // Mostrar error
-                            error.textContent = `❌ "${text}" no es una materia válida. Selecciona de la lista.`;
-                            error.classList.remove('hidden');
-                            setTimeout(() => error.classList.add('hidden'), 3000);
-                        }
-                    }
-
-                    function addTagToUI(originalName) {
-                        // Evitar duplicados
-                        if(!tags.includes(originalName)) {
-                            tags.push(originalName);
-                            renderTags();
-                            error.classList.add('hidden');
-                        }
-                    }
-
-                    function renderTags() {
-                        container.innerHTML = '';
-                        tags.forEach((tag, index) => {
-                            const badge = document.createElement('span');
-                            badge.className = 'inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full border border-blue-200 animate-fade-in';
-                            badge.innerHTML = `
-                                ${tag}
-                                <button type="button" class="text-blue-400 hover:text-red-500 font-bold ml-1 focus:outline-none" data-index="${index}">&times;</button>
-                            `;
-                            // Listener para borrar
-                            badge.querySelector('button').addEventListener('click', (e) => {
-                                e.stopPropagation(); // Evitar triggers raros
-                                removeTag(index);
-                            });
-                            container.appendChild(badge);
-                        });
-                        
-                        // Actualizar input oculto para el formulario
-                        hidden.value = tags.join(', ');
-                    }
-
-                    function removeTag(index) {
-                        tags.splice(index, 1);
-                        renderTags();
-                    }
-                }
-            });
-        </script>
     </body>
 </html>
