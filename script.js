@@ -14,6 +14,10 @@ function goToSection2(e) {
 
     // --- CORRECCIÓN INTEGRADA: Capturar lista de semestres y campos nuevos ---
     const semestresSeleccionados = formData1.getAll('semestre');
+    
+    // Capturar lista de materias verano aprobadas y reprobadas (NUEVO P17)
+    const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
+    const veranoReprobadas = formData1.getAll('materias_verano_reprobadas');
 
     // Capturar campos "Otro" de radio buttons
     let anioIngreso = formData1.get('anio_ingreso');
@@ -57,17 +61,24 @@ function goToSection2(e) {
         // P10 (Antes 7)
         semestre: semestresSeleccionados,
 
-        // P11 (Antes 8)
+        // P11 (NUEVO PPA)
+        ppa: formData1.get('ppa') || '',
+
+        // P12 (Antes P11)
         carga_academica: formData1.get('carga_academica') || '',
 
-        // P12-P15 (Nuevos)
+        // P13-P16 (Renumerados)
         materias_aprobadas: formData1.get('materias_aprobadas') || '',
         materias_reprobadas: formData1.get('materias_reprobadas') || '',
         repetido_materia: repetidoMateria || '',
         materias_repetidas_nombres: materiasRepetidasNombres,
         materias_dificultad: formData1.get('materias_dificultad') || '',
+        
+        // P17 (NUEVO) - Materias Verano/Nivelación
+        materias_verano_aprobadas: veranoAprobadas,
+        materias_verano_reprobadas: veranoReprobadas,
 
-        // P16-P18 (Antes 9-11)
+        // P18-P20 (Renumerados)
         trabaja: formData1.get('trabaja') || '',
         horas_estudio: formData1.get('horas_estudio') || '',
         avance: formData1.get('avance') || ''
@@ -239,6 +250,8 @@ if (q13Checkboxes.length > 0) {
     });
 }
 
+
+
 function updateQ14Options() {
     const container = document.getElementById('q14-options');
     if (!container) return;
@@ -277,7 +290,7 @@ function updateQ14Options() {
     });
 
     if (!hasSelection) {
-        container.innerHTML = '<p class="text-slate-400 italic text-sm">Selecciona opciones en la pregunta 22 primero.</p>';
+        container.innerHTML = '<p class="text-slate-400 italic text-sm">Selecciona opciones en la pregunta 23 primero.</p>';
     }
 }
 
@@ -361,8 +374,9 @@ function init() {
     // Poblar datalist con materias
     populateMateriasList().then(() => {
         // Inicializar Multi-Selects después de cargar materias (incluyendo fetch async)
-        setupMultiSelect('input-q14', 'dropdown-q14', 'tags-container-q14', 'hidden-q14', 'error-q14');
+        // IDs actualizados a Q15 (Rept) y Q16 (Dif)
         setupMultiSelect('input-q15', 'dropdown-q15', 'tags-container-q15', 'hidden-q15', 'error-q15');
+        setupMultiSelect('input-q16', 'dropdown-q16', 'tags-container-q16', 'hidden-q16', 'error-q16');
     });
 }
 
@@ -1273,6 +1287,8 @@ function capturarTodosDatos() {
         console.log('📝 Personal vacío, capturando de form-section1...');
         const formData1 = new FormData(form1);
         const semestresSeleccionados = formData1.getAll('semestre');
+        const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
+        const veranoReprobadas = formData1.getAll('materias_verano_reprobadas');
 
         allData.personal = {
             nombre: formData1.get('nombre') || '',
@@ -1285,12 +1301,17 @@ function capturarTodosDatos() {
             celular: formData1.get('celular') || '',
             correo: formData1.get('correo') || '',
             semestre: semestresSeleccionados,
+            ppa: formData1.get('ppa') || '',
             carga_academica: formData1.get('carga_academica') || '',
             materias_aprobadas: formData1.get('materias_aprobadas') || '',
             materias_reprobadas: formData1.get('materias_reprobadas') || '',
             repetido_materia: formData1.get('repetido_materia') || '',
             materias_repetidas_nombres: formData1.get('materias_repetidas_nombres') || '',
             materias_dificultad: formData1.get('materias_dificultad') || '',
+            // NUEVO P17
+            materias_verano_aprobadas: veranoAprobadas,
+            materias_verano_reprobadas: veranoReprobadas,
+            // RENUMERADOS
             trabaja: formData1.get('trabaja') || '',
             horas_estudio: formData1.get('horas_estudio') || '',
             avance: formData1.get('avance') || ''
@@ -1395,6 +1416,7 @@ function descargarReportePDF() {
     const anioIngreso = data.anio_ingreso || '-';
     const modalidadIngreso = data.modalidad_ingreso || '-';
     const tiempoTerminar = data.tiempo_terminar || '-';
+    const ppa = data.ppa || '-';
     const carga = data.carga_academica || '-';
     const matAprob = data.materias_aprobadas || '-';
     const matReprob = data.materias_reprobadas || '-';
@@ -1404,6 +1426,16 @@ function descargarReportePDF() {
         ? `(${data.materias_repetidas_nombres})`
         : '';
     const matDificultad = data.materias_dificultad || 'Ninguna especificada';
+    
+    // NUEVO P17
+    let veranoAprob = '-';
+    if (data.materias_verano_aprobadas && data.materias_verano_aprobadas.length > 0) {
+        veranoAprob = data.materias_verano_aprobadas.join(', ');
+    }
+    let veranoReprob = '-';
+    if (data.materias_verano_reprobadas && data.materias_verano_reprobadas.length > 0) {
+        veranoReprob = data.materias_verano_reprobadas.join(', ');
+    }
 
     // Datos laborales
     const trabaja = data.trabaja || '-';
@@ -1700,7 +1732,11 @@ function descargarReportePDF() {
         <!-- Section 2: Historial -->
         <div class="section keep-together">
             <div class="section-header"><span>📊</span> Historial y Rendimiento</div>
-             <div class="grid-3">
+            <div class="grid-3">
+                <div class="field-box">
+                    <div class="label">PPA Aprox.</div>
+                    <div class="value" style="color:#6b21a8; font-weight:700;">${ppa}</div>
+                </div>
                 <div class="field-box">
                     <div class="label">Mat. Aprobadas</div>
                     <div class="value" style="color:#059669; font-weight:700;">${matAprob}</div>
@@ -1709,21 +1745,32 @@ function descargarReportePDF() {
                     <div class="label">Mat. Reprobadas</div>
                     <div class="value" style="color:#dc2626; font-weight:700;">${matReprob}</div>
                 </div>
+            </div>
+            <div class="grid-2">
                 <div class="field-box">
                     <div class="label">Tiempo Estimado Finalizacón</div>
                     <div class="value">${tiempoTerminar}</div>
                 </div>
-            </div>
-            <div class="grid-2">
                 <div class="field-box">
                     <div class="label">Repitencia (>3 veces)</div>
                     <div class="value">${repitio} ${repitioCual}</div>
                 </div>
-                 <div class="field-box">
-                    <div class="label">Materias con Dificultad</div>
-                    <div class="value">${matDificultad}</div>
-                </div>
             </div>
+            <div class="field-box" style="margin-bottom:12px;">
+                <div class="label">Materias con Dificultad</div>
+                <div class="value">${matDificultad}</div>
+            </div>
+            
+            <!-- NUEVO BLOQUE P17 -->
+            <div class="field-box" style="margin-bottom:12px; background-color:#eff6ff; padding:8px; border-radius:4px;">
+                <div class="label" style="color:#1e3a8a;">MATERIAS PARA NIVELACIÓN / VERANO (YA APROBADAS)</div>
+                <div class="value" style="border:none; padding-bottom:0;">${veranoAprob}</div>
+            </div>
+            <div class="field-box" style="margin-bottom:12px; background-color:#fef2f2; padding:8px; border-radius:4px;">
+                <div class="label" style="color:#b91c1c;">MATERIAS PARA NIVELACIÓN / VERANO (REPROBADAS)</div>
+                <div class="value" style="border:none; padding-bottom:0;">${veranoReprob}</div>
+            </div>
+
             <div class="grid-2">
                  <div class="field-box">
                     <div class="label">Situación Laboral</div>
