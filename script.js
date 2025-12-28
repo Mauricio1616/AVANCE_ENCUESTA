@@ -1710,7 +1710,7 @@ function descargarReportePDF() {
                     <div class="value" style="color:#dc2626; font-weight:700;">${matReprob}</div>
                 </div>
                 <div class="field-box">
-                    <div class="label">Tiempo Estimado Fin</div>
+                    <div class="label">Tiempo Estimado Finalizacón</div>
                     <div class="value">${tiempoTerminar}</div>
                 </div>
             </div>
