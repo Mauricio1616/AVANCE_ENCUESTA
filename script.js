@@ -14,7 +14,7 @@ function goToSection2(e) {
 
     // --- CORRECCIÓN INTEGRADA: Capturar lista de semestres y campos nuevos ---
     const semestresSeleccionados = formData1.getAll('semestre');
-    
+
     // Capturar lista de materias verano aprobadas y reprobadas (NUEVO P17)
     const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
     const veranoReprobadas = formData1.getAll('materias_verano_reprobadas');
@@ -73,7 +73,7 @@ function goToSection2(e) {
         repetido_materia: repetidoMateria || '',
         materias_repetidas_nombres: materiasRepetidasNombres,
         materias_dificultad: formData1.get('materias_dificultad') || '',
-        
+
         // P17 (NUEVO) - Materias Verano/Nivelación
         materias_verano_aprobadas: veranoAprobadas,
         materias_verano_reprobadas: veranoReprobadas,
@@ -95,8 +95,9 @@ function goToSection2Q10() {
     const mallaCards = document.querySelectorAll('.materia-card');
     window.surveyData.malla = Array.from(mallaCards).map(card => ({
         id: card.id,
-        nombre: card.innerText,
-        estado: card.dataset.status
+        nombre: card.innerText, // This might now contain the appended text, but that's okay/good for PDF if we use this fallback
+        estado: card.dataset.status,
+        customSelection: card.dataset.customSelection || card.dataset.selectedWorkshop || ''
     }));
 
     showView('section2-q10-view');
@@ -331,6 +332,7 @@ const styles = {
 const icons = { aprobado: '<i class="fas fa-check text-[10px] absolute top-1 right-1 opacity-50"></i>', reprobado: '<i class="fas fa-times text-[10px] absolute top-1 right-1 opacity-50"></i>', levantamiento: '<i class="fas fa-arrow-up text-[10px] absolute top-1 right-1 opacity-50"></i>', pendiente: '' };
 
 function init() {
+    loadLists();
     renderSemesters();
     renderBottomRows();
     updateProgress();
@@ -529,19 +531,27 @@ function saveData() {
     const state = {};
     const names = {};
 
+    const metadata = {};
+
     document.querySelectorAll('.materia-card').forEach(card => {
         // Guardar estado
         if (card.dataset.status !== 'pendiente') {
             state[card.id] = card.dataset.status;
         }
         // Guardar nombres personalizados si difieren del original
-        if (card.dataset.originalName !== card.innerText) {
+        if (card.dataset.originalName !== card.innerText && !card.dataset.selectedWorkshop) {
             names[card.id] = card.innerText;
+        }
+        // Guardar metadata (Talleres & Electivas)
+        if (card.dataset.customSelection) {
+            metadata[card.id] = { customSelection: card.dataset.customSelection };
+        } else if (card.dataset.selectedWorkshop) { // Legacy check
+            metadata[card.id] = { customSelection: card.dataset.selectedWorkshop };
         }
     });
 
     // Guardamos también la modalidad seleccionada
-    const data = { state, names, modality: currentModality };
+    const data = { state, names, modality: currentModality, metadata };
     localStorage.setItem('mallaCurricularData', JSON.stringify(data));
 
     showSaveToast();
@@ -552,7 +562,7 @@ function loadData() {
     if (!rawData) return;
 
     try {
-        const { state, names, modality } = JSON.parse(rawData);
+        const { state, names, modality, metadata } = JSON.parse(rawData);
 
         // Restaurar Modalidad
         if (modality && abordajesData[modality]) {
@@ -562,6 +572,7 @@ function loadData() {
         // Hack: Guardamos los datos cargados en variable global para aplicarlos después del render
         window.loadedState = state;
         window.loadedNames = names;
+        window.loadedMetadata = metadata;
 
     } catch (e) {
         console.error("Error cargando datos", e);
@@ -573,6 +584,20 @@ function applyLoadedData() {
         Object.keys(window.loadedNames).forEach(id => {
             const card = document.getElementById(id);
             if (card) card.innerText = window.loadedNames[id];
+        });
+    }
+
+    if (window.loadedMetadata) {
+        Object.keys(window.loadedMetadata).forEach(id => {
+            const card = document.getElementById(id);
+            if (card && window.loadedMetadata[id].selectedWorkshop) {
+                const sel = window.loadedMetadata[id].selectedWorkshop;
+                card.dataset.selectedWorkshop = sel;
+                const originalTitle = card.dataset.originalName || "Taller";
+                card.innerHTML = `<div class="font-bold pointer-events-none">${originalTitle}</div><div class="text-[10px] leading-tight mt-1 text-blue-800 font-normal pointer-events-none">${sel}</div>`;
+                card.classList.remove('items-center');
+                card.classList.add('flex-col', 'justify-center');
+            }
         });
     }
 
@@ -767,8 +792,18 @@ function createCard(id, text) {
     card.dataset.originalName = text;
     card.dataset.status = 'pendiente';
 
-    card.onclick = () => applyTool(card);
-    card.ondblclick = () => openEditModal(card);
+    card.onclick = () => {
+        if (id.startsWith('taller-') || id.startsWith('elec-')) {
+            openSelectionModal(card);
+        } else {
+            applyTool(card);
+        }
+    };
+    card.ondblclick = () => {
+        if (!id.startsWith('taller-') && !id.startsWith('elec-')) {
+            openEditModal(card);
+        }
+    };
 
     return card;
 }
@@ -1426,7 +1461,7 @@ function descargarReportePDF() {
         ? `(${data.materias_repetidas_nombres})`
         : '';
     const matDificultad = data.materias_dificultad || 'Ninguna especificada';
-    
+
     // NUEVO P17
     let veranoAprob = '-';
     if (data.materias_verano_aprobadas && data.materias_verano_aprobadas.length > 0) {
@@ -1590,9 +1625,24 @@ function descargarReportePDF() {
         columns[i].forEach(m => {
             const st = stylesMap[m.estado] || stylesMap.pendiente;
 
-            // Recortar nombre
-            let shortName = m.nombre;
-            if (shortName.length > 15) shortName = shortName.substring(0, 13) + '..';
+            // Determine Name to Display
+            let displayName = m.nombre;
+            // Si el usuario tiene una selección personalizada, la usamos
+            const userSubj = malla.find(u => u.id === m.id);
+            if (userSubj && userSubj.customSelection) {
+                // Formatting: "Original: Selected" or just "Selected" depending on length
+                // User prefers to see what they selected.
+                displayName = userSubj.customSelection;
+            }
+
+            // Recortar nombre si es muy largo
+            let shortName = displayName;
+            if (shortName.length > 25) {
+                shortName = shortName.substring(0, 23) + '..'; // Increased limit slightly
+            }
+
+            // Adjustment for tiny font if still too long or custom
+            const fontSize = (displayName.length > 20) ? '6px' : '7px';
 
             mallaHTML += `<div style="
                 background-color: ${st.bg};
@@ -1600,7 +1650,7 @@ function descargarReportePDF() {
                 border: 1px solid ${st.border};
                 border-radius: 3px;
                 padding: 2px;
-                font-size: 7px;
+                font-size: ${fontSize};
                 line-height: 1.1;
                 text-align: center;
                 height: 28px;
@@ -1609,7 +1659,8 @@ function descargarReportePDF() {
                 justify-content: center;
                 position: relative;
                 overflow: hidden;
-            " title="${m.nombre} (${m.estado})">
+                word-break: break-all; 
+            " title="${displayName} (${m.estado})">
                 ${shortName}
                 ${st.icon ? `<div style="position: absolute; top: 0px; right: 1px; font-size: 6px; opacity: 0.7;">${st.icon}</div>` : ''}
             </div>`;
@@ -1884,3 +1935,162 @@ function descargarReportePDF() {
 
 // Inicializar
 init();
+
+// --- SELECTION MODAL LOGIC (Talleres & Electivas) ---
+let currentSelectionCard = null;
+const listsData = {
+    talleres: [],
+    electivas: []
+};
+
+async function loadLists() {
+    // Load Talleres
+    try {
+        const responseT = await fetch('talleres.txt');
+        if (responseT.ok) {
+            const text = await responseT.text();
+            listsData.talleres = text.split('\n').map(l => l.trim()).filter(l => l);
+        }
+    } catch (e) {
+        console.warn("Error cargando talleres.txt", e);
+    }
+
+    // Load Electivas
+    try {
+        const responseE = await fetch('electivas.txt');
+        if (responseE.ok) {
+            const text = await responseE.text();
+            listsData.electivas = text.split('\n').map(l => l.trim()).filter(l => l);
+        }
+    } catch (e) {
+        console.warn("Error cargando electivas.txt", e);
+    }
+}
+
+function openSelectionModal(card) {
+    currentSelectionCard = card;
+    const modal = document.getElementById('talleres-modal');
+    const title = modal.querySelector('h3');
+    const p = modal.querySelector('p');
+    const select = document.getElementById('taller-select');
+
+    // Determine type
+    const isTaller = card.id.startsWith('taller-');
+    const list = isTaller ? listsData.talleres : listsData.electivas;
+
+    // Update UI text
+    if (isTaller) {
+        title.innerHTML = '<i class="fas fa-chalkboard-teacher text-blue-900"></i> Seleccionar Taller';
+        p.textContent = 'Elige el taller que cursaste:';
+    } else {
+        title.innerHTML = '<i class="fas fa-book-open text-blue-900"></i> Seleccionar Electiva';
+        p.textContent = 'Elige la electiva que cursaste:';
+    }
+
+    // Populate Select
+    select.innerHTML = '<option value="">-- Selecciona una opción --</option>';
+    list.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        select.appendChild(opt);
+    });
+
+    // Reset Input
+    const input = document.getElementById('custom-selection-input');
+    input.classList.add('hidden');
+    input.value = '';
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    // Pre-select if already selected
+    if (card.dataset.customSelection) {
+        // Check if value is in list
+        const isInList = list.includes(card.dataset.customSelection);
+        if (isInList) {
+            select.value = card.dataset.customSelection;
+        } else {
+            // If not in list, it's likely a custom typed value (or legacy/Other)
+            // We try to find the "Other" option to select it
+            const otherOption = Array.from(select.options).find(o => o.text.toLowerCase().includes('otro') || o.text.toLowerCase().includes('otra'));
+            if (otherOption) {
+                select.value = otherOption.value;
+                toggleCustomInput(select); // Show input
+                input.value = card.dataset.customSelection; // Fill input
+            } else {
+                // Fallback
+                select.value = "";
+            }
+        }
+    } else if (card.dataset.selectedWorkshop) { // Legacy support
+        select.value = card.dataset.selectedWorkshop;
+    } else {
+        select.value = "";
+    }
+}
+
+function closeTalleresModal() {
+    const modal = document.getElementById('talleres-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    currentSelectionCard = null;
+}
+
+function saveTallerSelection() {
+    if (!currentSelectionCard) return;
+
+    const select = document.getElementById('taller-select');
+    const input = document.getElementById('custom-selection-input');
+
+    let selectedValue = select.value;
+
+    // Si el input está visible, usaremos su valor
+    if (!input.classList.contains('hidden') && input.value.trim() !== "") {
+        selectedValue = input.value.trim();
+    }
+
+    if (selectedValue) {
+        // Guardar seleccion
+        currentSelectionCard.dataset.customSelection = selectedValue;
+        currentSelectionCard.dataset.status = 'aprobado';
+
+        // Actualizar UI
+        const originalTitle = currentSelectionCard.dataset.originalName;
+        currentSelectionCard.innerHTML = `<div class="font-bold pointer-events-none">${originalTitle}</div><div class="text-[10px] leading-tight mt-1 text-blue-800 font-normal pointer-events-none">${selectedValue}</div>`;
+
+        currentSelectionCard.classList.remove('items-center');
+        currentSelectionCard.classList.add('flex-col', 'justify-center');
+
+        updateCardStyle(currentSelectionCard, 'aprobado');
+    } else {
+        // Limpia la selección
+        currentSelectionCard.removeAttribute('data-custom-selection');
+        currentSelectionCard.removeAttribute('data-selected-workshop');
+        currentSelectionCard.dataset.status = 'pendiente';
+        currentSelectionCard.innerText = currentSelectionCard.dataset.originalName;
+        currentSelectionCard.classList.add('items-center');
+        currentSelectionCard.classList.remove('flex-col', 'justify-center');
+        updateCardStyle(currentSelectionCard, 'pendiente');
+    }
+
+    saveData();
+    closeTalleresModal();
+    updateProgress();
+}
+
+// --- HELPER FOR CUSTOM INPUT ---
+function toggleCustomInput(select) {
+    const input = document.getElementById('custom-selection-input');
+    // Check if the selected text implies "Other"
+    const text = select.options[select.selectedIndex].text.toLowerCase();
+
+    if (text.includes('otro') || text.includes('otra')) {
+        input.classList.remove('hidden');
+        input.focus();
+    } else {
+        input.classList.add('hidden');
+        input.value = ''; // Clean up
+    }
+}
+
