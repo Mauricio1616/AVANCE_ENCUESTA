@@ -2093,4 +2093,3 @@ function toggleCustomInput(select) {
         input.value = ''; // Clean up
     }
 }
-
