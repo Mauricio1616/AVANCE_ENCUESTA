@@ -137,8 +137,15 @@
 
     <h2 class="text-lg font-bold mb-4 text-center">Acceso Admin</h2>
 
-    <input id="codigoInput" type="password" placeholder="Ingrese el código"
-      class="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+<input 
+  id="codigoInput" 
+  type="password" 
+  placeholder="Ingrese el código"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  oninput="this.value = this.value.replace(/[^0-9]/g,'')"
+  class="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
 
     <p id="errorMsg" class="text-red-500 text-sm mb-3 hidden">
       ❌ Código inválido
