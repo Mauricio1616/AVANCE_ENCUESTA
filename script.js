@@ -642,10 +642,39 @@ function showSaveToast() {
 
 // --- FUNCIONES DE MODALIDAD ---
 function changeModality(selectElement) {
-    currentModality = selectElement.value;
+    saveData(); // Guardar estado actual (semestres 1-8 y 10)
+    loadData(); // Cargar ese estado en memoria (window.loadedState)
+
+    const oldModality = currentModality;
+    const newModality = selectElement.value;
+    currentModality = newModality;
+
     renderSemesters(); // Re-renderizar para mostrar las nuevas materias
     // Aplicar estados guardados a las nuevas tarjetas generadas
     applyLoadedData();
+
+    // Migrar estados de Semestre 10 si los nombres coinciden
+    if (oldModality && abordajesData[oldModality] && abordajesData[newModality]) {
+        const oldSem10 = abordajesData[oldModality].sem10 || [];
+        const newSem10 = abordajesData[newModality].sem10 || [];
+
+        oldSem10.forEach((subj, index) => {
+            const oldId = `mod10-${oldModality}-${index}`;
+            if (window.loadedState && window.loadedState[oldId]) {
+                // Verificar coincidencia de nombre en el mismo índice
+                if (newSem10[index] && newSem10[index].name === subj.name) {
+                    const newId = `mod10-${newModality}-${index}`;
+                    const card = document.getElementById(newId);
+                    if (card) {
+                        const status = window.loadedState[oldId];
+                        card.dataset.status = status;
+                        updateCardStyle(card, status);
+                    }
+                }
+            }
+        });
+    }
+
     saveData();
     updateProgress();
 }
