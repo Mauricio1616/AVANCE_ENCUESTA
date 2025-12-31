@@ -123,48 +123,41 @@
         };
     </script>
 
-       <!-- Botón Admin -->
-<!-- Botón redondeado -->
-<button onclick="abrirModal()"
-  class="fixed bottom-4 right-4 z-[1000] bg-blue-500 text-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg hover:bg-blue-600 transition-colors">
-  <i class="fa-solid fa-circle-user text-lg"></i>
-</button>
+    <!-- Botón Admin -->
+    <!-- Botón redondeado -->
+    <button onclick="abrirModal()"
+        class="fixed bottom-4 right-4 z-[1000] bg-blue-500 text-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg hover:bg-blue-600 transition-colors">
+        <i class="fa-solid fa-circle-user text-lg"></i>
+    </button>
 
 
-<!-- Modal -->
-<div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
-  <div class="bg-white rounded-lg shadow-xl p-6 w-80">
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[2000]">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-80">
 
-    <h2 class="text-lg font-bold mb-4 text-center">Acceso Admin</h2>
+            <h2 class="text-lg font-bold mb-4 text-center">Acceso Admin</h2>
 
-<input 
-  id="codigoInput" 
-  type="password" 
-  placeholder="Ingrese el código"
-  inputmode="numeric"
-  pattern="[0-9]*"
-  oninput="this.value = this.value.replace(/[^0-9]/g,'')"
-  class="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input id="codigoInput" type="password" placeholder="Ingrese el código" inputmode="numeric" pattern="[0-9]*"
+                oninput="this.value = this.value.replace(/[^0-9]/g,'')"
+                class="w-full border border-gray-300 rounded px-3 py-2 mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
 
 
-    <p id="errorMsg" class="text-red-500 text-sm mb-3 hidden">
-      ❌ Código inválido
-    </p>
+            <p id="errorMsg" class="text-red-500 text-sm mb-3 hidden">
+                ❌ Código inválido
+            </p>
 
-    <div class="flex justify-between">
-      <button onclick="cerrarModal()"
-        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-        Cancelar
-      </button>
+            <div class="flex justify-between">
+                <button onclick="cerrarModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                    Cancelar
+                </button>
 
-      <button onclick="verificarCodigo()"
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-        Ingresar
-      </button>
+                <button onclick="verificarCodigo()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    Ingresar
+                </button>
+            </div>
+
+        </div>
     </div>
-
-  </div>
-</div>
 
     <!-- ================= VISTA 1: ENCUESTA INICIAL ================= -->
     <div id="section1-view" class="view-container fixed inset-0 z-[100] bg-slate-100 overflow-y-auto overflow-x-hidden">
@@ -277,9 +270,11 @@
                                     <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
                                         <input type="radio" name="anio_ingreso" value="Otro" id="anio_otro_radio"
                                             class="accent-blue-900"> Otro:
-                                        <input type="text" name="anio_ingreso_otro"
+                                        <input type="number" name="anio_ingreso_otro" min="1000" max="9999"
+                                            oninput="this.value = this.value.slice(0,4)"
                                             class="border-b border-slate-300 outline-none w-20 text-sm focus:border-blue-900 bg-transparent"
                                             onclick="document.getElementById('anio_otro_radio').checked = true;">
+
                                     </label>
                                 </div>
                             </div>
@@ -416,25 +411,32 @@
                                     semestre:</label>
                                 <label class="text-slate-800 mb-2 block">
                                     Número de materias inscritas: (Indicará aquí un número no se permite letras)</label>
-                                <input type="number" name="carga_academica" required class="survey-input"
-                                    placeholder="Número de materias">
+                                <input type="number" name="carga_academica" class="survey-input"
+                                    placeholder="Número de materias" required min="1" max="10" step="1"
+                                    oninput="if (this.value < 1 || this.value > 10) this.value = '';">
+
                             </div>
 
                             <!-- P13 (ANTES 12) -->
                             <div>
                                 <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has aprobado en
                                     total en todo tu recorrido académico? (coloca un número)</label>
-                                <input type="number" name="materias_aprobadas" class="survey-input"
-                                    placeholder="Ej: 25">
+                                <input type="number" name="materias_reprobadas" class="survey-input"
+                                    placeholder="1 – 67" min="1" max="67"
+                                    oninput="if (this.value > 67) this.value = '';">
                             </div>
 
                             <!-- P14 (ANTES 13) -->
                             <div>
-                                <label class="font-bold text-slate-800 mb-2 block">14. ¿Cuántas materias has reprobado?
-                                    (coloca un número)</label>
-                                <input type="number" name="materias_reprobadas" class="survey-input"
-                                    placeholder="Ej: 2">
+                                <label class="font-bold text-slate-800 mb-2 block">
+                                    14. ¿Cuántas materias has reprobado? (coloca un número)
+                                </label>
+
+                                <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2"
+                                    min="1" step="1" oninput="this.value = this.value.replace(/[^0-9]/g, ''); 
+                    if (this.value < 1) this.value = '';">
                             </div>
+
 
                             <!-- P15 (ANTES 14) - Repetido Materia -->
                             <div>
@@ -629,7 +631,9 @@
                                 <label class="text-slate-800 mb-2 block">(Aquí indicará un número, no se permite
                                     letras)</label>
 
-                                <input type="number" name="horas_estudio" required class="survey-input">
+                                <input type="number" name="horas_estudio" class="survey-input" required min="1" max="24"
+                                    step="1" oninput="if (this.value < 1 || this.value > 24) this.value = '';">
+
                             </div>
 
                             <!-- P20 (ANTES 19) -->
@@ -1147,49 +1151,49 @@
 
     <script src="script.js"></script>
 
-<script>
-  function abrirModal() {
-    document.getElementById("modal").classList.remove("hidden");
-    document.getElementById("codigoInput").value = "";
-    document.getElementById("errorMsg").classList.add("hidden");
-    document.getElementById("codigoInput").focus();
-  }
+    <script>
+        function abrirModal() {
+            document.getElementById("modal").classList.remove("hidden");
+            document.getElementById("codigoInput").value = "";
+            document.getElementById("errorMsg").classList.add("hidden");
+            document.getElementById("codigoInput").focus();
+        }
 
-  function cerrarModal() {
-    document.getElementById("modal").classList.add("hidden");
-  }
+        function cerrarModal() {
+            document.getElementById("modal").classList.add("hidden");
+        }
 
-  async function verificarCodigo() {
-    const codigoIngresado = document.getElementById("codigoInput").value.trim();
-    const errorMsg = document.getElementById("errorMsg");
+        async function verificarCodigo() {
+            const codigoIngresado = document.getElementById("codigoInput").value.trim();
+            const errorMsg = document.getElementById("errorMsg");
 
-    try {
-      const response = await fetch("codigo.txt");
-      const texto = await response.text();
+            try {
+                const response = await fetch("codigo.txt");
+                const texto = await response.text();
 
-      // Convertir a array de códigos
-      const codigos = texto
-        .split(/\r?\n/)
-        .map(c => c.trim())
-        .filter(c => c !== "");
+                // Convertir a array de códigos
+                const codigos = texto
+                    .split(/\r?\n/)
+                    .map(c => c.trim())
+                    .filter(c => c !== "");
 
-      if (codigos.includes(codigoIngresado)) {
-        window.location.href = "360_Panel_Administracion.html";
-      } else {
-        errorMsg.classList.remove("hidden");
-      }
-    } catch (error) {
-      errorMsg.textContent = "⚠️ Error al validar el código";
-      errorMsg.classList.remove("hidden");
-      console.error(error);
-    }
-  }
+                if (codigos.includes(codigoIngresado)) {
+                    window.location.href = "360_Panel_Administracion.html";
+                } else {
+                    errorMsg.classList.remove("hidden");
+                }
+            } catch (error) {
+                errorMsg.textContent = "⚠️ Error al validar el código";
+                errorMsg.classList.remove("hidden");
+                console.error(error);
+            }
+        }
 
-  // Enter para enviar
-  document.getElementById("codigoInput").addEventListener("keyup", e => {
-    if (e.key === "Enter") verificarCodigo();
-  });
-</script>
+        // Enter para enviar
+        document.getElementById("codigoInput").addEventListener("keyup", e => {
+            if (e.key === "Enter") verificarCodigo();
+        });
+    </script>
 </body>
 
 

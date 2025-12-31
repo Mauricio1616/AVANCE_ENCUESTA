@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Admin - Encuesta Psicología</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-            rel="stylesheet">
 
-        <style>
-            .hide-scroll::-webkit-scrollbar { display: none; }
-            .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        </style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin - Encuesta Psicología</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-        <!-- Firebase SDKs -->
-        <script type="module">
+    <style>
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyCkhGGnoJpAJSs3YC55EzHj2ETGSCvK63w",
-          authDomain: "psiconet-360.firebaseapp.com",
-          projectId: "psiconet-360",
-          storageBucket: "psiconet-360.firebasestorage.app",
-          messagingSenderId: "210998536370",
-          appId: "1:210998536370:web:da23055d04f4491175c1ab"
+            apiKey: "AIzaSyCkhGGnoJpAJSs3YC55EzHj2ETGSCvK63w",
+            authDomain: "psiconet-360.firebaseapp.com",
+            projectId: "psiconet-360",
+            storageBucket: "psiconet-360.firebasestorage.app",
+            messagingSenderId: "210998536370",
+            appId: "1:210998536370:web:da23055d04f4491175c1ab"
         };
 
         let db;
@@ -37,7 +42,7 @@
         // --- FUNCIÓN DE BÚSQUEDA PROFUNDA ---
         function getField(doc, ...keys) {
             if (!doc) return undefined;
-            const data = doc.data ? doc.data() : doc; 
+            const data = doc.data ? doc.data() : doc;
             const isValid = (val) => val !== undefined && val !== null && val !== "";
 
             for (const key of keys) {
@@ -60,7 +65,7 @@
                     }
                 }
             }
-            
+
             for (const prop in data) {
                 if (typeof data[prop] === 'object' && data[prop] !== null && !Array.isArray(data[prop]) && prop !== 'personal') {
                     for (const key of keys) {
@@ -76,7 +81,7 @@
             if (!val) return '<span class="text-slate-400 italic text-[10px]">Sin datos</span>';
             let arr = Array.isArray(val) ? val : [String(val)];
             if (arr.length === 1 && typeof arr[0] === 'string' && arr[0].includes(',')) {
-                 arr = arr[0].split(',').map(s => s.trim());
+                arr = arr[0].split(',').map(s => s.trim());
             }
             if (arr.length === 0 || (arr.length === 1 && arr[0] === "")) return '<span class="text-slate-400 italic text-[10px]">Sin selección</span>';
             return arr.map(item => `<span class="inline-block bg-blue-100 text-blue-800 text-[10px] font-bold px-1.5 py-0.5 rounded border border-blue-200 mr-1 mb-1 whitespace-nowrap">${item}</span>`).join('');
@@ -84,47 +89,47 @@
 
         async function initAdmin() {
             try {
-                if(firebaseConfig.apiKey === "TU_API_KEY") throw new Error("Configurar Firebase - API Key no seteada");
+                if (firebaseConfig.apiKey === "TU_API_KEY") throw new Error("Configurar Firebase - API Key no seteada");
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 try {
-                  const colRef = collection(db, "encuestas_estudiantes");
-                  const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
-                      if (querySnapshot.size === 0) {
-                          loadDummyData();
-                          isRealData = false;
-                          showStatusMessage('ℹ️ Demo: Base vacía.', 'warning');
-                      } else {
-                          allSurveys = [];
-                          querySnapshot.forEach((doc) => {
-                              allSurveys.push({ id: doc.id, ...doc.data() });
-                          });
-                          // Ordenar por fecha descendente (si existe timestamp)
-                          allSurveys.sort((a, b) => {
-                              const tA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
-                              const tB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
-                              return tB - tA;
-                          });
-                          isRealData = true;
-                          showStatusMessage(`✅ ${allSurveys.length} encuestas`, 'success');
-                      }
-                      updateUI();
-                      populateStudentSelect(); // Actualizar selector
-                  }, (err) => {
-                      console.error('❌ onSnapshot error:', err);
-                      loadDummyData();
-                      isRealData = false;
-                      showStatusMessage('Error conexión.', 'error');
-                      updateUI();
-                      populateStudentSelect();
-                  });
-                  window._adminUnsubscribe = unsubscribe;
+                    const colRef = collection(db, "encuestas_estudiantes");
+                    const unsubscribe = onSnapshot(colRef, (querySnapshot) => {
+                        if (querySnapshot.size === 0) {
+                            loadDummyData();
+                            isRealData = false;
+                            showStatusMessage('ℹ️ Demo: Base vacía.', 'warning');
+                        } else {
+                            allSurveys = [];
+                            querySnapshot.forEach((doc) => {
+                                allSurveys.push({ id: doc.id, ...doc.data() });
+                            });
+                            // Ordenar por fecha descendente (si existe timestamp)
+                            allSurveys.sort((a, b) => {
+                                const tA = a.timestamp ? (a.timestamp.seconds || 0) : 0;
+                                const tB = b.timestamp ? (b.timestamp.seconds || 0) : 0;
+                                return tB - tA;
+                            });
+                            isRealData = true;
+                            showStatusMessage(`✅ ${allSurveys.length} encuestas`, 'success');
+                        }
+                        updateUI();
+                        populateStudentSelect(); // Actualizar selector
+                    }, (err) => {
+                        console.error('❌ onSnapshot error:', err);
+                        loadDummyData();
+                        isRealData = false;
+                        showStatusMessage('Error conexión.', 'error');
+                        updateUI();
+                        populateStudentSelect();
+                    });
+                    window._adminUnsubscribe = unsubscribe;
                 } catch (e) {
-                  console.error('❌ Error CRÍTICO:', e);
-                  loadDummyData();
-                  isRealData = false;
-                  updateUI();
-                  populateStudentSelect();
+                    console.error('❌ Error CRÍTICO:', e);
+                    loadDummyData();
+                    isRealData = false;
+                    updateUI();
+                    populateStudentSelect();
                 }
             } catch (e) {
                 console.error("❌ Error init:", e);
@@ -148,19 +153,19 @@
 
         function loadDummyData() {
             allSurveys = [
-                { 
-                    id: "demo-1", 
-                    timestamp: { seconds: Date.now()/1000 },
-                    personal: { 
-                        nombre: "Sofía Martínez", 
-                        registro: "220001", 
-                        CI: "1234567 SC", 
-                        celular: "70012345", 
-                        correo: "sofia@mail.com", 
-                        semestre: ["10mo Semestre"], 
-                        carga_academica: "5", 
-                        trabaja: "No", 
-                        horas_estudio: "4", 
+                {
+                    id: "demo-1",
+                    timestamp: { seconds: Date.now() / 1000 },
+                    personal: {
+                        nombre: "Sofía Martínez",
+                        registro: "220001",
+                        CI: "1234567 SC",
+                        celular: "70012345",
+                        correo: "sofia@mail.com",
+                        semestre: ["10mo Semestre"],
+                        carga_academica: "5",
+                        trabaja: "No",
+                        horas_estudio: "4",
                         avance: "Voy al día",
                         anio_ingreso: "2021",
                         modalidad_ingreso: "PSA",
@@ -170,8 +175,8 @@
                         repetido_materia: "No",
                         materias_dificultad: "Estadística II, Neuropsicología I",
                         materias_repetidas_nombres: "Estadística I"
-                    }, 
-                    malla: [{id: "sem-0-0", nombre: "Filosofía", estado: "aprobado"}, {id: "sem-9-0", nombre: "Ética Profesional II", estado: "aprobado"}], 
+                    },
+                    malla: [{ id: "sem-0-0", nombre: "Filosofía", estado: "aprobado" }, { id: "sem-9-0", nombre: "Ética Profesional II", estado: "aprobado" }],
                     seccion2_cierre: { q10: "No" }, seccion3: { q11: "Motivado", q12: "Claridad" }, seccion4: { prioridad: "Ninguna (Voy bien)", q13: ["Ninguna"] }, seccion5: { propuesta: "Mantener el ritmo actual." }
                 }
             ];
@@ -179,44 +184,52 @@
 
         window.initAdmin = initAdmin;
         window.getField = getField;
+        window.renderTable = renderTable;
 
         window.switchTab = (tabName) => {
             const listBtn = document.getElementById('tab-btn-list');
             const statsBtn = document.getElementById('tab-btn-stats');
             const indivBtn = document.getElementById('tab-btn-individual');
-            
+            const dataBtn = document.getElementById('tab-btn-data');
+
             const listView = document.getElementById('view-list');
             const statsView = document.getElementById('view-stats');
             const indivView = document.getElementById('view-individual');
+            const dataView = document.getElementById('view-data');
 
             // Reset classes
-            [listBtn, statsBtn, indivBtn].forEach(btn => {
-                if(btn) {
+            [listBtn, statsBtn, indivBtn, dataBtn].forEach(btn => {
+                if (btn) {
                     btn.classList.replace('border-blue-900', 'border-transparent');
                     btn.classList.replace('text-blue-900', 'text-slate-500');
                 }
             });
-            [listView, statsView, indivView].forEach(view => {
-                if(view) view.classList.add('hidden');
+            [listView, statsView, indivView, dataView].forEach(view => {
+                if (view) view.classList.add('hidden');
             });
 
             // Activate current
-            if(tabName === 'list') {
-                listBtn.classList.replace('border-transparent', 'border-blue-900'); 
+            if (tabName === 'list') {
+                listBtn.classList.replace('border-transparent', 'border-blue-900');
                 listBtn.classList.replace('text-slate-500', 'text-blue-900');
-                listView.classList.remove('hidden'); 
+                listView.classList.remove('hidden');
             } else if (tabName === 'stats') {
-                statsBtn.classList.replace('border-transparent', 'border-blue-900'); 
+                statsBtn.classList.replace('border-transparent', 'border-blue-900');
                 statsBtn.classList.replace('text-slate-500', 'text-blue-900');
-                statsView.classList.remove('hidden'); 
+                statsView.classList.remove('hidden');
                 setTimeout(renderDashboard, 100);
             } else if (tabName === 'individual') {
-                indivBtn.classList.replace('border-transparent', 'border-blue-900'); 
+                indivBtn.classList.replace('border-transparent', 'border-blue-900');
                 indivBtn.classList.replace('text-slate-500', 'text-blue-900');
                 indivView.classList.remove('hidden');
                 // Trigger rendering for selected student if any
                 const select = document.getElementById('student-select');
-                if(select && select.value) loadStudentStats();
+                if (select && select.value) loadStudentStats();
+            } else if (tabName === 'data') {
+                dataBtn.classList.replace('border-transparent', 'border-blue-900');
+                dataBtn.classList.replace('text-slate-500', 'text-blue-900');
+                dataView.classList.remove('hidden');
+                renderDataView();
             }
         };
 
@@ -227,7 +240,7 @@
             if (index !== -1) {
                 // Cambiar a pestaña individual
                 window.switchTab('individual');
-                
+
                 // Seleccionar estudiante en el dropdown
                 const select = document.getElementById('student-select');
                 if (select) {
@@ -256,8 +269,8 @@
             const btn = document.getElementById('btn-confirm-delete');
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
-            try { await deleteDoc(doc(db, "encuestas_estudiantes", surveyToDeleteId)); showStatusMessage('✅ Borrado.', 'success'); } 
-            catch (error) { showStatusMessage('❌ Error al borrar.', 'error'); } 
+            try { await deleteDoc(doc(db, "encuestas_estudiantes", surveyToDeleteId)); showStatusMessage('✅ Borrado.', 'success'); }
+            catch (error) { showStatusMessage('❌ Error al borrar.', 'error'); }
             finally { btn.innerHTML = originalText; btn.disabled = false; window.closeDeleteModal(); }
         };
 
@@ -265,33 +278,44 @@
 
         // --- NUEVA LÓGICA: ESTADÍSTICA INDIVIDUAL ---
         function populateStudentSelect() {
-            const select = document.getElementById('student-select');
-            if(!select) return;
-            select.innerHTML = '<option value="">-- Selecciona un Estudiante --</option>';
-            
-            allSurveys.forEach((s, index) => {
+            const datalist = document.getElementById('student-datalist');
+            const input = document.getElementById('student-select-input');
+            if (!datalist || !input) return;
+
+            datalist.innerHTML = '';
+
+            allSurveys.forEach((s) => {
                 const nombre = getField(s, 'nombre', 'Nombre') || 'Anónimo';
                 const registro = getField(s, 'registro', 'Registro') || s.id;
                 const option = document.createElement('option');
-                option.value = index; // Usamos el índice para acceso rápido
-                option.textContent = `${nombre} (${registro})`;
-                select.appendChild(option);
+                option.value = `${nombre} (${registro})`;
+                datalist.appendChild(option);
             });
         }
 
         window.loadStudentStats = () => {
-            const select = document.getElementById('student-select');
+            const input = document.getElementById('student-select-input');
             const container = document.getElementById('individual-stats-content');
-            if(!select || !container) return;
+            if (!input || !container) return;
 
-            const index = select.value;
-            if (index === "") {
-                container.innerHTML = '<p class="text-center text-slate-400 mt-10">Selecciona un estudiante para ver su reporte detallado.</p>';
+            const val = input.value;
+            if (!val) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed"><i class="fas fa-search text-3xl mb-2 opacity-50"></i><p>Selecciona un estudiante del listado para ver su análisis detallado.</p></div>';
                 return;
             }
 
-            const student = allSurveys[index];
-            if (!student) return;
+            // Buscar estudiante que coincida con el valor del input (nombre + registro)
+            const student = allSurveys.find(s => {
+                const n = getField(s, 'nombre', 'Nombre') || 'Anónimo';
+                const r = getField(s, 'registro', 'Registro') || s.id;
+                return `${n} (${r})` === val;
+            });
+
+            if (!student) {
+                // Si el usuario escribió algo pero no coincide exactamente, podemos mostrar mensaje o nada
+                // container.innerHTML = '<p class="text-center text-red-400 mt-10">Estudiante no encontrado. Selecciona de la lista.</p>';
+                return;
+            }
 
             // 1. Obtener Semestres Pendientes (P10)
             const semestresP10 = getField(student, 'semestre', 'Semestre') || [];
@@ -305,12 +329,12 @@
             };
 
             let pendingHtml = '';
-            
+
             if (semestresArray.length === 0 || (semestresArray.length === 1 && semestresArray[0] === '')) {
                 pendingHtml = '<div class="p-4 bg-green-50 rounded border border-green-200 text-green-800">No hay semestres pendientes reportados en P10.</div>';
             } else {
                 pendingHtml = '<div class="space-y-4">';
-                
+
                 semestresArray.forEach(semName => {
                     const colIndex = semestreMap[semName.trim()];
                     if (colIndex !== undefined) {
@@ -322,10 +346,10 @@
                         });
 
                         const pendientes = materiasDelSemestre.filter(m => m.estado !== 'aprobado');
-                        
+
                         // Si no hay materias guardadas en la malla para este semestre, asumimos que todas están pendientes (caso borde)
                         // O mostramos las que están marcadas explícitamente como NO aprobadas
-                        
+
                         let listaMaterias = '';
                         if (pendientes.length > 0) {
                             listaMaterias = `<ul class="list-disc list-inside text-sm text-slate-700 ml-2 mt-1">
@@ -377,7 +401,7 @@
                 const ctx = document.getElementById('chart-malla-individual');
                 if (ctx) {
                     let mallaStats = { 'Aprobado': 0, 'Reprobado': 0, 'Pendiente': 0 };
-                    
+
                     // Calcular Aprobados y Pendientes desde la Malla Interactiva
                     if (student.malla && Array.isArray(student.malla)) {
                         student.malla.forEach(m => {
@@ -387,11 +411,11 @@
                             else mallaStats['Pendiente']++; // Pendiente o Levantamiento
                         });
                     }
-                    
+
                     // Obtener Reprobados desde P13 explícitamente
                     const reprobadasP13 = parseInt(getField(student, 'materias_reprobadas')) || 0;
                     mallaStats['Reprobado'] = reprobadasP13;
-                    
+
                     if (chartInstances['chart-malla-individual']) chartInstances['chart-malla-individual'].destroy();
                     chartInstances['chart-malla-individual'] = new Chart(ctx, {
                         type: 'bar', // O 'pie' si prefieres
@@ -418,36 +442,57 @@
 
         function renderTable() {
             const tbody = document.getElementById('students-table-body');
-            tbody.innerHTML = '';
-            if (allSurveys.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 text-sm">No hay encuestas registradas aún.</td></tr>'; return; }
+            const searchInput = document.getElementById('list-search-input');
+            const filter = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-            allSurveys.forEach(s => {
+            tbody.innerHTML = '';
+
+            if (allSurveys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 text-sm">No hay encuestas registradas aún.</td></tr>';
+                return;
+            }
+
+            // Filter logic
+            const filteredSurveys = allSurveys.filter(s => {
+                if (!filter) return true;
+                const nombre = (getField(s, 'nombre', 'Nombre') || '').toLowerCase();
+                const registro = (getField(s, 'registro', 'Registro') || '').toLowerCase();
+                return nombre.includes(filter) || registro.includes(filter);
+            });
+
+            if (filteredSurveys.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 text-sm italic">No se encontraron resultados para la búsqueda.</td></tr>';
+                document.getElementById('total-count').innerText = "0 de " + allSurveys.length;
+                return;
+            }
+
+            filteredSurveys.forEach(s => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 border-b border-slate-100 cursor-pointer transition-colors group";
                 tr.onclick = () => openStudentDetail(s);
-                
+
                 const aprobadas = s.malla ? s.malla.filter(m => m.estado === 'aprobado').length : 0;
-                const avanceVal = getField(s, 'avance', 'Avance'); 
+                const avanceVal = getField(s, 'avance', 'Avance');
                 // Columna Sentimiento eliminada
-                
+
                 // Formato Fecha
                 let fecha = "N/A";
                 if (s.timestamp) {
                     const date = s.timestamp.toDate ? s.timestamp.toDate() : new Date(s.timestamp.seconds * 1000);
                     if (!isNaN(date.getTime())) {
-                        fecha = date.toLocaleString('es-BO', { 
-                            day: '2-digit', month: '2-digit', year: '2-digit', 
-                            hour: '2-digit', minute: '2-digit' 
+                        fecha = date.toLocaleString('es-BO', {
+                            day: '2-digit', month: '2-digit', year: '2-digit',
+                            hour: '2-digit', minute: '2-digit'
                         });
                     }
                 }
-                
+
                 let estadoBadge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] font-bold">Sin datos</span>`;
                 if (avanceVal && typeof avanceVal === 'string') {
-                    if(avanceVal.includes('día')) estadoBadge = `<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Al día</span>`;
-                    else if(avanceVal.includes('atrasado') || avanceVal.includes('moderado') || avanceVal.includes('significativo')) estadoBadge = `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>`;
+                    if (avanceVal.includes('día')) estadoBadge = `<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Al día</span>`;
+                    else if (avanceVal.includes('atrasado') || avanceVal.includes('moderado') || avanceVal.includes('significativo')) estadoBadge = `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded text-[10px] font-bold">Atrasado</span>`;
                 }
-                
+
                 const nombre = getField(s, 'nombre', 'Nombre') || 'Anónimo';
                 const registro = getField(s, 'registro', 'Registro') || '-';
                 const semestreRaw = getField(s, 'semestre', 'Semestre');
@@ -475,105 +520,100 @@
                 `;
                 tbody.appendChild(tr);
             });
-            document.getElementById('total-count').innerText = allSurveys.length;
+            document.getElementById('total-count').innerText = `${filteredSurveys.length} de ${allSurveys.length}`;
         }
 
         const chartInstances = {};
         function renderDashboard() {
-            const countData = (fieldKeys) => {
-                const counts = {};
-                allSurveys.forEach(s => {
-                    let val = getField(s, ...(Array.isArray(fieldKeys) ? fieldKeys : [fieldKeys]));
-                    if(Array.isArray(val)) { val.forEach(v => { let label = v || "Sin respuesta"; counts[label] = (counts[label] || 0) + 1; }); } 
-                    else { let label = val || "Sin respuesta"; if(label.length > 18) label = label.substring(0, 18) + "..."; counts[label] = (counts[label] || 0) + 1; }
-                });
-                return counts;
-            };
+            try {
+                const countData = (fieldKeys) => {
+                    const counts = {};
+                    allSurveys.forEach(s => {
+                        let val = getField(s, ...(Array.isArray(fieldKeys) ? fieldKeys : [fieldKeys]));
+                        if (Array.isArray(val)) { val.forEach(v => { let label = v || "Sin respuesta"; counts[label] = (counts[label] || 0) + 1; }); }
+                        else { let label = val || "Sin respuesta"; if (label.length > 18) label = label.substring(0, 18) + "..."; counts[label] = (counts[label] || 0) + 1; }
+                    });
+                    return counts;
+                };
 
-            // Función especializada para contar materias separadas por comas (P14 y P15)
-            const countCommaSeparated = (fieldKey) => {
-                const counts = {};
+                // Función especializada para contar materias separadas por comas (P14 y P15)
+                const countCommaSeparated = (fieldKey) => {
+                    const counts = {};
+                    allSurveys.forEach(s => {
+                        let rawText = getField(s, fieldKey);
+                        if (rawText !== undefined && rawText !== null) {
+                            // Asegurar que sea string
+                            rawText = String(rawText);
+                            if (rawText && rawText !== 'Sin respuesta' && rawText !== '-') {
+                                // Dividir por comas, limpiar espacios y contar
+                                const items = rawText.split(',').map(i => i.trim()).filter(i => i !== '');
+                                items.forEach(item => {
+                                    counts[item] = (counts[item] || 0) + 1;
+                                });
+                            }
+                        }
+                    });
+                    // Ordenar por frecuencia descendente y tomar top 10
+                    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                    const result = {};
+                    sorted.forEach(([k, v]) => result[k] = v);
+                    return result;
+                };
+
+                // Lógica para Histograma de Frecuencia de Carga (P11) - REEMPLAZADO
+                const loadFrequency = {};
                 allSurveys.forEach(s => {
-                    const rawText = getField(s, fieldKey) || '';
-                    if (rawText && rawText !== 'Sin respuesta' && rawText !== '-') {
-                        // Dividir por comas, limpiar espacios y contar
-                        const items = rawText.split(',').map(i => i.trim()).filter(i => i !== '');
-                        items.forEach(item => {
-                            counts[item] = (counts[item] || 0) + 1;
-                        });
+                    let load = parseInt(getField(s, 'carga_academica', 'carga'));
+                    if (!isNaN(load) && load > 0) {
+                        // Agrupar mayores a 10 si es necesario, o dejarlos puros
+                        const key = load.toString();
+                        loadFrequency[key] = (loadFrequency[key] || 0) + 1;
                     }
                 });
-                // Ordenar por frecuencia descendente y tomar top 10
-                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-                const result = {};
-                sorted.forEach(([k, v]) => result[k] = v);
-                return result;
-            };
 
-            // Lógica para Histograma de Frecuencia de Carga (P11) - REEMPLAZADO
-            const loadFrequency = {};
-            allSurveys.forEach(s => {
-                let load = parseInt(getField(s, 'carga_academica', 'carga'));
-                if (!isNaN(load) && load > 0) {
-                    // Agrupar mayores a 10 si es necesario, o dejarlos puros
-                    const key = load.toString();
-                    loadFrequency[key] = (loadFrequency[key] || 0) + 1;
-                }
-            });
-            
-            // Ordenar por número de materias (Eje X: 1, 2, 3, 4...)
-            const sortedLoadKeys = Object.keys(loadFrequency).sort((a, b) => parseInt(a) - parseInt(b));
-            const sortedLoadObj = {};
-            sortedLoadKeys.forEach(k => sortedLoadObj[k] = loadFrequency[k]);
+                // Ordenar por número de materias (Eje X: 1, 2, 3, 4...)
+                const sortedLoadKeys = Object.keys(loadFrequency).sort((a, b) => parseInt(a) - parseInt(b));
+                const sortedLoadObj = {};
+                sortedLoadKeys.forEach(k => sortedLoadObj[k] = loadFrequency[k]);
 
 
-            const renderChart = (canvasId, type, counts, label, colorHex) => {
-                const canvas = document.getElementById(canvasId); if(!canvas) return;
-                if(chartInstances[canvasId]) chartInstances[canvasId].destroy();
-                chartInstances[canvasId] = new Chart(canvas, {
-                    type: type,
-                    data: { labels: Object.keys(counts), datasets: [{ label: label, data: Object.values(counts), backgroundColor: Array.isArray(colorHex) ? colorHex : (type === 'pie' || type === 'doughnut' ? ['#1e3a8a', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] : colorHex), borderWidth: 1 }] },
-                    options: { responsive: true, maintainAspectRatio: false, indexAxis: type === 'bar' && ['chart-priority','chart-measures', 'chart-repetidas', 'chart-dificultad'].includes(canvasId) ? 'y' : 'x', plugins: { legend: { display: type === 'pie' || type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
-                });
-            };
-            
-            // Gráficos existentes
-            renderChart('chart-semestre', 'bar', countData(['semestre', 'Semestre']), 'Est', '#3b82f6');
-            
-            // ELIMINADO EL GRÁFICO ORIGINAL DE "CARGA" YA QUE AHORA ES EL HISTOGRAMA EN chart-promedio-carga
-            // Si quieres mantener el original en su posición, descomenta abajo, pero como pediste reemplazar...
-            // renderChart('chart-carga', 'bar', countData(['carga_academica', 'carga']), 'Est', '#0ea5e9');
-            // Como el diseño tenía un hueco para P11, usaré el histograma ahí si lo prefieres, 
-            // PERO tu instrucción decía "borra TOP PROMEDIO... yo me refería a esto en la 11".
-            // Así que usaré el canvas 'chart-promedio-carga' (que es el nuevo slot) para este histograma.
-            
-            // Renderizamos P11 original (si existe el canvas chart-carga) con datos simples o lo ocultamos si es redundante.
-            // Para ser limpio: usaré 'chart-carga' para el histograma y 'chart-promedio-carga' lo usaré para lo mismo o lo quitaré.
-            // Dado que el HTML tiene slots definidos, voy a re-usar el slot nuevo que creamos antes para este propósito.
-            
-            // renderChart('chart-carga', 'bar', countData(['carga_academica', 'carga']), 'Est', '#0ea5e9'); // Mantengo el original por si acaso
-            renderChart('chart-trabaja', 'pie', countData(['trabaja', 'Trabaja']), 'Est', null);
-            renderChart('chart-horas', 'bar', countData(['horas_estudio', 'Horas_estudio', 'horas']), 'Est', '#6366f1');
-            renderChart('chart-avance', 'doughnut', countData(['avance', 'Avance']), 'Est', null);
-            
-            // Nuevos Gráficos (Añadidos)
-            if(document.getElementById('chart-ingreso')) renderChart('chart-ingreso', 'bar', countData('anio_ingreso'), 'Ingreso', '#14b8a6');
-            if(document.getElementById('chart-modalidad')) renderChart('chart-modalidad', 'pie', countData('modalidad_ingreso'), 'Modalidad', null);
-            
-            // Gráficos P14 y P15 (NUEVOS - Materias Repetidas y Dificultad)
-            if(document.getElementById('chart-repetidas')) renderChart('chart-repetidas', 'bar', countCommaSeparated('materias_repetidas_nombres'), 'Veces', '#ef4444');
-            if(document.getElementById('chart-dificultad')) renderChart('chart-dificultad', 'bar', countCommaSeparated('materias_dificultad'), 'Veces', '#f97316');
+                const renderChart = (canvasId, type, counts, label, colorHex) => {
+                    const canvas = document.getElementById(canvasId); if (!canvas) return;
+                    if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+                    chartInstances[canvasId] = new Chart(canvas, {
+                        type: type,
+                        data: { labels: Object.keys(counts), datasets: [{ label: label, data: Object.values(counts), backgroundColor: Array.isArray(colorHex) ? colorHex : (type === 'pie' || type === 'doughnut' ? ['#1e3a8a', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'] : colorHex), borderWidth: 1 }] },
+                        options: { responsive: true, maintainAspectRatio: false, indexAxis: type === 'bar' && ['chart-priority', 'chart-measures', 'chart-repetidas', 'chart-dificultad'].includes(canvasId) ? 'y' : 'x', plugins: { legend: { display: type === 'pie' || type === 'doughnut', position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+                    });
+                };
 
-            // NUEVO GRAFICO HISTOGRAMA DE FRECUENCIA (Reemplazando el de promedio)
-            if(document.getElementById('chart-promedio-carga')) renderChart('chart-promedio-carga', 'bar', sortedLoadObj, 'Estudiantes', '#38bdf8');
+                // Gráficos existentes
+                renderChart('chart-semestre', 'bar', countData(['semestre', 'Semestre']), 'Est', '#3b82f6');
 
-            renderChart('chart-p10', 'pie', countData('q10'), 'Res', null);
-            renderChart('chart-sentiment', 'bar', countData('q11'), 'Est', '#8b5cf6');
-            renderChart('chart-p12', 'bar', countData('q12'), 'Est', '#f59e0b');
-            renderChart('chart-measures', 'bar', countData('q13'), 'Votos', '#10b981');
-            renderChart('chart-priority', 'bar', countData('prioridad'), 'Votos', '#ef4444');
-            
-            // El gráfico global ha sido movido a la pestaña individual por solicitud
+                renderChart('chart-trabaja', 'pie', countData(['trabaja', 'Trabaja']), 'Est', null);
+                renderChart('chart-horas', 'bar', countData(['horas_estudio', 'Horas_estudio', 'horas']), 'Est', '#6366f1');
+                renderChart('chart-avance', 'doughnut', countData(['avance', 'Avance']), 'Est', null);
+
+                // Nuevos Gráficos (Añadidos)
+                if (document.getElementById('chart-ingreso')) renderChart('chart-ingreso', 'bar', countData('anio_ingreso'), 'Ingreso', '#14b8a6');
+                if (document.getElementById('chart-modalidad')) renderChart('chart-modalidad', 'pie', countData('modalidad_ingreso'), 'Modalidad', null);
+
+                // Gráficos P14 y P15 (NUEVOS - Materias Repetidas y Dificultad)
+                if (document.getElementById('chart-repetidas')) renderChart('chart-repetidas', 'bar', countCommaSeparated('materias_repetidas_nombres'), 'Veces', '#ef4444');
+                if (document.getElementById('chart-dificultad')) renderChart('chart-dificultad', 'bar', countCommaSeparated('materias_dificultad'), 'Veces', '#f97316');
+
+                // NUEVO GRAFICO HISTOGRAMA DE FRECUENCIA (Reemplazando el de promedio)
+                if (document.getElementById('chart-promedio-carga')) renderChart('chart-promedio-carga', 'bar', sortedLoadObj, 'Estudiantes', '#38bdf8');
+
+                renderChart('chart-p10', 'pie', countData('q10'), 'Res', null);
+                renderChart('chart-sentiment', 'bar', countData('q11'), 'Est', '#8b5cf6');
+                renderChart('chart-p12', 'bar', countData('q12'), 'Est', '#f59e0b');
+                renderChart('chart-measures', 'bar', countData('q13'), 'Votos', '#10b981');
+                renderChart('chart-priority', 'bar', countData('prioridad'), 'Votos', '#ef4444');
+
+            } catch (error) {
+                console.error("Error rendering dashboard:", error);
+            }
         }
 
         window.openStudentDetail = (student) => {
@@ -582,11 +622,11 @@
 
             const nombre = getField(student, 'nombre', 'Nombre') || '-';
             const apellidos = getField(student, 'Apellidos', 'apellidos') || '-';
-            const ci = getField(student, 'CI', 'ci', 'Ci') || '-'; 
+            const ci = getField(student, 'CI', 'ci', 'Ci') || '-';
             const registro = getField(student, 'registro', 'Registro') || '-';
             const celular = getField(student, 'celular', 'Celular') || '-';
             const correo = getField(student, 'correo', 'Correo') || '-';
-            
+
             // Nuevos campos P5-P7
             const anioIngreso = getField(student, 'anio_ingreso') || '-';
             const modalidadIngreso = getField(student, 'modalidad_ingreso') || '-';
@@ -594,14 +634,14 @@
 
             const semestre = getField(student, 'semestre', 'Semestre');
             const carga = getField(student, 'carga_academica', 'carga') || '-';
-            
+
             // Nuevos campos P12-P16
             const matAprob = getField(student, 'materias_aprobadas') || '-';
             const matReprob = getField(student, 'materias_reprobadas') || '-';
             const repitio = getField(student, 'repetido_materia') || '-';
             const repitioCual = getField(student, 'materias_repetidas_nombres') || '';
             const matDificultad = getField(student, 'materias_dificultad') || '-';
-            
+
             // NUEVO P17
             const veranoAprob = formatListAsBadges(getField(student, 'materias_verano_aprobadas'));
             const veranoReprob = formatListAsBadges(getField(student, 'materias_verano_reprobadas'));
@@ -610,7 +650,7 @@
             const trabaja = getField(student, 'trabaja', 'Trabaja') || '-';
             const horas = getField(student, 'horas_estudio', 'Horas_estudio', 'horas') || '-';
             const avance = getField(student, 'avance', 'Avance') || '-';
-            
+
             const p10_val = getField(student, 'q10') || '-';
             const p10_exp = getField(student.seccion2_cierre, 'explicacion') || '';
             const p11_val = getField(student, 'q11') || '-';
@@ -754,31 +794,31 @@
 
         function renderFullMalla(mallaData) {
             if (!mallaData || mallaData.length === 0) return '<p class="text-center text-slate-400 italic text-xs py-2">Sin materias.</p>';
-            
+
             const columns = {};
-            for(let i=0; i<10; i++) columns[i] = [];
-            
+            for (let i = 0; i < 10; i++) columns[i] = [];
+
             mallaData.forEach(m => {
                 if (m.id && m.id.startsWith("sem-")) columns[parseInt(m.id.split('-')[1])].push(m);
-                else if (m.id && (m.id.startsWith("elec-") || m.id.startsWith("taller-"))) { if(!columns[10]) columns[10]=[]; columns[10].push(m); }
-                else if (m.id && m.id.startsWith("mod9-")) { if(!columns[8]) columns[8]=[]; columns[8].push(m); }
-                else if (m.id && m.id.startsWith("mod10-")) { if(!columns[9]) columns[9]=[]; columns[9].push(m); }
+                else if (m.id && (m.id.startsWith("elec-") || m.id.startsWith("taller-"))) { if (!columns[10]) columns[10] = []; columns[10].push(m); }
+                else if (m.id && m.id.startsWith("mod9-")) { if (!columns[8]) columns[8] = []; columns[8].push(m); }
+                else if (m.id && m.id.startsWith("mod10-")) { if (!columns[9]) columns[9] = []; columns[9].push(m); }
             });
 
             let html = '<div class="flex gap-2 overflow-x-auto pb-2 min-w-full">';
             for (let i = 0; i <= 10; i++) {
-                if (!columns[i] || columns[i].length === 0) continue; 
-                let semTitle = (i < 10) ? `${i+1}º` : "E/T";
+                if (!columns[i] || columns[i].length === 0) continue;
+                let semTitle = (i < 10) ? `${i + 1}º` : "E/T";
                 html += `<div class="flex flex-col gap-1 w-20 shrink-0"><div class="text-center text-[9px] font-bold text-slate-400 uppercase border-b border-slate-300 pb-0.5 mb-0.5">${semTitle}</div>`;
-                
+
                 columns[i].forEach(m => {
                     let bgClass = "bg-white border-slate-200 text-slate-400";
                     let icon = "";
                     if (m.estado === 'aprobado') { bgClass = "bg-green-100 border-green-300 text-green-900 font-bold"; icon = '<i class="fas fa-check text-[8px] opacity-60"></i>'; }
                     else if (m.estado === 'reprobado') { bgClass = "bg-red-100 border-red-300 text-red-900"; icon = '<i class="fas fa-times text-[8px] opacity-60"></i>'; }
                     else if (m.estado === 'levantamiento') { bgClass = "bg-blue-100 border-blue-300 text-blue-900"; icon = '<i class="fas fa-arrow-up text-[8px] opacity-60"></i>'; }
-                    
-                    html += `<div class="p-1 rounded border text-[9px] flex items-center justify-center text-center h-10 relative leading-none ${bgClass}" title="${m.nombre}">${m.nombre.substring(0,15)}${m.nombre.length>15?'...':''} <div class="absolute top-0.5 right-0.5">${icon}</div></div>`;
+
+                    html += `<div class="p-1 rounded border text-[9px] flex items-center justify-center text-center h-10 relative leading-none ${bgClass}" title="${m.nombre}">${m.nombre.substring(0, 15)}${m.nombre.length > 15 ? '...' : ''} <div class="absolute top-0.5 right-0.5">${icon}</div></div>`;
                 });
                 html += `</div>`;
             }
@@ -786,12 +826,292 @@
             return html;
         }
 
+        // --- LOGICA VISTA DE DATOS ---
+        window.renderDataView = () => {
+            const input = document.getElementById('data-search-input');
+            const filter = input ? input.value.toLowerCase() : '';
+            const tbody = document.getElementById('data-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let filtered = allSurveys;
+            if (filter) {
+                filtered = allSurveys.filter(s => {
+                    const n = (getField(s, 'nombre') || '').toLowerCase();
+                    const r = (getField(s, 'registro') || '').toLowerCase();
+                    const c = (getField(s, 'ci') || '').toLowerCase();
+                    return n.includes(filter) || r.includes(filter) || c.includes(filter);
+                });
+            }
+
+            // Actualizar contador visualmente si es la vista activa
+            if (!document.getElementById('view-data').classList.contains('hidden')) {
+                // Opcional: mostrar cuantos hay visibles
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="28" class="p-4 text-center text-slate-400 italic">No se encontraron resultados.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100";
+
+                // Helper para valores
+                const val = (k, ...alt) => {
+                    let v = getField(s, k, ...alt);
+                    if (Array.isArray(v)) return v.join(', ');
+                    return v || '-';
+                };
+
+                const formatTime = (ts) => {
+                    if (!ts) return '-';
+                    const date = ts.toDate ? ts.toDate() : new Date(ts.seconds * 1000);
+                    return !isNaN(date.getTime()) ? date.toLocaleString('es-BO') : '-';
+                };
+
+                const cols = [
+                    val('nombre') + ' ' + val('apellidos', 'Apellidos'),
+                    val('registro'),
+                    val('ci', 'CI'),
+                    val('semestre'),
+                    val('ppa', 'q11'), // PPA is P11 now
+                    val('carga_academica', 'carga'), // P12
+                    val('materias_aprobadas'), // P13
+                    val('materias_reprobadas'), // P14
+                    val('repetido_materia'), // P15
+                    val('materias_repetidas_nombres'),
+                    val('materias_dificultad'), // P16
+                    val('materias_verano_aprobadas'), // P17 A
+                    val('materias_verano_reprobadas'), // P17 B
+                    val('trabaja'), // P18
+                    val('horas_estudio'), // P19
+                    val('avance'), // P20
+                    val('q10'), // P21 (Afectación)
+                    val('q11'), // P22 (Sentimiento)
+                    val('q12'), // P23 (Aporte)
+                    val('q13'), // P24 (Medidas)
+                    val('prioridad'), // P25
+                    val('propuesta', 'seccion5.propuesta'), // P26
+                    val('anio_ingreso'), // P5
+                    val('modalidad_ingreso'), // P6
+                    val('tiempo_terminar'), // P7
+                    val('celular'), // P8
+                    val('correo'), // P9
+                    formatTime(s.timestamp)
+                ];
+
+                cols.forEach((c, idx) => {
+                    const td = document.createElement('td');
+                    td.className = "p-3 border-r border-slate-100 last:border-r-0";
+
+                    if (idx === 0) { // Sticky column styling override
+                        td.className += " sticky left-0 z-10 bg-white font-medium text-slate-900 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]";
+                    }
+                    td.textContent = c;
+                    tr.appendChild(td); // Append td to tr
+                });
+                tbody.appendChild(tr); // Append tr to tbody
+            });
+        }; // End renderDataView
+
+        // Global variables for chart data export
+        let currentChartData = [];
+        let currentChartTitle = '';
+
+        window.openChartData = (fieldKey, title, isComplex = false) => {
+            const modal = document.getElementById('chart-data-modal');
+            const label = document.getElementById('chart-data-label');
+            const tbody = document.getElementById('chart-data-body');
+
+            if (!modal || !label || !tbody) return;
+
+            label.textContent = title;
+            currentChartTitle = title;
+            tbody.innerHTML = '';
+
+            // Calculate Stats (Reusing countData Iogic partially)
+            const stats = {};
+            let total = 0;
+
+            allSurveys.forEach(s => {
+                let keys = [];
+                // Handle different key types (string, array of strings for nested, or special logic)
+                if (Array.isArray(fieldKey)) {
+                    // Extract value using getField with multiple fallbacks
+                    const val = getField(s, ...fieldKey);
+                    if (val) {
+                        // Case for Checkbox arrays (e.g. trabaja, horas)
+                        if (Array.isArray(val)) keys = val;
+                        else keys = [val]; // Single value
+                    }
+                } else {
+                    // Single string key
+                    const val = getField(s, fieldKey);
+                    if (val) {
+                        if (isComplex && typeof val === 'string') {
+                            // Case for comma-separated values (e.g. Materias Dificultad)
+                            // We split by comma but need to be careful with formatting
+                            keys = val.split(',').map(k => k.trim()).filter(k => k);
+                        } else if (Array.isArray(val)) {
+                            keys = val;
+                        } else {
+                            keys = [val];
+                        }
+                    }
+                }
+
+                keys.forEach(k => {
+                    const cleanKey = String(k).trim();
+                    if (cleanKey) {
+                        stats[cleanKey] = (stats[cleanKey] || 0) + 1;
+                        total++;
+                    }
+                });
+            });
+
+            // Convert to array and sort
+            const sortedData = Object.entries(stats)
+                .map(([category, count]) => ({ category, count, percent: ((count / total) * 100).toFixed(1) }))
+                .sort((a, b) => b.count - a.count);
+
+            currentChartData = sortedData;
+
+            if (sortedData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">No hay datos disponibles para esta métrica.</td></tr>';
+            } else {
+                sortedData.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 border-b border-slate-100 last:border-b-0";
+                    tr.innerHTML = `
+                        <td class="p-3 text-sm font-medium text-slate-700">${item.category}</td>
+                        <td class="p-3 text-sm text-right font-mono text-slate-600">${item.count}</td>
+                        <td class="p-3 text-sm text-right font-mono text-blue-600">${item.percent}%</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeChartDataModal = () => {
+            const modal = document.getElementById('chart-data-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        };
+
+        window.exportChartData = () => {
+            if (!currentChartData || currentChartData.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            // CSV Header with BOM
+            let csvContent = '\uFEFFCategoría;Cantidad;Porcentaje\n';
+
+            currentChartData.forEach(row => {
+                // Escape quotes and handle semicolons
+                const cat = row.category.replace(/"/g, '""');
+                csvContent += `"${cat}";${row.count};"${row.percent}%"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Datos_${currentChartTitle.replace(/\s+/g, '_')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // Función para exportar TODO a Excel (CSV)
+        window.exportToExcel = () => {
+            if (!allSurveys || allSurveys.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // BOM
+            const headers = [
+                "Fecha", "Nombre", "Registro", "CI", "Semestre (P10)", "PPA (P11)",
+                "Carga Académica (P12)", "Materias Aprobadas (P13)", "Materias Reprobadas (P14)",
+                "Repitió Materia (P15)", "Materia Repetida", "Materias Dificultad (P16)",
+                "Verano Aprobadas (P17)", "Verano Reprobadas (P17)", "Trabaja (P18)", "Horas Estudio (P19)",
+                "Avance Autopercibido (P20)", "Afectación Malla (P21)", "Sentimiento (P22)",
+                "Aporte Esperado (P23)", "Medidas Apoyo (P24)", "Prioridad (P25)", "Comentario (P26)",
+                "Año Ingreso (P5)", "Modalidad (P6)", "Tiempo Traslado (P7)", "Celular (P8)", "Correo (P9)"
+            ];
+
+            csvContent += headers.join(";") + "\n";
+
+            allSurveys.forEach(s => {
+                const fecha = s.timestamp ? (s.timestamp.toDate ? s.timestamp.toDate() : new Date(s.timestamp.seconds * 1000)).toLocaleString('es-BO') : "N/A";
+
+                const clean = (val) => {
+                    if (val === undefined || val === null) return "";
+                    return String(val).replace(/;/g, ",").replace(/\n/g, " ").trim();
+                };
+
+                const row = [
+                    fecha,
+                    clean(getField(s, 'nombre', 'Nombre')),
+                    clean(getField(s, 'registro', 'Registro')),
+                    clean(getField(s, 'ci', 'CI')),
+                    clean((getField(s, 'semestre', 'Semestre') || []).join(', ')),
+                    clean(getField(s, 'ppa', 'PPA')),
+                    clean(getField(s, 'carga_academica', 'Carga')),
+                    clean(getField(s, 'materias_aprobadas', 'materias_aprobadas_semestre_anterior')),
+                    clean(getField(s, 'materias_reprobadas')),
+                    clean(getField(s, 'repitio_materia')),
+                    clean(getField(s, 'materia_repetida_nombre')),
+                    clean(getField(s, 'materias_dificultad')),
+                    clean((getField(s, 'materias_verano_aprobadas') || []).join(', ')),
+                    clean((getField(s, 'materias_verano_reprobadas') || []).join(', ')),
+                    clean((getField(s, 'trabaja', 'Trabaja') || []).join(', ')),
+                    clean((getField(s, 'horas_estudio', 'Horas_estudio', 'horas') || []).join(', ')),
+                    clean((getField(s, 'avance', 'Avance') || []).join(', ')),
+                    clean(getField(s, 'q10', 'afectacion')),
+                    clean(getField(s, 'q11', 'sentimiento')),
+                    clean(getField(s, 'q12', 'aporte')),
+                    clean(getField(s, 'q13', 'medidas')),
+                    clean(getField(s, 'prioridad')),
+                    clean(getField(s, 'comentario_final')),
+                    clean(getField(s, 'anio_ingreso')),
+                    clean(getField(s, 'modalidad_ingreso')),
+                    clean(getField(s, 'tiempo_traslado')),
+                    clean(getField(s, 'celular')),
+                    clean(getField(s, 'correo'))
+                ];
+
+                csvContent += row.join(";") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            const dateStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("download", `Encuesta_Datos_Completa_${dateStr}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
         window.closeModal = () => {
             const modal = document.getElementById('detail-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         };
 
+        // Listener original
         document.getElementById('detail-modal')?.addEventListener('click', (e) => {
             if (e.target === document.getElementById('detail-modal')) window.closeModal();
         });
@@ -799,267 +1119,540 @@
             if (e.target === document.getElementById('delete-confirm-modal')) window.closeDeleteModal();
         });
 
+        // Init Directo
         initAdmin();
     </script>
-    </head>
-    <body
-        class="bg-slate-100 text-slate-800 h-screen h-[100dvh] overflow-hidden flex flex-col font-sans text-sm md:text-base">
+    <script>
+        // Failsafe por si el módulo es bloqueado (ej. CORS local)
+        setTimeout(() => {
+            const tableBody = document.getElementById('students-table-body');
+            // Si initAdmin no está definido, asumimos que el módulo falló
+            if (typeof window.initAdmin !== 'function') {
+                console.error("Módulo no cargado.");
+                if (tableBody) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="p-8 text-center">
+                                <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                                <h3 class="text-lg font-bold text-slate-700">Error de Carga</h3>
+                                <p class="text-slate-500 mt-2 max-w-md mx-auto">
+                                    El sistema no pudo iniciarse. Si estás abriendo el archivo localmente, 
+                                    es probable que el navegador haya bloqueado los scripts externos o módulos.
+                                </p>
+                                <div class="mt-4 p-3 bg-blue-50 text-blue-800 text-xs rounded text-left inline-block">
+                                    <strong>Solución:</strong><br>
+                                    1. Usa un servidor local (VS Code Live Server).<br>
+                                    2. O verifica tu conexión a internet.
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+        }, 3000);
+    </script>
+</head>
 
-        <!-- Header Admin -->
-        <header
-            class="bg-blue-900 text-white p-3 md:p-4 shadow-md flex justify-between items-center z-10 shrink-0">
-            <div class="flex items-center gap-2 md:gap-3">
-                <div
-                    class="bg-white p-1 rounded h-8 w-8 md:h-10 md:w-10 flex items-center justify-center text-blue-900 shadow">
-                    <i class="fas fa-university text-base md:text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-base md:text-lg font-bold leading-tight">Admin Psicología</h1>
-                    <p class="text-blue-200 text-[10px] md:text-xs hidden sm:block">Resultados en Tiempo Real</p>
-                </div>
-            </div>
+<body
+    class="bg-slate-100 text-slate-800 h-screen h-[100dvh] overflow-hidden flex flex-col font-sans text-sm md:text-base">
+
+    <!-- Header Admin -->
+    <header class="bg-blue-900 text-white p-3 md:p-4 shadow-md flex justify-between items-center z-10 shrink-0">
+        <div class="flex items-center gap-2 md:gap-3">
             <div
-                class="bg-blue-800 px-3 py-1 md:px-4 md:py-2 rounded-lg text-xs md:text-sm shadow-inner border border-blue-700 whitespace-nowrap">
-                Total: <span id="total-count"
-                    class="font-bold text-white text-base md:text-lg ml-1">0</span>
+                class="bg-white p-1 rounded h-8 w-8 md:h-10 md:w-10 flex items-center justify-center text-blue-900 shadow">
+                <i class="fas fa-university text-base md:text-xl"></i>
             </div>
-        </header>
-
-        <!-- Navegación de Pestañas -->
-        <div class="bg-white border-b border-slate-200 px-2 md:px-4 pt-2 md:pt-4 flex gap-4 md:gap-6 z-10 overflow-x-auto hide-scroll">
-            <button onclick="switchTab('list')" id="tab-btn-list" class="pb-2 md:pb-3 border-b-2 border-blue-900 text-blue-900 font-bold text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
-                <i class="fas fa-list"></i> Lista
-            </button>
-            <!-- PESTAÑA RENOMBRADA -->
-            <button onclick="switchTab('stats')" id="tab-btn-stats" class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
-                <i class="fas fa-chart-pie"></i> Estadísticas Gral.
-            </button>
-            <!-- NUEVA PESTAÑA -->
-            <button onclick="switchTab('individual')" id="tab-btn-individual" class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
-                <i class="fas fa-user-chart"></i> Estadística Indiv.
-            </button>
+            <div>
+                <h1 class="text-base md:text-lg font-bold leading-tight">Admin Psicología</h1>
+                <p class="text-blue-200 text-[10px] md:text-xs hidden sm:block">Resultados en Tiempo Real</p>
+            </div>
         </div>
+        <div
+            class="bg-blue-800 px-3 py-1 md:px-4 md:py-2 rounded-lg text-xs md:text-sm shadow-inner border border-blue-700 whitespace-nowrap">
+            Total: <span id="total-count" class="font-bold text-white text-base md:text-lg ml-1">0</span>
+        </div>
+    </header>
 
-        <div class="flex flex-1 overflow-hidden relative">
+    <!-- Navegación de Pestañas -->
+    <div
+        class="bg-white border-b border-slate-200 px-2 md:px-4 pt-2 md:pt-4 flex gap-4 md:gap-6 z-10 overflow-x-auto hide-scroll">
+        <button onclick="switchTab('list')" id="tab-btn-list"
+            class="pb-2 md:pb-3 border-b-2 border-blue-900 text-blue-900 font-bold text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+            <i class="fas fa-list"></i> Lista
+        </button>
+        <!-- PESTAÑA RENOMBRADA -->
+        <button onclick="switchTab('stats')" id="tab-btn-stats"
+            class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+            <i class="fas fa-chart-pie"></i> Estadísticas Gral.
+        </button>
+        <!-- NUEVA PESTAÑA -->
+        <button onclick="switchTab('individual')" id="tab-btn-individual"
+            class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+            <i class="fas fa-user-chart"></i> Estadística Indiv.
+        </button>
+        <!-- PESTAÑA DATOS (NUEVA) -->
+        <button onclick="switchTab('data')" id="tab-btn-data"
+            class="pb-2 md:pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-xs md:text-sm transition-colors flex items-center gap-2 whitespace-nowrap">
+            <i class="fas fa-table"></i> Datos
+        </button>
+    </div>
 
-            <!-- VISTA 1: Lista -->
-            <main id="view-list" class="absolute inset-0 flex flex-col bg-slate-50 overflow-y-auto">
-                <!-- Barra superior -->
-                <div
-                    class="p-3 md:p-4 border-b border-slate-200 bg-white flex justify-between items-center shrink-0 shadow-sm sticky top-0 z-10">
-                    <h2
-                        class="font-bold text-slate-700 flex items-center gap-2 text-sm md:text-base"><i
-                            class="fas fa-users text-blue-900"></i> Encuestas</h2>
-                    <button onclick="initAdmin()"
-                        class="text-blue-600 hover:text-blue-800 text-xs md:text-sm flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-blue-50">
-                        <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Actualizar</span>
-                    </button>
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- VISTA 1: Lista -->
+        <main id="view-list" class="absolute inset-0 flex flex-col bg-slate-50 overflow-y-auto">
+            <!-- Barra superior -->
+            <div
+                class="p-3 md:p-4 border-b border-slate-200 bg-white flex justify-between items-center shrink-0 shadow-sm sticky top-0 z-10">
+                <h2 class="font-bold text-slate-700 flex items-center gap-2 text-sm md:text-base"><i
+                        class="fas fa-users text-blue-900"></i> Encuestas</h2>
+                <button onclick="initAdmin()"
+                    class="text-blue-600 hover:text-blue-800 text-xs md:text-sm flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-blue-50">
+                    <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Actualizar</span>
+                </button>
+            </div>
+            <!-- Buscador -->
+            <div class="px-3 md:px-6 pt-4 pb-2">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-slate-400"></i>
+                    </div>
+                    <input type="text" id="list-search-input" oninput="renderTable()"
+                        class="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm transition duration-150 ease-in-out shadow-sm"
+                        placeholder="Buscar por Registro o Nombre...">
                 </div>
+            </div>
 
-                <!-- Estado de Conexión -->
-                <div id="connection-status" class="px-3 pt-3 shrink-0"></div>
+            <!-- Estado de Conexión -->
+            <div id="connection-status" class="px-3 pt-3 shrink-0"></div>
 
-                <!-- Tabla -->
-                <div class="flex-1 p-2 md:p-6 overflow-x-auto">
+            <!-- Tabla -->
+            <div class="flex-1 p-2 md:p-6 overflow-x-auto">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-full">
+                    <table class="w-full text-left border-collapse">
+                        <thead
+                            class="bg-slate-50 border-b border-slate-200 text-[10px] md:text-xs uppercase text-slate-500 font-semibold tracking-wider">
+                            <tr>
+                                <th class="p-2 md:p-4">Fecha</th>
+                                <th class="p-2 md:p-4">Estudiante</th>
+                                <th class="p-4 hidden md:table-cell">Registro</th>
+                                <th class="p-2 md:p-4">Semestre</th>
+                                <th class="p-4 hidden md:table-cell">Estado</th>
+                                <th class="p-2 md:p-4 text-center">Mat.</th>
+                                <th class="p-2 md:p-4 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body" class="text-xs md:text-sm divide-y divide-slate-100 bg-white">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center">
+                                    <i class="fas fa-spinner fa-spin text-blue-900 text-2xl"></i>
+                                    <p class="text-slate-500 mt-2">Cargando...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-center text-[10px] md:text-xs text-slate-400 mt-4 mb-2">Orden: Más recientes primero.</p>
+            </div>
+        </main>
+
+        <!-- VISTA 2: Estadísticas Generales (RENOMBRADO) -->
+        <div id="view-stats" class="absolute inset-0 overflow-y-auto bg-slate-50 p-4 md:p-6 hidden">
+            <div class="max-w-7xl mx-auto pb-10">
+                <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-blue-900"></i> Estadísticas Generales
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <!-- P5. Año Ingreso (NUEVO) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">P5.
+                                Año de Ingreso</h4>
+                            <button onclick="window.openChartData('anio_ingreso', 'Año de Ingreso')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-ingreso"></canvas></div>
+                    </div>
+                    <!-- P6. Modalidad (NUEVO) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">P6.
+                                Modalidad de Ingreso</h4>
+                            <button onclick="window.openChartData('modalidad_ingreso', 'Modalidad de Ingreso')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-modalidad"></canvas></div>
+                    </div>
+                    <!-- P10. Semestre (ANTES P7) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P10. Estudiantes Cursando por Semestre</h4>
+                            <button onclick="window.openChartData(['semestre', 'Semestre'], 'Semestre Actual')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-semestre"></canvas></div>
+                    </div>
+                    <!-- NUEVO: Frecuencia de Materias Inscritas (P11 Histograma) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                Frecuencia de Materias Inscritas (Histograma P11)</h4>
+                            <button
+                                onclick="window.openChartData('carga_histograma', 'Frecuencia de Materias Inscritas')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-promedio-carga"></canvas></div>
+                    </div>
+                    <!-- P14. Repetidas (NUEVO P14) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P14. Top Materias Repetidas (3ra vez+)</h4>
+                            <button
+                                onclick="window.openChartData('materias_repetidas_nombres', 'Materias Repetidas', true)"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-repetidas"></canvas></div>
+                    </div>
+                    <!-- P15. Dificultad (NUEVO P15) -->
                     <div
-                        class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden min-w-full">
-                        <table class="w-full text-left border-collapse">
-                            <thead
-                                class="bg-slate-50 border-b border-slate-200 text-[10px] md:text-xs uppercase text-slate-500 font-semibold tracking-wider">
-                                <tr>
-                                    <th class="p-2 md:p-4">Fecha</th>
-                                    <th class="p-2 md:p-4">Estudiante</th>
-                                    <th class="p-4 hidden md:table-cell">Registro</th>
-                                    <th class="p-2 md:p-4">Semestre</th>
-                                    <th class="p-4 hidden md:table-cell">Estado</th>
-                                    <th class="p-2 md:p-4 text-center">Mat.</th>
-                                    <th class="p-2 md:p-4 text-center">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody id="students-table-body"
-                                class="text-xs md:text-sm divide-y divide-slate-100 bg-white">
-                                <tr>
-                                    <td colspan="7" class="p-8 text-center">
-                                        <i class="fas fa-spinner fa-spin text-blue-900 text-2xl"></i>
-                                        <p class="text-slate-500 mt-2">Cargando...</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P15. Top Materias con Mayor Dificultad</h4>
+                            <button
+                                onclick="window.openChartData('materias_dificultad', 'Materias con Dificultad', true)"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-dificultad"></canvas></div>
                     </div>
-                    <p class="text-center text-[10px] md:text-xs text-slate-400 mt-4 mb-2">Orden: Más recientes primero.</p>
+                    <!-- P16. Trabaja (ANTES P9) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P18. Situación Laboral</h4>
+                            <button onclick="window.openChartData(['trabaja', 'Trabaja'], 'Situación Laboral')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-trabaja"></canvas></div>
+                    </div>
+                    <!-- P17. Horas Estudio (ANTES P10) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P19. Horas Estudio/Día</h4>
+                            <button
+                                onclick="window.openChartData(['horas_estudio', 'Horas_estudio', 'horas'], 'Horas de Estudio')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-horas"></canvas></div>
+                    </div>
+                    <!-- P18. Avance (ANTES P11) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P20. Autopercepción Avance</h4>
+                            <button onclick="window.openChartData(['avance', 'Avance'], 'Autopercepción de Avance')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-avance"></canvas></div>
+                    </div>
+                    <!-- P19. Afectación (ANTES P12) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P21. ¿Afectación por Malla?</h4>
+                            <button onclick="window.openChartData('q10', 'Afectación por Malla')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-p10"></canvas></div>
+                    </div>
+                    <!-- P20. Sentimiento (ANTES P13) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P22. Sentimiento</h4>
+                            <button onclick="window.openChartData('q11', 'Sentimiento sobre cambio')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-sentiment"></canvas></div>
+                    </div>
+                    <!-- P21. Aporte (ANTES P14) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P23. Aporte Esperado</h4>
+                            <button onclick="window.openChartData('q12', 'Aporte Esperado')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-p12"></canvas></div>
+                    </div>
+                    <!-- P22. Medidas (ANTES P15) -->
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-2 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P24. Medidas de Apoyo</h4>
+                            <button onclick="window.openChartData('q13', 'Medidas de Apoyo')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-48 md:h-60 relative"><canvas id="chart-measures"></canvas></div>
+                    </div>
+                    <!-- P23. Prioridad (ANTES P16) -->
+                    <div
+                        class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3 group">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-700 uppercase text-xs tracking-wider flex-1 text-center">
+                                P25. Prioridad Principal</h4>
+                            <button onclick="window.openChartData('prioridad', 'Prioridad Principal')"
+                                class="text-slate-300 hover:text-blue-600 transition-colors p-1" title="Ver Datos"><i
+                                    class="fas fa-table"></i></button>
+                        </div>
+                        <div class="h-64 relative"><canvas id="chart-priority"></canvas></div>
+                    </div>
                 </div>
-            </main>
+            </div>
+        </div>
 
-            <!-- VISTA 2: Estadísticas Generales (RENOMBRADO) -->
-            <div id="view-stats" class="absolute inset-0 overflow-y-auto bg-slate-50 p-4 md:p-6 hidden">
-                <div class="max-w-7xl mx-auto pb-10">
-                    <h2 class="text-lg md:text-xl font-bold text-slate-800 mb-4 md:mb-6 flex items-center gap-2">
-                        <i class="fas fa-chart-bar text-blue-900"></i> Estadísticas Generales
+        <!-- VISTA 3: Estadística Individual (NUEVA) -->
+        <div id="view-individual" class="absolute inset-0 overflow-y-auto bg-slate-50 p-4 md:p-6 hidden">
+            <div class="max-w-7xl mx-auto pb-10">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-user-chart text-blue-900"></i> Estadística Individual
                     </h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                        <!-- P5. Año Ingreso (NUEVO) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P5. Año de Ingreso</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-ingreso"></canvas></div>
-                        </div>
-                        <!-- P6. Modalidad (NUEVO) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P6. Modalidad de Ingreso</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-modalidad"></canvas></div>
-                        </div>
-                        <!-- P10. Semestre (ANTES P7) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P10. Estudiantes Cursando por Semestre</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-semestre"></canvas></div>
-                        </div>
-                        <!-- NUEVO: Frecuencia de Materias Inscritas (P11 Histograma) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">Frecuencia de Materias Inscritas (Histograma P11)</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-promedio-carga"></canvas></div>
-                        </div>
-                        <!-- P14. Repetidas (NUEVO P14) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P14. Top Materias Repetidas (3ra vez+)</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-repetidas"></canvas></div>
-                        </div>
-                        <!-- P15. Dificultad (NUEVO P15) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P15. Top Materias con Mayor Dificultad</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-dificultad"></canvas></div>
-                        </div>
-                        <!-- P16. Trabaja (ANTES P9) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P18. Situación Laboral</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-trabaja"></canvas></div>
-                        </div>
-                        <!-- P17. Horas Estudio (ANTES P10) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P19. Horas Estudio/Día</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-horas"></canvas></div>
-                        </div>
-                        <!-- P18. Avance (ANTES P11) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P20. Autopercepción Avance</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-avance"></canvas></div>
-                        </div>
-                        <!-- P19. Afectación (ANTES P12) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P21. ¿Afectación por Malla?</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-p10"></canvas></div>
-                        </div>
-                        <!-- P20. Sentimiento (ANTES P13) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P22. Sentimiento</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-sentiment"></canvas></div>
-                        </div>
-                        <!-- P21. Aporte (ANTES P14) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P23. Aporte Esperado</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-p12"></canvas></div>
-                        </div>
-                        <!-- P22. Medidas (ANTES P15) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 lg:col-span-2">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P24. Medidas de Apoyo</h4>
-                             <div class="h-48 md:h-60 relative"><canvas id="chart-measures"></canvas></div>
-                        </div>
-                        <!-- P23. Prioridad (ANTES P16) -->
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 md:col-span-2 lg:col-span-3">
-                             <h4 class="font-bold text-slate-700 mb-2 text-center uppercase text-xs tracking-wider">P25. Prioridad Principal</h4>
-                             <div class="h-64 relative"><canvas id="chart-priority"></canvas></div>
+                    <!-- Selector de Estudiante (Searchable Datalist) -->
+                    <div class="w-full md:w-auto">
+                        <div class="relative">
+                            <input list="student-datalist" id="student-select-input" onchange="loadStudentStats()"
+                                placeholder="Escribe para buscar estudiante..."
+                                class="w-full md:w-80 p-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <datalist id="student-datalist">
+                                <!-- Opciones inyectadas por JS -->
+                            </datalist>
+                            <span
+                                class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
+                                <i class="fas fa-chevron-down text-xs"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- VISTA 3: Estadística Individual (NUEVA) -->
-            <div id="view-individual" class="absolute inset-0 overflow-y-auto bg-slate-50 p-4 md:p-6 hidden">
-                <div class="max-w-7xl mx-auto pb-10">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                        <h2 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fas fa-user-chart text-blue-900"></i> Estadística Individual
-                        </h2>
-                        <!-- Selector de Estudiante -->
-                        <div class="w-full md:w-auto">
-                            <select id="student-select" onchange="loadStudentStats()" class="w-full md:w-80 p-2 border border-blue-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
-                                <option value="">-- Cargando estudiantes... --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Contenedor dinámico de estadísticas individuales -->
-                    <div id="individual-stats-content" class="space-y-6">
-                        <div class="text-center py-10 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">
-                            <i class="fas fa-search text-3xl mb-2 opacity-50"></i>
-                            <p>Selecciona un estudiante del listado para ver su análisis detallado.</p>
-                        </div>
+                <!-- Contenedor dinámico de estadísticas individuales -->
+                <div id="individual-stats-content" class="space-y-6">
+                    <div
+                        class="text-center py-10 text-slate-400 bg-white rounded-xl border border-slate-200 border-dashed">
+                        <i class="fas fa-search text-3xl mb-2 opacity-50"></i>
+                        <p>Selecciona un estudiante del listado para ver su análisis detallado.</p>
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Modal Detalle -->
-        <div id="detail-modal"
-            class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden z-50 items-center justify-center p-0 md:p-4 transition-opacity duration-300">
+        <!-- VISTA 4: Datos (NUEVA) -->
+        <div id="view-data" class="absolute inset-0 flex flex-col bg-slate-50 p-4 md:p-6 hidden">
+            <!-- Header Fixed -->
+            <div class="flex-none max-w-full mx-auto w-full mb-4">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h2 class="text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-table text-blue-900"></i> Base de Datos Completa
+                    </h2>
+
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                        <!-- Buscador -->
+                        <div class="relative w-full md:w-64">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="data-search-input" onkeyup="renderDataView()"
+                                placeholder="Buscar por Registro o Nombre..."
+                                class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        </div>
+
+                        <!-- Botón Exportar -->
+                        <button onclick="exportToExcel()"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap">
+                            <i class="fas fa-file-excel"></i> Descargar Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Datos (Scrollable Area) -->
             <div
-                class="bg-white md:rounded-xl shadow-2xl w-full h-full md:h-auto md:max-w-4xl md:max-h-[95vh] flex flex-col transform transition-all scale-100 overflow-hidden">
-                <!-- Modal Header -->
-                <div
-                    class="p-4 border-b border-slate-100 flex justify-between items-center bg-white md:rounded-t-xl sticky top-0 z-10 shadow-sm shrink-0">
-                    <h3
-                        class="font-bold text-base md:text-lg text-slate-800 flex items-center gap-2">
-                        <span
-                            class="bg-blue-100 text-blue-800 p-1.5 md:p-2 rounded-full h-8 w-8 flex items-center justify-center"><i
-                                class="fas fa-user-graduate text-sm"></i></span>
-                        Reporte Individual
-                    </h3>
-                    <button onclick="closeModal()"
-                        class="text-slate-400 hover:text-red-500 transition-colors w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 active:bg-red-100">
-                        <i class="fas fa-times text-xl"></i>
+                class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 overflow-hidden relative flex flex-col min-h-0 w-full">
+                <div class="overflow-auto flex-1 w-full relative custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs whitespace-nowrap relative">
+                        <thead
+                            class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <!-- Encabezados -->
+                                <th
+                                    class="p-3 sticky left-0 top-0 z-30 bg-slate-50 border-r border-slate-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                    Estudiante</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Registro</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">CI</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Semestre (P10)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">PPA (P11)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Carga (P12)</th>
+                                <th class="p-3 text-center sticky top-0 bg-slate-50 z-20">Aprob. (P13)</th>
+                                <th class="p-3 text-center sticky top-0 bg-slate-50 z-20">Reprob. (P14)</th>
+                                <th class="p-3 text-center sticky top-0 bg-slate-50 z-20">Repitió (P15)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Materia Repetida</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Dificultad (P16)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Verano Aprob (P17)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Verano Reprob (P17)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Trabaja (P18)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Horas Est. (P19)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Avance Autop. (P20)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Afectación (P21)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Sentimiento (P22)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Aporte Esp. (P23)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Medidas (P24)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Prioridad (P25)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Comentario (P26)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Ingreso (P5)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Modalidad (P6)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Tiempo (P7)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Celular (P8)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Correo (P9)</th>
+                                <th class="p-3 sticky top-0 bg-slate-50 z-20">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body" class="divide-y divide-slate-100 text-slate-700">
+                            <!-- Filas inyectadas por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex-none mt-2 flex justify-end">
+                <p class="text-[10px] text-slate-400">* Se muestran todas las respuestas cargadas.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Detalle -->
+    <div id="detail-modal"
+        class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden z-50 items-center justify-center p-0 md:p-4 transition-opacity duration-300">
+        <div
+            class="bg-white md:rounded-xl shadow-2xl w-full h-full md:h-auto md:max-w-4xl md:max-h-[95vh] flex flex-col transform transition-all scale-100 overflow-hidden">
+            <!-- Modal Header -->
+            <div
+                class="p-4 border-b border-slate-100 flex justify-between items-center bg-white md:rounded-t-xl sticky top-0 z-10 shadow-sm shrink-0">
+                <h3 class="font-bold text-base md:text-lg text-slate-800 flex items-center gap-2">
+                    <span
+                        class="bg-blue-100 text-blue-800 p-1.5 md:p-2 rounded-full h-8 w-8 flex items-center justify-center"><i
+                            class="fas fa-user-graduate text-sm"></i></span>
+                    Reporte Individual
+                </h3>
+                <button onclick="closeModal()"
+                    class="text-slate-400 hover:text-red-500 transition-colors w-10 h-10 flex items-center justify-center rounded-full hover:bg-red-50 active:bg-red-100">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div id="modal-content-body" class="p-4 md:p-6 overflow-y-auto bg-slate-50 custom-scrollbar flex-1">
+                <!-- Contenido inyectado por JS -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div
+                class="p-3 md:p-4 border-t border-slate-100 bg-white md:rounded-b-xl flex justify-end shrink-0 safe-area-pb">
+                <button onclick="closeModal()"
+                    class="w-full md:w-auto px-6 py-3 md:py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-sm shadow-sm transition-all active:bg-slate-100">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Datos de Gráfico -->
+    <div id="chart-data-modal"
+        class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden z-50 items-center justify-center p-4 transition-opacity duration-300">
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col transform transition-all scale-100 overflow-hidden max-h-[90vh]">
+            <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                <h3 id="chart-data-title" class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-table text-blue-900"></i> <span id="chart-data-label">Datos</span>
+                </h3>
+                <button onclick="closeChartDataModal()"
+                    class="text-slate-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-0 overflow-y-auto custom-scrollbar flex-1">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs sticky top-0">
+                        <tr>
+                            <th class="p-3 border-b border-slate-200">Categoría</th>
+                            <th class="p-3 border-b border-slate-200 text-right">Cant.</th>
+                            <th class="p-3 border-b border-slate-200 text-right">%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chart-data-body" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Data injected here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
+                <button onclick="closeChartDataModal()"
+                    class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
+                    Cerrar
+                </button>
+                <button onclick="exportChartData()"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fas fa-file-excel"></i> Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmación Eliminación -->
+    <div id="delete-confirm-modal"
+        class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden z-50 items-center justify-center p-4 transition-opacity duration-300">
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100 border border-slate-200 mx-4">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <h3 class="text-lg leading-6 font-medium text-slate-900 mb-2">¿Eliminar encuesta?</h3>
+                <p class="text-sm text-slate-500 mb-6">
+                    Esta acción borrará permanentemente el registro.
+                </p>
+                <div class="flex gap-3 justify-center">
+                    <button onclick="window.closeDeleteModal()"
+                        class="flex-1 px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
+                        Cancelar
                     </button>
-                </div>
-
-                <!-- Modal Body -->
-                <div id="modal-content-body"
-                    class="p-4 md:p-6 overflow-y-auto bg-slate-50 custom-scrollbar flex-1">
-                    <!-- Contenido inyectado por JS -->
-                </div>
-
-                <!-- Modal Footer -->
-                <div
-                    class="p-3 md:p-4 border-t border-slate-100 bg-white md:rounded-b-xl flex justify-end shrink-0 safe-area-pb">
-                    <button onclick="closeModal()"
-                        class="w-full md:w-auto px-6 py-3 md:py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-sm shadow-sm transition-all active:bg-slate-100">
-                        Cerrar
+                    <button id="btn-confirm-delete" onclick="window.executeDelete()"
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-trash-alt text-xs"></i> Eliminar
                     </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modal Confirmación Eliminación -->
-        <div id="delete-confirm-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm hidden z-50 items-center justify-center p-4 transition-opacity duration-300">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all scale-100 border border-slate-200 mx-4">
-                <div class="text-center">
-                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                    </div>
-                    <h3 class="text-lg leading-6 font-medium text-slate-900 mb-2">¿Eliminar encuesta?</h3>
-                    <p class="text-sm text-slate-500 mb-6">
-                        Esta acción borrará permanentemente el registro.
-                    </p>
-                    <div class="flex gap-3 justify-center">
-                        <button onclick="window.closeDeleteModal()" class="flex-1 px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 font-medium text-sm transition-colors">
-                            Cancelar
-                        </button>
-                        <button id="btn-confirm-delete" onclick="window.executeDelete()" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-trash-alt text-xs"></i> Eliminar
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+</body>
 
-    </body>
 </html>
