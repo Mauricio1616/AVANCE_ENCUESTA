@@ -93,6 +93,15 @@ function goToSection2(e) {
 function goToSection2Q10() {
     // Capturar estado actual de la malla
     const mallaCards = document.querySelectorAll('.materia-card');
+
+    // Validación: Verificar que al menos una materia tenga estado diferente a 'pendiente'
+    const hasProgress = Array.from(mallaCards).some(card => card.dataset.status !== 'pendiente');
+
+    if (!hasProgress) {
+        alert("Por favor, marca tu avance en la malla (materias aprobadas) antes de continuar.");
+        return;
+    }
+
     window.surveyData.malla = Array.from(mallaCards).map(card => ({
         id: card.id,
         nombre: card.innerText, // This might now contain the appended text, but that's okay/good for PDF if we use this fallback
