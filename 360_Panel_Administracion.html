@@ -495,7 +495,19 @@
 
                 const nombre = getField(s, 'nombre', 'Nombre') || 'Anónimo';
                 const registro = getField(s, 'registro', 'Registro') || '-';
+                const celular = getField(s, 'celular', 'Celular') || '';
                 const semestreRaw = getField(s, 'semestre', 'Semestre');
+
+                let whatsappLink = '#';
+                let whatsappClass = 'text-slate-300 cursor-not-allowed';
+
+                if (celular && celular.length > 5) {
+                    const cleanPhone = celular.replace(/\D/g, '');
+                    // Asumir código de país Bolivia (591) si no lo tiene
+                    const phoneUrl = cleanPhone.length === 8 ? `591${cleanPhone}` : cleanPhone;
+                    whatsappLink = `https://wa.me/${phoneUrl}`;
+                    whatsappClass = 'text-green-500 hover:text-green-600 hover:bg-green-50';
+                }
 
                 tr.innerHTML = `
                     <td class="p-2 md:p-4 align-middle text-xs md:text-sm text-slate-500 whitespace-nowrap">${fecha}</td>
@@ -505,6 +517,12 @@
                         <div class="md:hidden mt-1">${estadoBadge}</div>
                     </td>
                     <td class="p-4 text-slate-600 hidden md:table-cell align-middle text-sm font-mono">${registro}</td>
+                    <td class="p-2 md:p-4 align-middle">
+                        <div class="flex items-center gap-2">
+                             <span class="text-xs text-slate-600 font-mono">${celular || '-'}</span>
+                             ${celular ? `<a href="${whatsappLink}" target="_blank" onclick="event.stopPropagation()" class="p-1.5 rounded-full transition-colors ${whatsappClass}"><i class="fab fa-whatsapp text-lg"></i></a>` : ''}
+                        </div>
+                    </td>
                     <td class="p-2 md:p-4 align-middle">
                         <div class="flex flex-wrap gap-1 max-w-[150px] md:max-w-xs">${formatListAsBadges(semestreRaw)}</div>
                     </td>
@@ -1237,6 +1255,7 @@
                                 <th class="p-2 md:p-4">Fecha</th>
                                 <th class="p-2 md:p-4">Estudiante</th>
                                 <th class="p-4 hidden md:table-cell">Registro</th>
+                                <th class="p-2 md:p-4">Celular</th>
                                 <th class="p-2 md:p-4">Semestre</th>
                                 <th class="p-4 hidden md:table-cell">Estado</th>
                                 <th class="p-2 md:p-4 text-center">Mat.</th>
