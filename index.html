@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Malla Curricular Interactiva - Psiconet 360</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- Librería para generar PDF -->
@@ -219,451 +220,512 @@
                                 1: Datos Generales / Situación
                                 Actual</h2>
                         </div>
-                        <form id="form-section1" class="space-y-6" onsubmit="goToSection2(event)">
+                        <form id="form-section1" class="space-y-6" onsubmit="goToSection2(event)" novalidate>
                             <!-- P1 -->
                             <div><label class="font-bold text-slate-800 mb-2 block">1.
-                                    Nombre</label><input type="text" name="nombre" required class="survey-input"></div>
+                                    Nombre</label><input type="text" name="nombre" required class="survey-input">
+                                <p id="error-P1" class="text-red-500 text-sm mt-1 hidden"><i
+                                        class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                            </div>
                             <!-- P2 -->
                             <div><label class="font-bold text-slate-800 mb-2 block">2.
                                     Apellidos</label><input type="text" name="Apellidos" required class="survey-input">
+                                <p id="error-P2" class="text-red-500 text-sm mt-1 hidden"><i
+                                        class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
                             </div>
                             <!-- P3 -->
                             <div><label class="font-bold text-slate-800 mb-2 block">3.
                                     CI-Cédula de Identidad</label><input type="text" name="CI" required
-                                    class="survey-input"></div>
+                                    class="survey-input">
+                                <p id="error-P3" class="text-red-500 text-sm mt-1 hidden"><i
+                                        class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                            </div>
                             <!-- P4 -->
                             <div><label class="font-bold text-slate-800 mb-2 block">4.
                                     Registro Universitario</label><input type="number" name="registro" required
                                     id="input-registro" class="survey-input" placeholder="Ej: 200012345">
-                                <div id="error-registro"
-                                    class="hidden mt-2 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm flex items-center gap-2">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <span>Usted no está registrado como estudiante de la carrera de Psicología</span>
-                                </div>
+                                <p id="error-registro" class="text-red-500 text-sm mt-1 hidden"><i
+                                        class="fas fa-exclamation-circle"></i> <span>El registro no está registrado en
+                                        la carrera de Psicología</span></p>
+                                <p id="success-registro" class="text-green-600 text-sm mt-1 hidden font-bold"><i
+                                        class="fas fa-check-circle"></i> <span>Usted puede continuar respondiendo</span>
+                                </p>
                             </div>
-
-                            <!-- NUEVA P5: AÑO DE INGRESO -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">5. Año de ingreso a la
-                                    carrera:</label>
-                                <div class="flex flex-wrap gap-4 text-sm">
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="anio_ingreso" value="2021" class="accent-blue-900">
-                                        2021</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="anio_ingreso" value="2022" class="accent-blue-900">
-                                        2022</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="anio_ingreso" value="2023" class="accent-blue-900">
-                                        2023</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="anio_ingreso" value="2024" class="accent-blue-900">
-                                        2024</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="anio_ingreso" value="2025" class="accent-blue-900">
-                                        2025</label>
-                                    <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
-                                        <input type="radio" name="anio_ingreso" value="Otro" id="anio_otro_radio"
-                                            class="accent-blue-900"> Otro:
-                                        <input type="number" name="anio_ingreso_otro" min="1000" max="9999"
-                                            oninput="this.value = this.value.slice(0,4)"
-                                            class="border-b border-slate-300 outline-none w-20 text-sm focus:border-blue-900 bg-transparent"
-                                            onclick="document.getElementById('anio_otro_radio').checked = true;">
-
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- NUEVA P6: MODALIDAD DE INGRESO -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">6. Modalidad de ingreso:</label>
-                                <div class="flex flex-wrap gap-4 text-sm">
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="modalidad_ingreso" value="PSA" class="accent-blue-900">
-                                        PSA</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="modalidad_ingreso" value="CUP" class="accent-blue-900">
-                                        CUP</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="modalidad_ingreso" value="Admisión especial"
-                                            class="accent-blue-900"> Admisión especial</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="modalidad_ingreso" value="Traslado"
-                                            class="accent-blue-900"> Traslado</label>
-                                    <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
-                                        <input type="radio" name="modalidad_ingreso" value="Otra" id="mod_otra_radio"
-                                            class="accent-blue-900"> Otra:
-                                        <input type="text" name="modalidad_ingreso_otra"
-                                            class="border-b border-slate-300 outline-none w-32 text-sm focus:border-blue-900 bg-transparent"
-                                            onclick="document.getElementById('mod_otra_radio').checked = true;">
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- NUEVA P7: CUÁNDO TERMINAR -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">7. Según tu avance actual, ¿cuándo
-                                    crees que podrías terminar la carrera?</label>
-                                <div class="flex flex-col gap-2 text-sm">
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
-                                            type="radio" name="tiempo_terminar" value="En 1 año"
-                                            class="accent-blue-900"> En 1 año</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
-                                            type="radio" name="tiempo_terminar" value="En 2 años"
-                                            class="accent-blue-900"> En 2 años</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
-                                            type="radio" name="tiempo_terminar" value="En 3 años"
-                                            class="accent-blue-900"> En 3 años</label>
-                                    <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded w-fit">
-                                        <input type="radio" name="tiempo_terminar" value="Otro" id="tiempo_otro_radio"
-                                            class="accent-blue-900"> otro:
-                                        <input type="text" name="tiempo_terminar_otro"
-                                            class="border-b border-slate-300 outline-none w-40 text-sm focus:border-blue-900 bg-transparent"
-                                            onclick="document.getElementById('tiempo_otro_radio').checked = true;">
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- P8 (ANTES 5) -->
-                            <div><label class="font-bold text-slate-800 mb-2 block">8.
-                                    Celular</label><input type="tel" name="celular" required class="survey-input"></div>
-
-                            <!-- P9 (ANTES 6) -->
-                            <div><label class="font-bold text-slate-800 mb-2 block">9.
-                                    Correo Electrónico</label><input type="email" name="correo" required
-                                    class="survey-input"></div>
-
-                            <!-- P10 (ANTES 7) -->
-                            <div><label class="font-bold text-slate-800 mb-2 block">10.
-                                    En qué semestre estás actualmente (marca uno solo si estas nivelado en un semestre y
-                                    no debes materias de otro semestre. Si tienes materias en otros semestres, Marca las
-                                    opciones necesarias)</label>
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="1er Semestre">
-                                        1er</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="2do Semestre">
-                                        2do</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="3er Semestre">
-                                        3er</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="4to Semestre">
-                                        4to</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="5to Semestre">
-                                        5to</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="6to Semestre">
-                                        6to</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="7mo Semestre">
-                                        7mo</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="8vo Semestre">
-                                        8vo</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="9no Semestre">
-                                        9no</label>
-                                    <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
-                                            type="checkbox" name="semestre" value="10mo Semestre">
-                                        10mo</label>
-                                </div>
-                            </div>
-
-                            <!-- P11 (NUEVA PPA) -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">11. Promedio Ponderado Anual (PPA)
-                                    (aprox.):</label>
-                                <div class="flex flex-wrap gap-4 text-sm">
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="ppa" value="50-59" class="accent-blue-900" required>
-                                        50–59</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="ppa" value="60-69" class="accent-blue-900"> 60–69</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="ppa" value="70-79" class="accent-blue-900"> 70–79</label>
-                                    <label
-                                        class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
-                                            type="radio" name="ppa" value="80+" class="accent-blue-900"> ≥80</label>
-                                </div>
-                            </div>
-
-                            <!-- P12 (ANTES 11) -->
-                            <div><label class="font-bold text-slate-800 mb-2 block">12.
-                                    Carga académica registrada este
-                                    semestre:</label>
-                                <label class="text-slate-800 mb-2 block">
-                                    Número de materias inscritas: (Indicará aquí un número no se permite letras)</label>
-                                <input type="number" name="carga_academica" class="survey-input"
-                                    placeholder="Número de materias" required min="1" max="10" step="1"
-                                    oninput="if (this.value < 1 || this.value > 10) this.value = '';">
-
-                            </div>
-
-                            <!-- P13 (ANTES 12) -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has aprobado en
-                                    total en todo tu recorrido académico? (coloca un número)</label>
-                                <input type="number" name="materias_aprobadas" class="survey-input"
-                                    placeholder="1 – 67" min="1" max="67"
-                                    oninput="if (this.value > 67) this.value = '';">
-                            </div>
-
-                            <!-- P14 (ANTES 13) -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">
-                                    14. ¿Cuántas materias has reprobado? (coloca un número)
-                                </label>
-
-                                <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2"
-                                    min="1" step="1" oninput="this.value = this.value.replace(/[^0-9]/g, ''); 
-                    if (this.value < 1) this.value = '';">
-                            </div>
-
-
-                            <!-- P15 (ANTES 14) - Repetido Materia -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">15. ¿Has repetido alguna materia por
-                                    tercera vez o más?</label>
-                                <div class="flex items-center gap-4 mb-3">
-                                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio"
-                                            name="repetido_materia" value="Sí" class="accent-blue-900"
-                                            onclick="document.getElementById('container-repitencia').classList.remove('hidden')">
-                                        Sí</label>
-                                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio"
-                                            name="repetido_materia" value="No" class="accent-blue-900"
-                                            onclick="document.getElementById('container-repitencia').classList.add('hidden')">
-                                        No</label>
-                                </div>
-                                <div id="container-repitencia"
-                                    class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in relative">
-                                    <label class="block text-sm font-bold text-slate-700 mb-1">Cual o Cuales</label>
-                                    <p class="text-xs text-slate-500 mb-2">Busca y selecciona las materias.</p>
-
-                                    <!-- Container de Tags -->
-                                    <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
-
-                                    <!-- Wrapper relativo para el input y el dropdown -->
-                                    <div class="relative">
-                                        <input type="text" id="input-q15" class="survey-input text-sm w-full"
-                                            placeholder="Escribe para buscar..." autocomplete="off">
-
-                                        <!-- Dropdown Custom -->
-                                        <ul id="dropdown-q15"
-                                            class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
-                                            <!-- Opciones se llenan dinámicamente js -->
-                                        </ul>
-                                    </div>
-                                    <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
-
-                                    <!-- Input Oculto Real (El que se envía) -->
-                                    <input type="hidden" name="materias_repetidas_nombres" id="hidden-q15">
-                                </div>
-                            </div>
-
-                            <!-- P16 (ANTES 15) - Materias Dificultad -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">16. ¿En qué materias has tenido más
-                                    dificultad?</label>
-                                <label class="text-slate-600 mb-1 block text-sm">Busca y selecciona las
-                                    materias.</label>
-
-                                <!-- Container de Tags -->
-                                <div id="tags-container-q16" class="flex flex-wrap gap-2 mb-2"></div>
-
-                                <!-- Wrapper relativo para el input y el dropdown -->
-                                <div class="relative">
-                                    <input type="text" id="input-q16" class="survey-input text-sm w-full"
-                                        placeholder="Escribe para buscar..." autocomplete="off">
-
-                                    <!-- Dropdown Custom -->
-                                    <ul id="dropdown-q16"
-                                        class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
-                                        <!-- Opciones se llenan dinámicamente js -->
-                                    </ul>
-                                </div>
-                                <p id="error-q16" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
-
-                                <!-- Input Oculto Real (El que se envía) -->
-                                <input type="hidden" name="materias_dificultad" id="hidden-q16">
-                            </div>
-
-                            <!-- NUEVA P17: MATERIAS VERANO -->
-                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                <label class="font-bold text-slate-800 mb-3 block">17. MATERIAS RELACIONADAS CON los
-                                    cursos de verano y la nivelación para la transición</label>
-
-                                <div class="mb-5">
-                                    <p class="text-sm text-blue-900 font-bold mb-2 border-b border-blue-200 pb-1">Marca
-                                        solo las que YA aprobaste <span class="font-normal text-slate-600 text-xs">(Si
-                                            no la cursaste o la reprobaste, deja en blanco)</span>:</p>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Delito y Sociedad" class="accent-blue-900"> Delito y
-                                            Sociedad</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas" value="Psicoanálisis I"
-                                                class="accent-blue-900"> Psicoanálisis I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Terapia Rogeriana / Humanista" class="accent-blue-900"> Terapia
-                                            Rogeriana / Humanista</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Psicología Cognitiva I" class="accent-blue-900"> Psicología
-                                            Cognitiva I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Psicología Cognitiva II" class="accent-blue-900"> Psicología
-                                            Cognitiva II</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Psicopatología I" class="accent-blue-900"> Psicopatología
-                                            I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Teorías y Sistemas I" class="accent-blue-900"> Teorías y Sistemas
-                                            I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas" value="Ética II"
-                                                class="accent-blue-900"> Ética II</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_aprobadas"
-                                                value="Técnicas Recreativas / Dinámica de Grupo"
-                                                class="accent-blue-900"> Técnicas Recreativas / Dinámica de
-                                            Grupo</label>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <p class="text-sm text-red-800 font-bold mb-2 border-b border-red-200 pb-1">Si reprobaste alguna de estas materias, selecciona o déjala en blanco:</p>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Delito y Sociedad" class="accent-red-700"> Delito y
-                                            Sociedad</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Psicoanálisis I" class="accent-red-700"> Psicoanálisis I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Terapia Rogeriana / Humanista" class="accent-red-700"> Terapia
-                                            Rogeriana / Humanista</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Psicología Cognitiva I" class="accent-red-700"> Psicología
-                                            Cognitiva I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Psicología Cognitiva II" class="accent-red-700"> Psicología
-                                            Cognitiva II</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Psicopatología I" class="accent-red-700"> Psicopatología
-                                            I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Teorías y Sistemas I" class="accent-red-700"> Teorías y Sistemas
-                                            I</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas" value="Ética II"
-                                                class="accent-red-700"> Ética II</label>
-                                        <label
-                                            class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
-                                                type="checkbox" name="materias_verano_reprobadas"
-                                                value="Técnicas Recreativas / Dinámica de Grupo" class="accent-red-700">
-                                            Técnicas Recreativas / Dinámica de Grupo</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- P18 (ANTES 17) -->
-                            <div>
-                                <label class="font-bold text-slate-800 mb-2 block">18.
-                                    ¿Trabajas mientras estudias?</label>
-                                <label class="text-slate-800 mb-2 block">(Solo puede escoger Sí o No, no ambas)</label>
-                                <div class="flex gap-4"><label class="flex gap-2 cursor-pointer"><input type="radio"
-                                            name="trabaja" value="Sí" required>
-                                        Sí</label><label class="flex gap-2 cursor-pointer"><input type="radio"
-                                            name="trabaja" value="No">
-                                        No</label></div>
-                            </div>
-
-                            <!-- P19 (ANTES 18) -->
-                            <div><label class="font-bold text-slate-800 mb-2 block">19.
-                                    ¿Cuántas horas al día puedes dedicar
-                                    realmente al estudio?</label>
-                                <label class="text-slate-800 mb-2 block">(Aquí indicará un número, no se permite
-                                    letras)</label>
-
-                                <input type="number" name="horas_estudio" class="survey-input" required min="1" max="24"
-                                    step="1" oninput="if (this.value < 1 || this.value > 24) this.value = '';">
-
-                            </div>
-
-                            <!-- P20 (ANTES 19) -->
-                            <div><label class="font-bold text-slate-800 mb-2 block">20.
-                                    Estado general de avance
-                                    académico:</label>
-                                <div class="space-y-2">
-                                    <label class="block"><input type="radio" name="avance" value="Voy al día" required>
-                                        Voy al día</label>
-                                    <label class="block"><input type="radio" name="avance"
-                                            value="Ligeramente atrasado(a)">
-                                        Ligeramente atrasado(a)</label>
-                                    <label class="block"><input type="radio" name="avance" value="Atraso moderado">
-                                        Atraso
-                                        moderado</label>
-                                    <label class="block"><input type="radio" name="avance" value="Atraso significativo">
-                                        Atraso significativo</label>
-                                </div>
-                            </div>
-                            <div class="pt-6 border-t flex justify-end">
-                                <button type="submit" id="submit-form-section1"
-                                    class="bg-red-900 text-white font-bold py-3 px-6 rounded-lg shadow hover:bg-red-800 transition transform hover:scale-105">✓
-                                    Continuar a Sección 2.- Avance Académico <i
-                                        class="fas fa-arrow-right ml-2"></i></button>
-                            </div>
-                        </form>
+                            <p id="error-P4" class="text-red-500 text-sm mt-1 hidden"><i
+                                    class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
                     </div>
+
+                    <!-- NUEVA P5: AÑO DE INGRESO -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">5. Año de ingreso a la
+                            carrera:</label>
+                        <div class="flex flex-wrap gap-4 text-sm">
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="anio_ingreso" value="2021" class="accent-blue-900" required>
+                                2021</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="anio_ingreso" value="2022" class="accent-blue-900">
+                                2022</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="anio_ingreso" value="2023" class="accent-blue-900">
+                                2023</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="anio_ingreso" value="2024" class="accent-blue-900">
+                                2024</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="anio_ingreso" value="2025" class="accent-blue-900">
+                                2025</label>
+                            <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
+                                <input type="radio" name="anio_ingreso" value="Otro" id="anio_otro_radio"
+                                    class="accent-blue-900"> Otro:
+                                <input type="number" name="anio_ingreso_otro" min="1000" max="9999"
+                                    oninput="this.value = this.value.slice(0,4)"
+                                    class="border-b border-slate-300 outline-none w-20 text-sm focus:border-blue-900 bg-transparent"
+                                    onclick="document.getElementById('anio_otro_radio').checked = true;" required>
+
+                            </label>
+                        </div>
+                        <p id="error-P5" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- NUEVA P6: MODALIDAD DE INGRESO -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">6. Modalidad de ingreso:</label>
+                        <div class="flex flex-wrap gap-4 text-sm">
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="modalidad_ingreso" value="PSA" class="accent-blue-900" required>
+                                PSA</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="modalidad_ingreso" value="CUP" class="accent-blue-900">
+                                CUP</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="modalidad_ingreso" value="Admisión especial"
+                                    class="accent-blue-900"> Admisión especial</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="modalidad_ingreso" value="Traslado" class="accent-blue-900">
+                                Traslado</label>
+                            <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded">
+                                <input type="radio" name="modalidad_ingreso" value="Otra" id="mod_otra_radio"
+                                    class="accent-blue-900"> Otra:
+                                <input type="text" name="modalidad_ingreso_otra"
+                                    class="border-b border-slate-300 outline-none w-32 text-sm focus:border-blue-900 bg-transparent"
+                                    onclick="document.getElementById('mod_otra_radio').checked = true;">
+                            </label>
+                        </div>
+                        <p id="error-P6" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- NUEVA P7: CUÁNDO TERMINAR -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">7. Según tu avance actual, ¿cuándo
+                            crees que podrías terminar la carrera?</label>
+                        <div class="flex flex-col gap-2 text-sm">
+                            <label
+                                class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
+                                    type="radio" name="tiempo_terminar" value="En 1 año" class="accent-blue-900"
+                                    required> En 1 año</label>
+                            <label
+                                class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
+                                    type="radio" name="tiempo_terminar" value="En 2 años" class="accent-blue-900"> En 2
+                                años</label>
+                            <label
+                                class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded w-fit"><input
+                                    type="radio" name="tiempo_terminar" value="En 3 años" class="accent-blue-900"> En 3
+                                años</label>
+                            <label class="flex items-center gap-2 p-2 hover:bg-slate-50 rounded w-fit">
+                                <input type="radio" name="tiempo_terminar" value="Otro" id="tiempo_otro_radio"
+                                    class="accent-blue-900"> otro:
+                                <input type="text" name="tiempo_terminar_otro"
+                                    class="border-b border-slate-300 outline-none w-40 text-sm focus:border-blue-900 bg-transparent"
+                                    onclick="document.getElementById('tiempo_otro_radio').checked = true;">
+                            </label>
+                        </div>
+                        <p id="error-P7" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- P8  -->
+                    <div><label class="font-bold text-slate-800 mb-2 block">8.
+                            Celular</label><input type="tel" name="celular" required class="survey-input">
+                        <p id="error-P8" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- P9  -->
+                    <div><label class="font-bold text-slate-800 mb-2 block">9.
+                            Correo Electrónico</label><input type="email" name="correo" required class="survey-input">
+                        <p id="error-P9" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- P10 -->
+                    <div><label class="font-bold text-slate-800 mb-2 block">10.
+                            En qué semestre estás actualmente <span class="text-red-600">* (Obligatorio)</span>
+                            <br>
+                            <span class="font-normal text-sm text-slate-600">(marca uno solo si estas nivelado
+                                en un semestre y
+                                no debes materias de otro semestre. Si tienes materias en otros semestres, Marca
+                                las
+                                opciones necesarias)</span>
+                            <!-- Checkbox Dummy Oculto para Validación HTML5 -->
+                            <input type="checkbox" id="q10-required-check" required
+                                style="width:1px; height:0; opacity:0; position:absolute; pointer-events:none;"
+                                tabindex="-1">
+                        </label>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="1er Semestre">
+                                1er</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="2do Semestre">
+                                2do</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="3er Semestre">
+                                3er</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="4to Semestre">
+                                4to</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="5to Semestre">
+                                5to</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="6to Semestre">
+                                6to</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="7mo Semestre">
+                                7mo</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="8vo Semestre">
+                                8vo</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="9no Semestre">
+                                9no</label>
+                            <label class="p-2 border rounded hover:bg-blue-50 cursor-pointer flex gap-2"><input
+                                    type="checkbox" name="semestre" value="10mo Semestre">
+                                10mo</label>
+                        </div>
+                        <p id="error-q10" class="text-sm text-red-600 font-bold mt-2 hidden animate-pulse">
+                            <i class="fas fa-exclamation-circle"></i> Debes seleccionar al menos un semestre.
+                        </p>
+                    </div>
+
+                    <!-- P11 (NUEVA PPA) -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">11. Promedio Ponderado Anual (PPA)
+                            (aprox.):</label>
+                        <div class="flex flex-wrap gap-4 text-sm">
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="ppa" value="50-59" class="accent-blue-900" required>
+                                50–59</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="ppa" value="60-69" class="accent-blue-900"> 60–69</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="ppa" value="70-79" class="accent-blue-900"> 70–79</label>
+                            <label class="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 rounded"><input
+                                    type="radio" name="ppa" value="80+" class="accent-blue-900"> ≥80</label>
+                        </div>
+                        <p id="error-P11" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- P12 (ANTES 11) -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">
+                            12. Carga académica registrada este semestre:
+                        </label>
+
+                        <label class="text-slate-800 mb-2 block">
+                            Número de materias inscritas:
+                            <span class="text-sm text-slate-600">
+                                (Ingrese un número, no se permiten letras)
+                            </span>
+                        </label>
+
+                        <input type="number" name="carga_academica" placeholder="Número de materias" required min="0"
+                            max="10" step="1" oninput="if (this.value < 0 || this.value > 10) this.value = ''"
+                            class="survey-input">
+
+                        <p id="error-P12" class="text-red-500 text-sm mt-1 hidden">
+                            <i class="fas fa-exclamation-circle"></i>
+                            Este campo es obligatorio y debe estar entre 0 y 10.
+                        </p>
+                    </div>
+
+
+                    <!-- P13 -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">13. ¿Cuántas materias has aprobado en
+                            total en todo tu recorrido académico? (coloca un número)</label>
+                        <input type="number" name="materias_aprobadas" class="survey-input" required
+                            placeholder="1 – 67" min="0" max="67" oninput="if (this.value > 67) this.value = '';">
+                        <p id="error-P13" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+                    <!-- P14 -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">
+                            14. ¿Cuántas materias has reprobado? (coloca un número) si no reprobaste ninguna
+                            materia coloca 0
+                        </label>
+
+                        <input type="number" name="materias_reprobadas" class="survey-input" placeholder="Ej: 2"
+                            required min="0" step="1" oninput="this.value = this.value.replace(/[^0-9]/g, ''); 
+                    if (this.value < 0) this.value = '';">
+                        <p id="error-P14" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Este campo es obligatorio</p>
+                    </div>
+
+
+                    <!-- P15 - Repetido Materia -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">15. ¿Has repetido alguna materia por
+                            tercera vez o más?</label>
+                        <div class="flex items-center gap-4 mb-3">
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio"
+                                    name="repetido_materia" value="Sí" class="accent-blue-900" required
+                                    onclick="document.getElementById('container-repitencia').classList.remove('hidden')">
+                                Sí</label>
+                            <label class="flex items-center gap-2 cursor-pointer"><input type="radio"
+                                    name="repetido_materia" value="No" class="accent-blue-900"
+                                    onclick="document.getElementById('container-repitencia').classList.add('hidden')">
+                                No</label>
+                        </div>
+                        <p id="error-P15" class="text-red-500 text-sm mt-1 hidden"><i
+                                class="fas fa-exclamation-circle"></i> Debes seleccionar una opción</p>
+                        <div id="container-repitencia"
+                            class="hidden mt-2 p-4 bg-slate-50 border border-slate-200 rounded-lg animate-fade-in relative">
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Cual o Cuales</label>
+                            <p class="text-xs text-slate-500 mb-2">Busca y selecciona las materias.</p>
+
+                            <!-- Container de Tags -->
+                            <div id="tags-container-q15" class="flex flex-wrap gap-2 mb-2"></div>
+
+                            <!-- Wrapper relativo para el input y el dropdown -->
+                            <div class="relative">
+                                <input type="text" id="input-q15" class="survey-input text-sm w-full"
+                                    placeholder="Escribe para buscar..." autocomplete="off">
+
+                                <!-- Dropdown Custom -->
+                                <ul id="dropdown-q15"
+                                    class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                    <!-- Opciones se llenan dinámicamente js -->
+                                </ul>
+                            </div>
+                            <p id="error-q15" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+
+                            <!-- Input Oculto Real (El que se envía) -->
+                            <input type="hidden" name="materias_repetidas_nombres" id="hidden-q15">
+                        </div>
+                    </div>
+
+                    <!-- P16 - Materias Dificultad -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">16. ¿En qué materias has tenido más
+                            dificultad?</label>
+                        <label class="text-slate-600 mb-1 block text-sm">Busca y selecciona las
+                            materias.</label>
+
+                        <!-- Container de Tags -->
+                        <div id="tags-container-q16" class="flex flex-wrap gap-2 mb-2"></div>
+
+                        <!-- Wrapper relativo para el input y el dropdown -->
+                        <div class="relative">
+                            <input type="text" id="input-q16" class="survey-input text-sm w-full"
+                                placeholder="Escribe para buscar..." autocomplete="off">
+
+                            <!-- Dropdown Custom -->
+                            <ul id="dropdown-q16"
+                                class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1 text-sm">
+                                <!-- Opciones se llenan dinámicamente js -->
+                            </ul>
+                        </div>
+                        <p id="error-q16" class="text-xs text-red-600 mt-1 hidden font-bold"></p>
+
+                        <!-- Input Oculto Real (El que se envía) -->
+                        <input type="hidden" name="materias_dificultad" id="hidden-q16">
+                    </div>
+
+                    <!-- NUEVA P17: MATERIAS VERANO -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <label class="font-bold text-slate-800 mb-3 block">17. MATERIAS RELACIONADAS CON los
+                            cursos de verano y la nivelación para la transición</label>
+
+                        <div class="mb-5">
+                            <p class="text-sm text-blue-900 font-bold mb-2 border-b border-blue-200 pb-1">Marca
+                                solo las que YA aprobaste <span class="font-normal text-slate-600 text-xs">(Si
+                                    no la cursaste o la reprobaste, deja en blanco)</span>:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Delito y Sociedad"
+                                        class="accent-blue-900"> Delito y
+                                    Sociedad</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Psicoanálisis I"
+                                        class="accent-blue-900"> Psicoanálisis I</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas"
+                                        value="Terapia Rogeriana / Humanista" class="accent-blue-900"> Terapia
+                                    Rogeriana / Humanista</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Psicología Cognitiva I"
+                                        class="accent-blue-900"> Psicología
+                                    Cognitiva I</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Psicología Cognitiva II"
+                                        class="accent-blue-900"> Psicología
+                                    Cognitiva II</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Psicopatología I"
+                                        class="accent-blue-900"> Psicopatología
+                                    I</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Teorías y Sistemas I"
+                                        class="accent-blue-900"> Teorías y Sistemas
+                                    I</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas" value="Ética II"
+                                        class="accent-blue-900"> Ética II</label>
+                                <label
+                                    class="flex items-center gap-2 cursor-pointer hover:bg-blue-100 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_aprobadas"
+                                        value="Técnicas Recreativas / Dinámica de Grupo" class="accent-blue-900">
+                                    Técnicas Recreativas / Dinámica de
+                                    Grupo</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-sm text-red-800 font-bold mb-2 border-b border-red-200 pb-1">Si
+                                reprobaste alguna de estas materias, selecciona o déjala en blanco:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm pl-2">
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas" value="Delito y Sociedad"
+                                        class="accent-red-700"> Delito y
+                                    Sociedad</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas" value="Psicoanálisis I"
+                                        class="accent-red-700"> Psicoanálisis I</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas"
+                                        value="Terapia Rogeriana / Humanista" class="accent-red-700"> Terapia
+                                    Rogeriana / Humanista</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas" value="Psicología Cognitiva I"
+                                        class="accent-red-700"> Psicología
+                                    Cognitiva I</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas"
+                                        value="Psicología Cognitiva II" class="accent-red-700"> Psicología
+                                    Cognitiva II</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas" value="Psicopatología I"
+                                        class="accent-red-700"> Psicopatología
+                                    I</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas" value="Teorías y Sistemas I"
+                                        class="accent-red-700"> Teorías y Sistemas
+                                    I</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas" value="Ética II"
+                                        class="accent-red-700"> Ética II</label>
+                                <label class="flex items-center gap-2 cursor-pointer hover:bg-red-50 rounded p-1"><input
+                                        type="checkbox" name="materias_verano_reprobadas"
+                                        value="Técnicas Recreativas / Dinámica de Grupo" class="accent-red-700">
+                                    Técnicas Recreativas / Dinámica de Grupo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- P18  -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">
+                            18. ¿Trabajas mientras estudias?
+                        </label>
+                        <label class="text-slate-800 mb-2 block">
+                            (Solo puede escoger Sí o No)
+                        </label>
+
+                        <div class="flex gap-4">
+                            <label class="flex gap-2 cursor-pointer">
+                                <input type="radio" name="trabaja" value="Sí" required> Sí
+                            </label>
+                            <label class="flex gap-2 cursor-pointer">
+                                <input type="radio" name="trabaja" value="No"> No
+                            </label>
+                        </div>
+
+                        <p id="error-P18" class="text-red-500 text-sm mt-1 hidden">
+                            <i class="fas fa-exclamation-circle"></i> Este campo es obligatorio
+                        </p>
+                    </div>
+
+
+                    <!-- P19  -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">
+                            19. ¿Cuántas horas al día puedes dedicar realmente al estudio?
+                        </label>
+                        <label class="text-slate-800 mb-2 block">
+                            (Ingrese un número entre 1 y 24)
+                        </label>
+
+                        <input type="number" name="horas_estudio" class="survey-input" required min="1" max="24"
+                            step="1" oninput="if (this.value < 1 || this.value > 24) this.value = ''">
+
+                        <p id="error-P19" class="text-red-500 text-sm mt-1 hidden">
+                            <i class="fas fa-exclamation-circle"></i> Este campo es obligatorio
+                        </p>
+                    </div>
+
+
+                    <!-- P20  -->
+                    <div>
+                        <label class="font-bold text-slate-800 mb-2 block">
+                            20. Estado general de avance académico:
+                        </label>
+
+                        <div class="space-y-2">
+                            <label class="block">
+                                <input type="radio" name="avance" value="Voy al día" required> Voy al día
+                            </label>
+                            <label class="block">
+                                <input type="radio" name="avance" value="Ligeramente atrasado(a)"> Ligeramente
+                                atrasado(a)
+                            </label>
+                            <label class="block">
+                                <input type="radio" name="avance" value="Atraso moderado"> Atraso moderado
+                            </label>
+                            <label class="block">
+                                <input type="radio" name="avance" value="Atraso significativo"> Atraso significativo
+                            </label>
+                        </div>
+
+                        <p id="error-P20" class="text-red-500 text-sm mt-1 hidden">
+                            <i class="fas fa-exclamation-circle"></i> Este campo es obligatorio
+                        </p>
+                    </div>
+
+                    <div class="pt-6 border-t flex justify-end">
+                        <button type="submit" id="submit-form-section1"
+                            class="bg-red-900 text-white font-bold py-3 px-6 rounded-lg shadow hover:bg-red-800 transition transform hover:scale-105">✓
+                            Continuar a Sección 2.- Avance Académico <i class="fas fa-arrow-right ml-2"></i></button>
+                    </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- ================= VISTA 2: MALLA INTERACTIVA ================= -->
@@ -775,7 +837,7 @@
                                         Depende (explica):</div>
                                     <input type="text" id="q10-text"
                                         class="ml-8 border-b border-slate-300 outline-none focus:border-blue-900 w-[80%]"
-                                        placeholder="Escribe tu explicación..." disabled>
+                                        placeholder="Escribe tu explicación..." disabled required>
                                 </label>
                             </div>
                         </div>
@@ -798,7 +860,7 @@
                 </div>
                 <div class="p-8">
                     <form id="form-section3" onsubmit="goToSection4(event)" class="space-y-8">
-                        <!-- P22 (ANTES 21) -->
+                        <!-- P22  -->
                         <div>
                             <label class="text-lg font-bold text-slate-900 mb-4 block">22.
                                 ¿Cómo te sientes respecto a la
@@ -836,7 +898,7 @@
                                 </label>
                             </div>
                         </div>
-                        <!-- P23 (ANTES 22) -->
+                        <!-- P23 -->
                         <div class="border-t pt-6">
                             <label class="text-lg font-bold text-slate-900 mb-4 block">23.
                                 ¿Qué crees que aportará el nuevo
@@ -866,7 +928,7 @@
                                     opinión:
                                     <input type="text" id="q12-text"
                                         class="ml-2 border-b border-slate-300 outline-none focus:border-blue-900 w-1/2"
-                                        disabled>
+                                        disabled required>
                                 </label>
                             </div>
                         </div>
@@ -889,7 +951,7 @@
                 </div>
                 <div class="p-8">
                     <form id="form-section4" onsubmit="goToSection5(event)" class="space-y-8">
-                        <!-- P24 (ANTES 23) -->
+                        <!-- P24 (-->
                         <div>
                             <label class="text-lg font-bold text-slate-900 mb-4 block">24.
                                 Medidas que consideras útiles para tu avance
@@ -926,11 +988,11 @@
                                     Otros:
                                     <input type="text" id="q13-text"
                                         class="ml-2 border-b border-slate-300 outline-none focus:border-blue-900 w-1/2"
-                                        disabled>
+                                        disabled required>
                                 </label>
                             </div>
                         </div>
-                        <!-- P25 (ANTES 24) -->
+                        <!-- P25 -->
                         <div class="border-t pt-6">
                             <label class="text-lg font-bold text-slate-900 mb-2 block">25.
                                 De esas medidas que consideras útiles para
@@ -1018,6 +1080,14 @@
                     </svg>
                     60904656
                 </a>
+                <a href="https://wa.me/59173683548" target="_blank"
+                class="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-600 transition-colors mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M16.59 14.25c-.27-.13-1.6-.79-1.85-.88-.25-.09-.44-.13-.63.13s-.72.88-.88 1.06-.33.2-.6.07c-.27-.13-1.14-.42-2.17-1.33-.8-.71-1.34-1.59-1.5-1.86s-.02-.44.11-.57c.11-.11.25-.28.38-.42.13-.13.17-.22.27-.37.09-.15.04-.28-.02-.42-.07-.13-.63-1.51-.86-2.07-.23-.54-.46-.46-.63-.47l-.54-.01c-.17 0-.44.06-.67.28s-.88.86-.88 2.08.9 2.42 1.02 2.58c.13.17 1.76 2.7 4.27 3.78 2.51 1.08 2.51.72 2.97.68.46-.04 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.21-.06-.13-.22-.2-.48-.33z" />
+                </svg>
+                73683548
+            </a>
 
                 <!-- Botones de acción -->
                 <div class="flex flex-col gap-3">
@@ -1078,6 +1148,14 @@
                         d="M16.59 14.25c-.27-.13-1.6-.79-1.85-.88-.25-.09-.44-.13-.63.13s-.72.88-.88 1.06-.33.2-.6.07c-.27-.13-1.14-.42-2.17-1.33-.8-.71-1.34-1.59-1.5-1.86s-.02-.44.11-.57c.11-.11.25-.28.38-.42.13-.13.17-.22.27-.37.09-.15.04-.28-.02-.42-.07-.13-.63-1.51-.86-2.07-.23-.54-.46-.46-.63-.47l-.54-.01c-.17 0-.44.06-.67.28s-.88.86-.88 2.08.9 2.42 1.02 2.58c.13.17 1.76 2.7 4.27 3.78 2.51 1.08 2.51.72 2.97.68.46-.04 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.21-.06-.13-.22-.2-.48-.33z" />
                 </svg>
                 60904656
+            </a>
+            <a href="https://wa.me/59173683548" target="_blank"
+                class="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-600 transition-colors mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M16.59 14.25c-.27-.13-1.6-.79-1.85-.88-.25-.09-.44-.13-.63.13s-.72.88-.88 1.06-.33.2-.6.07c-.27-.13-1.14-.42-2.17-1.33-.8-.71-1.34-1.59-1.5-1.86s-.02-.44.11-.57c.11-.11.25-.28.38-.42.13-.13.17-.22.27-.37.09-.15.04-.28-.02-.42-.07-.13-.63-1.51-.86-2.07-.23-.54-.46-.46-.63-.47l-.54-.01c-.17 0-.44.06-.67.28s-.88.86-.88 2.08.9 2.42 1.02 2.58c.13.17 1.76 2.7 4.27 3.78 2.51 1.08 2.51.72 2.97.68.46-.04 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.21-.06-.13-.22-.2-.48-.33z" />
+                </svg>
+                73683548
             </a>
 
             <!-- Botones de acción -->
@@ -1198,5 +1276,3 @@
 
 
 </html>
-
-

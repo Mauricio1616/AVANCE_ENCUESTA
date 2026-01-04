@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         .hide-scroll::-webkit-scrollbar {
@@ -23,7 +24,7 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCkhGGnoJpAJSs3YC55EzHj2ETGSCvK63w",
@@ -250,6 +251,130 @@
                 }
             } else {
                 alert("Estudiante no encontrado en la lista actual.");
+            }
+        };
+
+        // --- EDIT LOGIC ---
+        let currentEditId = null;
+
+        // Helper to formatting array to string for edit input
+        function formatForEdit(val) {
+            if (Array.isArray(val)) return val.join(', ');
+            return val || '';
+        }
+
+        window.editStudent = (id) => {
+            const student = allSurveys.find(s => s.id === id);
+            if (!student) return;
+
+            currentEditId = id;
+            const modal = document.getElementById('edit-modal');
+
+            // Populate Personal & Basic
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-nombre').value = getField(student, 'nombre', 'Nombre') || '';
+            document.getElementById('edit-apellidos').value = getField(student, 'Apellidos', 'apellidos') || '';
+            document.getElementById('edit-registro').value = getField(student, 'registro', 'Registro') || '';
+            document.getElementById('edit-ci').value = getField(student, 'CI', 'ci', 'Ci') || '';
+            document.getElementById('edit-celular').value = getField(student, 'celular', 'Celular') || '';
+            document.getElementById('edit-correo').value = getField(student, 'correo', 'Correo') || '';
+            document.getElementById('edit-anio').value = getField(student, 'anio_ingreso') || '';
+
+            // Populate P10-P20
+            document.getElementById('edit-semestre').value = formatForEdit(getField(student, 'semestre', 'Semestre'));
+            document.getElementById('edit-ppa').value = getField(student, 'ppa', 'PPA') || '';
+            document.getElementById('edit-carga').value = getField(student, 'carga_academica', 'carga') || '';
+            document.getElementById('edit-mat-aprob').value = getField(student, 'materias_aprobadas') || '';
+            document.getElementById('edit-mat-reprob').value = getField(student, 'materias_reprobadas') || '';
+            document.getElementById('edit-repitio').value = getField(student, 'repetido_materia') || '';
+            document.getElementById('edit-mat-repetidas').value = getField(student, 'materias_repetidas_nombres') || '';
+            document.getElementById('edit-mat-dificultad').value = getField(student, 'materias_dificultad') || '';
+            document.getElementById('edit-verano-aprob').value = formatForEdit(getField(student, 'materias_verano_aprobadas'));
+            document.getElementById('edit-verano-reprob').value = formatForEdit(getField(student, 'materias_verano_reprobadas'));
+            document.getElementById('edit-trabaja').value = formatForEdit(getField(student, 'trabaja', 'Trabaja'));
+            document.getElementById('edit-horas').value = formatForEdit(getField(student, 'horas_estudio', 'Horas_estudio', 'horas'));
+            document.getElementById('edit-avance').value = formatForEdit(getField(student, 'avance', 'Avance'));
+
+            // Populate P21-P26
+            document.getElementById('edit-p21').value = getField(student, 'q10', 'afectacion') || '';
+            document.getElementById('edit-p22').value = getField(student, 'q11', 'sentimiento') || '';
+            document.getElementById('edit-p23').value = getField(student, 'q12', 'aporte') || ''; // Note: This field used to be aporte expected
+            document.getElementById('edit-p24').value = formatForEdit(getField(student, 'q13', 'medidas'));
+            document.getElementById('edit-p25').value = getField(student, 'prioridad') || '';
+            // For comments, look in multiple places
+            document.getElementById('edit-p26').value = getField(student, 'comentario_final') || getField(student, 'propuesta') || getField(student.seccion5, 'propuesta') || '';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeEditModal = () => {
+            const modal = document.getElementById('edit-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            currentEditId = null;
+        };
+
+        window.saveEdit = async () => {
+            if (!currentEditId) return;
+
+            const btn = document.getElementById('btn-save-edit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            btn.disabled = true;
+
+            // Helper to parsing csv string to array
+            const parseToArray = (val) => val ? val.split(',').map(s => s.trim()).filter(s => s) : [];
+
+            // We save mostly to root keys to ensure consistency and easier access by new getField logic
+            // Note: This effectively "flattens" the edited fields into the root of the document, which is fine for NoSQL and simplify things.
+            const newData = {
+                "personal.nombre": document.getElementById('edit-nombre').value,
+                "personal.apellidos": document.getElementById('edit-apellidos').value,
+                "personal.registro": document.getElementById('edit-registro').value,
+                "personal.ci": document.getElementById('edit-ci').value,
+                "personal.celular": document.getElementById('edit-celular').value,
+                "personal.correo": document.getElementById('edit-correo').value,
+                "personal.anio_ingreso": document.getElementById('edit-anio').value,
+
+                // Academico
+                "personal.semestre": parseToArray(document.getElementById('edit-semestre').value),
+                "personal.carga_academica": document.getElementById('edit-carga').value,
+                "ppa": document.getElementById('edit-ppa').value,
+                "materias_aprobadas": document.getElementById('edit-mat-aprob').value,
+                "materias_reprobadas": document.getElementById('edit-mat-reprob').value,
+                "repetido_materia": document.getElementById('edit-repitio').value,
+                "materias_repetidas_nombres": document.getElementById('edit-mat-repetidas').value,
+                "materias_dificultad": document.getElementById('edit-mat-dificultad').value,
+                "materias_verano_aprobadas": parseToArray(document.getElementById('edit-verano-aprob').value),
+                "materias_verano_reprobadas": parseToArray(document.getElementById('edit-verano-reprob').value),
+                "personal.trabaja": parseToArray(document.getElementById('edit-trabaja').value),
+                "personal.horas_estudio": parseToArray(document.getElementById('edit-horas').value),
+                "personal.avance": parseToArray(document.getElementById('edit-avance').value),
+
+                // Expectativas
+                "q10": document.getElementById('edit-p21').value,
+                "q11": document.getElementById('edit-p22').value,
+                "q12": document.getElementById('edit-p23').value,
+                "q13": parseToArray(document.getElementById('edit-p24').value),
+                "prioridad": document.getElementById('edit-p25').value,
+                "comentario_final": document.getElementById('edit-p26').value
+            };
+
+            try {
+                const docRef = doc(db, "encuestas_estudiantes", currentEditId);
+                await updateDoc(docRef, newData);
+
+                showStatusMessage('✅ Cambios guardados correctamente.', 'success');
+                closeEditModal();
+                // Real-time listener will update UI automatically
+            } catch (error) {
+                console.error("Error updating document: ", error);
+                showStatusMessage('❌ Error al guardar cambios.', 'error');
+                alert("Error al guardar: " + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         };
 
@@ -531,6 +656,8 @@
                     <td class="p-2 md:p-4 text-center align-middle" onclick="event.stopPropagation()">
                         <div class="flex items-center justify-center gap-2">
                             <button onclick="openStudentDetail(${JSON.stringify(s).replace(/"/g, '&quot;')})" class="text-slate-300 hover:text-blue-600 transition-colors" title="Ver Detalle"><i class="fas fa-eye"></i></button>
+                            <button onclick="downloadStudentPDF('${s.id}')" class="text-slate-300 hover:text-red-600 transition-colors" title="Descargar PDF"><i class="fas fa-file-pdf"></i></button>
+                            <button onclick="editStudent('${s.id}')" class="text-amber-400 hover:text-amber-700 hover:bg-amber-50 p-1.5 rounded-full transition-all" title="Editar"><i class="fas fa-pencil-alt"></i></button>
                             <button onclick="goToIndividualStats('${s.id}')" class="text-blue-400 hover:text-blue-700 hover:bg-blue-50 p-1.5 rounded-full transition-all" title="Ver Gráficos"><i class="fas fa-chart-line"></i></button>
                             <button onclick="confirmDelete('${s.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-full transition-all" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
                         </div>
@@ -1123,6 +1250,350 @@
             document.body.removeChild(link);
         };
 
+        // Función para descargar PDF individual de un estudiante (FORMATO COMPLETO)
+        window.downloadStudentPDF = (studentId) => {
+            console.log('📄 INICIANDO DESCARGA DE PDF...');
+
+            const student = allSurveys.find(s => s.id === studentId);
+            if (!student) {
+                alert('No se encontró el estudiante');
+                return;
+            }
+
+            // Verificar que html2pdf esté cargado
+            if (typeof html2pdf === 'undefined') {
+                alert('La librería html2pdf no está cargada. Por favor recarga la página.');
+                return;
+            }
+
+            // Adaptar estructura de datos de Firebase al formato esperado
+            const allData = {
+                personal: student.personal || student,
+                malla: student.malla || [],
+                seccion2_cierre: student.seccion2_cierre || {},
+                seccion3: student.seccion3 || {},
+                seccion4: student.seccion4 || {},
+                seccion5: student.seccion5 || {}
+            };
+
+            const data = allData.personal || {};
+            const malla = allData.malla || [];
+            const seccion2_cierre = allData.seccion2_cierre || {};
+            const seccion3 = allData.seccion3 || {};
+            const seccion4 = allData.seccion4 || {};
+            const seccion5 = allData.seccion5 || {};
+
+            console.log('📊 Datos para PDF listos:', allData);
+
+            const nombre = getField(student, 'nombre', 'Nombre') || '-';
+            const apellidos = getField(student, 'Apellidos', 'apellidos') || '-';
+            const registro = getField(student, 'registro', 'Registro') || '-';
+            const ci = getField(student, 'CI', 'ci', 'Ci') || '-';
+            const celular = getField(student, 'celular', 'Celular') || '-';
+            const correo = getField(student, 'correo', 'Correo') || '-';
+
+            // Validar si semestre es array o string
+            let semestreStr = '-';
+            const semestreData = getField(student, 'semestre', 'Semestre');
+            if (Array.isArray(semestreData)) {
+                semestreStr = semestreData.join(', ');
+            } else if (semestreData) {
+                semestreStr = semestreData;
+            }
+
+            // Datos académicos
+            const anioIngreso = getField(student, 'anio_ingreso') || '-';
+            const modalidadIngreso = getField(student, 'modalidad_ingreso') || '-';
+            const tiempoTerminar = getField(student, 'tiempo_terminar') || '-';
+            const ppa = getField(student, 'ppa') || '-';
+            const carga = getField(student, 'carga_academica', 'carga') || '-';
+            const matAprob = getField(student, 'materias_aprobadas') || '-';
+            const matReprob = getField(student, 'materias_reprobadas') || '-';
+            const repitio = getField(student, 'repetido_materia') || '-';
+            const repitioCual = (repitio === 'Sí' && getField(student, 'materias_repetidas_nombres'))
+                ? `(${getField(student, 'materias_repetidas_nombres')})`
+                : '';
+            const matDificultad = getField(student, 'materias_dificultad') || 'Ninguna especificada';
+
+            // P17
+            let veranoAprob = '-';
+            const veranoAprobData = getField(student, 'materias_verano_aprobadas');
+            if (veranoAprobData && veranoAprobData.length > 0) {
+                veranoAprob = Array.isArray(veranoAprobData) ? veranoAprobData.join(', ') : veranoAprobData;
+            }
+            let veranoReprob = '-';
+            const veranoReprobData = getField(student, 'materias_verano_reprobadas');
+            if (veranoReprobData && veranoReprobData.length > 0) {
+                veranoReprob = Array.isArray(veranoReprobData) ? veranoReprobData.join(', ') : veranoReprobData;
+            }
+
+            // Datos laborales
+            const trabaja = getField(student, 'trabaja', 'Trabaja') || '-';
+            const horas = getField(student, 'horas_estudio', 'Horas_estudio', 'horas') || '-';
+            const avance = getField(student, 'avance', 'Avance') || '-';
+
+            // Preguntas
+            const p10 = getField(student, 'q10') || '-';
+            const p10Exp = (p10 === 'Depende' && seccion2_cierre.explicacion)
+                ? `(Por: ${seccion2_cierre.explicacion})`
+                : '';
+
+            const p11 = getField(student, 'q11') || '-';
+
+            let p12 = getField(student, 'q12') || '-';
+            if ((p12 === 'Otra' || p12 === 'otra') && seccion3.q12_otra) {
+                p12 = seccion3.q12_otra;
+            }
+
+            let p13 = '-';
+            const p13Data = getField(student, 'q13');
+            if (Array.isArray(p13Data)) {
+                p13 = p13Data.join(', ');
+                if (p13Data.includes('Otros') && seccion4.q13_otros) {
+                    p13 += ` (${seccion4.q13_otros})`;
+                }
+            } else if (p13Data) {
+                p13 = p13Data;
+            }
+
+            const prioridad = getField(student, 'prioridad') || '-';
+            const propuesta = getField(student, 'propuesta') || getField(student.seccion5, 'propuesta') || 'Sin comentarios.';
+
+            // --- LÓGICA DE VISUALIZACIÓN (Malla Simplificada) ---
+            // Como no tenemos acceso a semesterData sin script.js, mostramos la malla del estudiante directamente
+
+            let mallaHTML = '';
+            if (malla && malla.length > 0) {
+                // Agrupar materias por semestre
+                const materiasPorSemestre = {};
+
+                malla.forEach(materia => {
+                    if (!materia.id) return;
+
+                    // Extraer semestre del ID (sem-0-0 = semestre 1, sem-1-0 = semestre 2, etc.)
+                    let semestre = 'Otros';
+                    if (materia.id.startsWith('sem-')) {
+                        const parts = materia.id.split('-');
+                        if (parts.length >= 2) {
+                            const semNum = parseInt(parts[1]) + 1;
+                            semestre = `Sem ${semNum}`;
+                        }
+                    } else if (materia.id.startsWith('mod9-')) {
+                        semestre = 'Sem 9';
+                    } else if (materia.id.startsWith('mod10-')) {
+                        semestre = 'Sem 10';
+                    } else if (materia.id.startsWith('elec-') || materia.id.startsWith('taller-')) {
+                        semestre = 'Electivas/Talleres';
+                    }
+
+                    if (!materiasPorSemestre[semestre]) {
+                        materiasPorSemestre[semestre] = [];
+                    }
+
+                    materiasPorSemestre[semestre].push(materia);
+                });
+
+                // Generar HTML de la malla
+                const stylesMap = {
+                    aprobado: { bg: '#dcfce7', text: '#14532d', border: '#86efac' },
+                    reprobado: { bg: '#fee2e2', text: '#7f1d1d', border: '#fca5a5' },
+                    levantamiento: { bg: '#e0f2fe', text: '#0c4a6e', border: '#7dd3fc' },
+                    pendiente: { bg: '#ffffff', text: '#94a3b8', border: '#e2e8f0' }
+                };
+
+                mallaHTML = '<div style="margin-top: 15px;">';
+
+                // Ordenar semestres
+                const semestresOrdenados = Object.keys(materiasPorSemestre).sort((a, b) => {
+                    if (a.startsWith('Sem') && b.startsWith('Sem')) {
+                        const numA = parseInt(a.replace('Sem ', ''));
+                        const numB = parseInt(b.replace('Sem ', ''));
+                        return numA - numB;
+                    }
+                    return a.localeCompare(b);
+                });
+
+                semestresOrdenados.forEach(semestre => {
+                    mallaHTML += `<div style="margin-bottom: 15px;">
+                        <div style="font-weight: 700; color: #1e3a8a; margin-bottom: 5px; font-size: 11px;">${semestre}</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">`;
+
+                    materiasPorSemestre[semestre].forEach(materia => {
+                        const st = stylesMap[materia.estado] || stylesMap.pendiente;
+                        const displayName = materia.customSelection || materia.nombre || 'Sin nombre';
+
+                        mallaHTML += `<div style="
+                            background-color: ${st.bg};
+                            color: ${st.text};
+                            border: 1px solid ${st.border};
+                            border-radius: 4px;
+                            padding: 4px 8px;
+                            font-size: 9px;
+                            line-height: 1.2;
+                        ">${displayName}</div>`;
+                    });
+
+                    mallaHTML += `</div></div>`;
+                });
+
+                mallaHTML += '</div>';
+            } else {
+                mallaHTML = '<p style="color: #94a3b8; font-style: italic; text-align: center; padding: 20px;">No hay datos de malla curricular registrados</p>';
+            }
+
+            const htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+                    body { font-family: 'Roboto', Arial, sans-serif; margin: 0; padding: 20px; color: #1f2937; background: #fff; max-width: 800px; mx-auto; }
+                    .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 25px; }
+                    .header-logo img { height: 60px; width: auto; }
+                    .header-text { text-align: right; }
+                    .header-title { font-size: 22px; font-weight: 800; color: #1e3a8a; margin: 0; letter-spacing: -0.5px; text-transform: uppercase; }
+                    .header-sub { font-size: 12px; color: #6b7280; font-weight: 500; margin-top: 5px; }
+                    .section { margin-bottom: 25px; background: #fff; }
+                    .section-header { background: #f1f5f9; color: #0f172a; padding: 8px 12px; font-size: 13px; font-weight: 800; border-left: 5px solid #1e3a8a; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+                    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+                    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+                    .field-box { margin-bottom: 8px; }
+                    .label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+                    .value { font-size: 12px; font-weight: 500; color: #111827; border-bottom: 1px solid #e5e7eb; padding-bottom: 2px; min-height: 16px; }
+                    .value-highlight { color: #1e3a8a; font-weight: 800; }
+                    .legend { display: flex; gap: 15px; justify-content: flex-end; margin-bottom: 10px; font-size: 10px; }
+                    .legend-item { display: flex; align-items: center; gap: 4px; }
+                    .dot { width: 10px; height: 10px; border-radius: 50%; }
+                    .footer { margin-top: 40px; text-align: center; color: #9ca3af; font-size: 9px; border-top: 1px solid #f3f4f6; padding-top: 15px; }
+                    .propuesta-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; font-size: 12px; line-height: 1.5; color: #374151; font-style: italic; }
+                    .keep-together { break-inside: avoid; }
+                </style>
+            </head>
+            <body>
+                <div class="header-container">
+                    <div class="header-logo">
+                        <img style="width: 150px; height: auto;" src="img/Encabezado.png" alt="Logo" class="object-contain bg-white rounded p-1 shadow-sm">
+                    </div>
+                    <div class="header-text">
+                        <h1 class="header-title">Reporte de Situación Académica</h1>
+                        <p class="header-sub">Proceso de transición curricular - Carrera de Psicología</p>
+                        <p class="header-sub">Generado: ${new Date().toLocaleDateString('es-ES')} | REGISTRO: ${registro}</p>
+                    </div>
+                </div>
+
+                <div class="section keep-together">
+                    <div class="section-header"><span></span> Datos Personales y Académicos</div>
+                    <div class="grid-3">
+                        <div class="field-box"><div class="label">Registro Universitario</div><div class="value value-highlight">${registro}</div></div>
+                        <div class="field-box"><div class="label">Cédula de Identidad</div><div class="value">${ci}</div></div>
+                        <div class="field-box"><div class="label">Nombre Completo</div><div class="value">${nombre} ${apellidos}</div></div>
+                    </div>
+                    <div class="grid-3">
+                        <div class="field-box"><div class="label">Semestre Actual</div><div class="value">${semestreStr}</div></div>
+                        <div class="field-box"><div class="label">Carga Actual</div><div class="value">${carga} Materias</div></div>
+                        <div class="field-box"><div class="label">Contacto</div><div class="value">${celular}</div></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field-box"><div class="label">Correo Electrónico</div><div class="value" style="font-size:11px;">${correo}</div></div>
+                        <div class="field-box"><div class="label">Año de Ingreso / Modalidad</div><div class="value">${anioIngreso} - ${modalidadIngreso}</div></div>
+                    </div>
+                </div>
+
+                <div class="section keep-together">
+                    <div class="section-header"><span></span> Historial y Rendimiento</div>
+                    <div class="grid-3">
+                        <div class="field-box"><div class="label">PPA Aprox.</div><div class="value" style="color:#6b21a8; font-weight:700;">${ppa}</div></div>
+                        <div class="field-box"><div class="label">Mat. Aprobadas</div><div class="value" style="color:#059669; font-weight:700;">${matAprob}</div></div>
+                        <div class="field-box"><div class="label">Mat. Reprobadas</div><div class="value" style="color:#dc2626; font-weight:700;">${matReprob}</div></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field-box"><div class="label">Tiempo Estimado Finalización</div><div class="value">${tiempoTerminar}</div></div>
+                        <div class="field-box"><div class="label">Repitencia (>3 veces)</div><div class="value">${repitio} ${repitioCual}</div></div>
+                    </div>
+                    <div class="field-box" style="margin-bottom:12px;"><div class="label">Materias con Dificultad</div><div class="value">${matDificultad}</div></div>
+                    <div class="field-box" style="margin-bottom:12px; background-color:#eff6ff; padding:8px; border-radius:4px;">
+                        <div class="label" style="color:#1e3a8a;">MATERIAS PARA NIVELACIÓN / VERANO (YA APROBADAS)</div>
+                        <div class="value" style="border:none; padding-bottom:0;">${veranoAprob}</div>
+                    </div>
+                    <div class="field-box" style="margin-bottom:12px; background-color:#fef2f2; padding:8px; border-radius:4px;">
+                        <div class="label" style="color:#b91c1c;">MATERIAS PARA NIVELACIÓN / VERANO (REPROBADAS)</div>
+                        <div class="value" style="border:none; padding-bottom:0;">${veranoReprob}</div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field-box"><div class="label">Situación Laboral</div><div class="value">Trabaja: ${trabaja}</div></div>
+                        <div class="field-box"><div class="label">Horas Estudio/Día</div><div class="value">${horas} Horas</div></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header"><div><span></span> Mapa de Avance Curricular</div></div>
+                    <div class="legend">
+                        <div class="legend-item"><div class="dot" style="background:#34d399;"></div> Aprobado</div>
+                        <div class="legend-item"><div class="dot" style="background:#f87171;"></div> Reprobado</div>
+                        <div class="legend-item"><div class="dot" style="background:#38bdf8;"></div> Levantamiento</div>
+                        <div class="legend-item"><div class="dot" style="background:#d1d5db;"></div> Pendiente</div>
+                    </div>
+                    ${mallaHTML}
+                </div>
+
+                <div class="section keep-together">
+                    <div class="section-header"><span></span> Percepción y Expectativas</div>
+                    <div class="field-box"><div class="label">¿Cómo te sientes respecto al nuevo currículo?</div><div class="value">${p11}</div></div>
+                    <div class="grid-2">
+                        <div class="field-box"><div class="label">Afectación percibida</div><div class="value">${p10} ${p10Exp}</div></div>
+                        <div class="field-box"><div class="label">Aporte principal esperado</div><div class="value">${p12}</div></div>
+                    </div>
+                </div>
+
+                <div class="section keep-together">
+                    <div class="section-header"><span></span> Medidas de Transición Preferidas</div>
+                    <div class="field-box"><div class="label">Medidas seleccionadas</div><div class="value" style="line-height:1.4;">${p13}</div></div>
+                    <div class="field-box" style="margin-top:10px;"><div class="label">PRIORIDAD ABSOLUTA</div><div class="value value-highlight">${prioridad}</div></div>
+                </div>
+
+                <div class="section keep-together">
+                    <div class="section-header"><span>¡</span> Tu Propuesta / Comentario Final</div>
+                    <div class="propuesta-box">"${propuesta}"</div>
+                </div>
+
+                <div class="footer">
+                    Documento generado automáticamente por el Sistema de Encuestas Curriculares - Psicología UAGRM<br>
+                    Este reporte es informativo y refleja las respuestas proporcionadas por el estudiante en la fecha indicada.
+                </div>
+            </body>
+            </html>
+            `;
+
+            const element = document.createElement('div');
+            element.innerHTML = htmlContent;
+
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `Reporte_Psicologia_${registro}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    letterRendering: true
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            console.log('📄 Generando PDF...');
+
+            html2pdf().set(opt).from(element).save()
+                .then(() => {
+                    console.log('✅ PDF Generado con éxito!');
+                })
+                .catch(err => {
+                    console.error('❌ Error generando PDF:', err);
+                    alert('Hubo un error generando el reporte. Por favor intente de nuevo.');
+                });
+        };
+
         window.closeModal = () => {
             const modal = document.getElementById('detail-modal');
             modal.classList.add('hidden');
@@ -1640,6 +2111,208 @@
                 <button onclick="exportChartData()"
                     class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm transition-colors shadow-sm flex items-center gap-2">
                     <i class="fas fa-file-excel"></i> Exportar
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div id="edit-modal"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[150] p-4 transition-opacity">
+        <div
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative transform scale-100 transition-all">
+            <!-- Header -->
+            <div class="bg-amber-500 p-4 shrink-0 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fas fa-edit"></i> Editar
+                    Estudiante</h3>
+                <button onclick="closeEditModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                <form id="edit-form" class="space-y-4">
+                    <input type="hidden" id="edit-id">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Nombre</label>
+                            <input type="text" id="edit-nombre"
+                                class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Apellidos</label>
+                            <input type="text" id="edit-apellidos"
+                                class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Registro</label>
+                            <input type="text" id="edit-registro"
+                                class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">C.I.</label>
+                            <input type="text" id="edit-ci"
+                                class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Celular</label>
+                            <input type="text" id="edit-celular"
+                                class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Correo</label>
+                            <input type="text" id="edit-correo"
+                                class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                        </div>
+
+                        <div class="md:col-span-2 border-t border-slate-100 pt-3 mt-1">
+                            <h4 class="text-xs font-bold text-blue-900 mb-2 uppercase">Datos Académicos</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Año de
+                                        Ingreso</label>
+                                    <input type="number" id="edit-anio"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 border-t border-slate-100 pt-3 mt-1">
+                            <h4 class="text-xs font-bold text-blue-900 mb-2 uppercase">Datos Académicos (P10-P20)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P10. Semestre(s) (Sep.
+                                        comas)</label>
+                                    <input type="text" id="edit-semestre"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P11. PPA</label>
+                                    <input type="text" id="edit-ppa"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P12. Carga
+                                        Académica</label>
+                                    <input type="text" id="edit-carga"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P13. Mat.
+                                        Aprobadas</label>
+                                    <input type="text" id="edit-mat-aprob"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P14. Mat.
+                                        Reprobadas</label>
+                                    <input type="text" id="edit-mat-reprob"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P15. ¿Repitió?
+                                        (Sí/No)</label>
+                                    <input type="text" id="edit-repitio"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P15. Materias Repetidas
+                                        (Nombres)</label>
+                                    <input type="text" id="edit-mat-repetidas"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P16. Materias
+                                        Dificultad</label>
+                                    <input type="text" id="edit-mat-dificultad"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P17. Verano
+                                        Aprobadas</label>
+                                    <input type="text" id="edit-verano-aprob"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P17. Verano
+                                        Reprobadas</label>
+                                    <input type="text" id="edit-verano-reprob"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P18. Trabaja</label>
+                                    <input type="text" id="edit-trabaja"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P19. Horas
+                                        Estudio</label>
+                                    <input type="text" id="edit-horas"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P20. Avance
+                                        Autopercibido</label>
+                                    <input type="text" id="edit-avance"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 border-t border-slate-100 pt-3 mt-1">
+                            <h4 class="text-xs font-bold text-blue-900 mb-2 uppercase">Expectativas y Cierre (P21-P26)
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P21. Afectación
+                                        Malla</label>
+                                    <input type="text" id="edit-p21"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P22. Sentimiento</label>
+                                    <input type="text" id="edit-p22"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P23. Aporte</label>
+                                    <input type="text" id="edit-p23"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P25. Prioridad</label>
+                                    <input type="text" id="edit-p25"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P24. Medidas Solicitadas
+                                        (Sep. comas)</label>
+                                    <textarea id="edit-p24" rows="2"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"></textarea>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">P26. Comentario
+                                        Final</label>
+                                    <textarea id="edit-p26" rows="2"
+                                        class="w-full border border-slate-300 rounded p-2 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-3 shrink-0">
+                <button onclick="closeEditModal()"
+                    class="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-lg font-medium transition-colors">Cancelar</button>
+                <button onclick="saveEdit()" id="btn-save-edit"
+                    class="px-6 py-2 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 shadow-lg shadow-amber-500/30 transition-all transform hover:scale-105 flex items-center gap-2">
+                    <i class="fas fa-save"></i> Guardar Cambios
                 </button>
             </div>
         </div>

@@ -15,33 +15,209 @@ function goToSection2(e) {
     // --- CORRECCIÓN INTEGRADA: Capturar lista de semestres y campos nuevos ---
     const semestresSeleccionados = formData1.getAll('semestre');
 
+    // --- VALIDACIÓN EXPLCITA CON SWEETALERT & INLINE ERRORS ---
+
+    // Helper para mostrar error y foco
+    const showError = (message, errorId, elementOrName) => {
+        // 1. Mostrar Inline Error inmediatamente
+        if (errorId) {
+            const errEl = document.getElementById(errorId);
+            if (errEl) errEl.classList.remove('hidden');
+        }
+
+        // 2. SweetAlert con callback para foco/scroll
+        Swal.fire({
+            icon: 'error',
+            title: 'Atención',
+            text: message,
+            confirmButtonText: 'Entendido, ir a la pregunta',
+            confirmButtonColor: '#7f1d1d',
+            returnFocus: false
+        }).then((result) => {
+            if (result.isConfirmed || result.isDismissed) {
+                // ACCIÓN AL CERRAR/ACEPTAR:
+
+                // A. Scroll al error inline (si existe) o al elemento
+                if (errorId) {
+                    const errEl = document.getElementById(errorId);
+                    if (errEl) {
+                        errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else if (elementOrName && typeof elementOrName !== 'string') {
+                    // Fallback: Si no hay ID de error, scrollear al input
+                    elementOrName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                // B. Foco y Highlight
+                if (elementOrName) {
+                    const clearError = () => {
+                        if (errorId) {
+                            const errEl = document.getElementById(errorId);
+                            if (errEl) errEl.classList.add('hidden');
+                        }
+                        if (typeof elementOrName === 'object' && elementOrName !== null) {
+                            elementOrName.classList.remove('border-red-500', 'bg-red-50');
+                        }
+                    };
+
+                    if (typeof elementOrName === 'string') {
+                        // Radio Group
+                        const radios = document.querySelectorAll(`input[name="${elementOrName}"]`);
+                        if (radios.length > 0) radios[0].focus();
+                        radios.forEach(r => r.addEventListener('change', clearError, { once: true }));
+                    } else {
+                        // Elemento individual
+                        elementOrName.classList.add('border-red-500', 'bg-red-50');
+                        // focus se maneja en el scroll, aseguramos aquí también
+                        elementOrName.focus();
+                        elementOrName.addEventListener('input', clearError, { once: true });
+                        elementOrName.addEventListener('change', clearError, { once: true });
+                    }
+                }
+            }
+        });
+
+        return false;
+    };
+
+    const checkRequired = (value, fieldName, errorId, elementOrName) => {
+        // Validar
+        if (!value || (typeof value === 'string' && value.trim() === '')) {
+            return showError(`El campo "${fieldName}" es obligatorio.`, errorId, elementOrName);
+        }
+        // Si es válido, ocultar error si existe
+        if (errorId) {
+            const errEl = document.getElementById(errorId);
+            if (errEl) errEl.classList.add('hidden');
+        }
+        if (elementOrName && typeof elementOrName === 'object') {
+            elementOrName.classList.remove('border-red-500', 'bg-red-50');
+        }
+        return true;
+    };
+
+    // 1. Datos Personales
+    const inputNombre = form1.querySelector('input[name="nombre"]');
+    if (!checkRequired(formData1.get('nombre'), 'Nombre', 'error-P1', inputNombre)) return;
+
+    const inputApellidos = form1.querySelector('input[name="Apellidos"]') || form1.querySelector('input[name="apellidos"]');
+    if (!checkRequired(formData1.get('Apellidos') || formData1.get('apellidos'), 'Apellidos', 'error-P2', inputApellidos)) return;
+
+    const inputCI = form1.querySelector('input[name="CI"]');
+    if (!checkRequired(formData1.get('CI'), 'Cédula de Identidad', 'error-P3', inputCI)) return;
+
+    const inputRegistro = form1.querySelector('input[name="registro"]');
+    if (!checkRequired(formData1.get('registro'), 'Registro Universitario', 'error-P4', inputRegistro)) return;
+
+    // 2. Q5: Año (Radio + Otro)
+    let anioIngreso = formData1.get('anio_ingreso');
+    if (!anioIngreso) {
+        return showError('Debes seleccionar un Año de ingreso.', 'error-P5', 'anio_ingreso');
+    }
+    if (anioIngreso === 'Otro') {
+        const inputAnioOtro = form1.querySelector('input[name="anio_ingreso_otro"]');
+        if (!checkRequired(formData1.get('anio_ingreso_otro'), 'Año de ingreso (Otro)', 'error-P5', inputAnioOtro)) return;
+        anioIngreso = formData1.get('anio_ingreso_otro'); // GUARDAR VALOR ESCRITO
+    }
+
+    // 3. Q6: Modalidad
+    let modalidadIngreso = formData1.get('modalidad_ingreso');
+    if (!modalidadIngreso) {
+        return showError('Debes seleccionar una Modalidad de ingreso.', 'error-P6', 'modalidad_ingreso');
+    }
+    if (modalidadIngreso === 'Otra' || modalidadIngreso === 'Otro') {
+        const inputModOtro = form1.querySelector('input[name="modalidad_ingreso_otra"]');
+        if (!checkRequired(formData1.get('modalidad_ingreso_otra'), 'Modalidad de ingreso (Otra)', 'error-P6', inputModOtro)) return;
+        modalidadIngreso = formData1.get('modalidad_ingreso_otra'); // GUARDAR VALOR ESCRITO
+    }
+
+    // 4. Q7: Tiempo
+    let tiempoTerminar = formData1.get('tiempo_terminar');
+    if (!tiempoTerminar) {
+        return showError('Debes seleccionar el Tiempo estimado para terminar.', 'error-P7', 'tiempo_terminar');
+    }
+    if (tiempoTerminar === 'Otro') {
+        const inputTiempoOtro = form1.querySelector('input[name="tiempo_terminar_otro"]');
+        if (!checkRequired(formData1.get('tiempo_terminar_otro'), 'Tiempo para terminar (Otro)', 'error-P7', inputTiempoOtro)) return;
+        tiempoTerminar = formData1.get('tiempo_terminar_otro'); // GUARDAR VALOR ESCRITO
+    }
+
+    // 5. Q8-Q9
+    const inputCelular = form1.querySelector('input[name="celular"]');
+    if (!checkRequired(formData1.get('celular'), 'Celular', 'error-P8', inputCelular)) return;
+
+    const inputCorreo = form1.querySelector('input[name="correo"]');
+    if (!checkRequired(formData1.get('correo'), 'Correo Electrónico', 'error-P9', inputCorreo)) return;
+
+    // 6. Q10 (Semestres)
+    if (semestresSeleccionados.length === 0) {
+        return showError('Por favor, selecciona en qué semestre(s) estás actualmente (Pregunta 10).', 'error-q10', null);
+    } else {
+        const errorQ10 = document.getElementById('error-q10');
+        if (errorQ10) errorQ10.classList.add('hidden');
+    }
+
+    // 7. Q11 (PPA)
+    if (!formData1.get('ppa')) {
+        return showError('Debes seleccionar tu Promedio Ponderado Anual (PPA).', 'error-P11', 'ppa');
+    }
+
+    // 8. Q12 (Carga)
+    const inputCarga = form1.querySelector('input[name="carga_academica"]');
+    if (!checkRequired(formData1.get('carga_academica'), 'Carga Académica', 'error-P12', inputCarga)) return;
+
+    // 9. Q13 (Aprobadas)
+    const inputAprobadas = form1.querySelector('input[name="materias_aprobadas"]');
+    if (!checkRequired(formData1.get('materias_aprobadas'), 'Materias Aprobadas', 'error-P13', inputAprobadas)) return;
+
+    // 10. Q14 (Reprobadas)
+    const inputReprobadas = form1.querySelector('input[name="materias_reprobadas"]');
+    if (!checkRequired(formData1.get('materias_reprobadas'), 'Materias Reprobadas', 'error-P14', inputReprobadas)) return;
+
+    // 11. Q15 (Repetido)
+    let repetidoMateria = formData1.get('repetido_materia');
+    let materiasRepetidasNombres = ''; // Declarar fuera del if para evitar ReferenceError
+
+    if (!repetidoMateria) {
+        return showError('Debes responder si has repetido alguna materia.', 'error-P15', 'repetido_materia');
+    }
+    if (repetidoMateria === 'Sí') {
+        materiasRepetidasNombres = formData1.get('materias_repetidas_nombres') || '';
+        if (!materiasRepetidasNombres.trim()) {
+            return showError("Seleccionaste 'Sí'. Por favor busca y selecciona las materias.", 'error-q15', document.getElementById('input-q15'));
+        }
+    }
+
+    // 12. Q16 (Dificultad) - OPCIONAL
+    // Se eliminó la validación obligatoria por solicitud del usuario.
+
+    // P18 (Trabaja) - Validación mejorada
+    const trabajaValue = formData1.get('trabaja');
+    if (!trabajaValue) {
+        return showError('Complete este campo.', 'error-P18', 'trabaja');
+    }
+
+    // P19 (Horas) - Validación mejorada
+    const horasValue = formData1.get('horas_estudio');
+    if (!horasValue || horasValue.trim() === '') {
+        return showError('Complete este campo.', 'error-P19', 'horas_estudio');
+    }
+    const horasNum = parseFloat(horasValue);
+    if (isNaN(horasNum) || horasNum < 1 || horasNum > 24) {
+        return showError('Las horas de estudio deben ser un número entre 1 y 24.', 'error-P19', 'horas_estudio');
+    }
+
+    // P20 (Avance) - Validación mejorada
+    const avanceValue = formData1.get('avance');
+    if (!avanceValue) {
+        return showError('Complete este campo.', 'error-P20', 'avance');
+    }
+
+    // --- FIN VALIDACIÓN ---
+
     // Capturar lista de materias verano aprobadas y reprobadas (NUEVO P17)
     const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
     const veranoReprobadas = formData1.getAll('materias_verano_reprobadas');
-
-    // Capturar campos "Otro" de radio buttons
-    let anioIngreso = formData1.get('anio_ingreso');
-    if (anioIngreso === 'Otro') {
-        anioIngreso = formData1.get('anio_ingreso_otro') || 'Otro';
-    }
-
-    let modalidadIngreso = formData1.get('modalidad_ingreso');
-    if (modalidadIngreso === 'Otra') {
-        modalidadIngreso = formData1.get('modalidad_ingreso_otra') || 'Otra';
-    }
-
-    let tiempoTerminar = formData1.get('tiempo_terminar');
-    if (tiempoTerminar === 'Otro') {
-        tiempoTerminar = formData1.get('tiempo_terminar_otro') || 'Otro';
-    }
-
-    // Lógica para materias repetidas
-    let repetidoMateria = formData1.get('repetido_materia');
-    let materiasRepetidasNombres = '';
-    if (repetidoMateria === 'Sí') {
-        materiasRepetidasNombres = formData1.get('materias_repetidas_nombres') || '';
-    }
-
     window.surveyData.personal = {
         // P1-P4
         nombre: formData1.get('nombre') || '',
@@ -115,15 +291,26 @@ function goToSection2Q10() {
 function goToSection3(e) {
     e.preventDefault();
 
-    // Capturar datos de Sección 2 (Q10)
+    // Capturar datos de Sección 2 (Q21/q10)
     const form10 = document.getElementById('form-q10');
     const formData10 = new FormData(form10);
-    window.surveyData.seccion2_cierre.q10 = formData10.get('q10') || '';
+    const q10Value = formData10.get('q10');
 
-    // Si eligió "Depende", capturar explicación
-    const q10Text = document.getElementById('q10-text');
-    if (q10Text && !q10Text.disabled) {
-        window.surveyData.seccion2_cierre.explicacion = q10Text.value || '';
+    if (!q10Value) {
+        return showError('Debes responder si estas materias afectan tu avance (Pregunta 21).', 'error-q10-view', null);
+    }
+
+    window.surveyData.seccion2_cierre.q10 = q10Value;
+
+    // Si eligió "Depende", capturar explicación y validar
+    if (q10Value === 'Depende') {
+        const q10Text = document.getElementById('q10-text');
+        if (!q10Text || !q10Text.value.trim()) {
+            return showError('Complete este campo.', 'error-q10-text', q10Text);
+        }
+        window.surveyData.seccion2_cierre.explicacion = q10Text.value.trim();
+    } else {
+        window.surveyData.seccion2_cierre.explicacion = ''; // Limpiar si cambió
     }
 
     showView('section3-view');
@@ -132,16 +319,30 @@ function goToSection3(e) {
 function goToSection4(e) {
     e.preventDefault();
 
-    // Capturar datos de Sección 3 (Expectativas)
-    window.surveyData.seccion3.q11 = document.querySelector('input[name="q11"]:checked')?.value || '';
+    // Capturar y Validar Q22 (q11)
+    const q11Value = document.querySelector('input[name="q11"]:checked')?.value;
+    if (!q11Value) {
+        return showError('Debes indicar cómo te sientes respecto al nuevo currículo (Pregunta 22).', 'error-q11', null);
+    }
+    window.surveyData.seccion3.q11 = q11Value;
 
+    // Capturar y Validar Q23 (q12)
     const q12Option = document.querySelector('input[name="q12"]:checked')?.value;
-    window.surveyData.seccion3.q12 = q12Option || '';
+    if (!q12Option) {
+        return showError('Debes indicar qué crees que aportará el nuevo currículo (Pregunta 23).', 'error-q12', null);
+    }
+    window.surveyData.seccion3.q12 = q12Option;
 
-    // Si eligió "Otra", capturar el texto
+    // Si eligió "Otra", capturar y validar texto
     if (q12Option === 'Otra' || q12Option === 'otra') {
         const q12Text = document.getElementById('q12-text');
-        window.surveyData.seccion3.q12_otra = q12Text?.value || '';
+        if (!q12Text || !q12Text.value.trim()) {
+            return showError('Complete este campo.', 'error-q12-text', q12Text);
+        }
+        window.surveyData.seccion3.q12_otra = q12Text.value.trim();
+        window.surveyData.seccion3.q12 = "Otra: " + q12Text.value.trim(); // Guardar valor combinado
+    } else {
+        window.surveyData.seccion3.q12_otra = '';
     }
 
     showView('section4-view');
@@ -150,19 +351,49 @@ function goToSection4(e) {
 function goToSection5(e) {
     e.preventDefault();
 
-    // Capturar datos de Sección 4 (Medidas)
-    const q13Selected = Array.from(document.querySelectorAll('.q13-check:checked')).map(c => c.value);
-    window.surveyData.seccion4.q13 = q13Selected;
-
-    // Si eligió "Otros", capturar el texto
-    const checkOtros = document.getElementById('q13-otros');
-    if (checkOtros && checkOtros.checked) {
-        const q13Text = document.getElementById('q13-text');
-        window.surveyData.seccion4.q13_otros = q13Text?.value || '';
+    // Capturar y Validar Q24 (Medidas - q13)
+    const q13Checks = document.querySelectorAll('.q13-check:checked');
+    if (q13Checks.length === 0) {
+        return showError('Debes seleccionar al menos una medida de transición (Pregunta 24).', 'error-q13', null);
     }
 
-    // Capturar Q14 (prioridad)
-    window.surveyData.seccion4.prioridad = document.querySelector('input[name="q14"]:checked')?.value || '';
+    // Validar "Otros" en Q24
+    const checkOtros = document.getElementById('q13-otros');
+    let q13Selected = [];
+    let otrosTexto = '';
+
+    // Procesar seleccionados
+    let otrosValid = true;
+    q13Checks.forEach(chk => {
+        if (chk.value === 'Otros') {
+            const q13Text = document.getElementById('q13-text');
+            if (!q13Text || !q13Text.value.trim()) {
+                otrosValid = false;
+                showError('Complete este campo.', 'error-q13-text', q13Text);
+            } else {
+                otrosTexto = q13Text.value.trim();
+                q13Selected.push("Otro: " + otrosTexto); // Guardar valor con texto
+            }
+        } else {
+            q13Selected.push(chk.value);
+        }
+    });
+
+    if (!otrosValid) return; // Detener si falla la validación de texto "Otros"
+
+    window.surveyData.seccion4.q13 = q13Selected;
+    window.surveyData.seccion4.q13_otros = otrosTexto;
+
+    // Capturar Q25 (Prioridad - q14)
+    const q14Value = document.querySelector('input[name="q14"]:checked')?.value;
+
+    // Validación de Prioridad: Debe seleccionar una si seleccionó medidas
+    // (Como validamos q13 > 0, siempre debería haber opciones, salvo error lógico)
+    if (!q14Value) {
+        return showError('Debes elegir una prioridad absoluta de las opciones seleccionadas (Pregunta 25).', 'error-q14', null);
+    }
+
+    window.surveyData.seccion4.prioridad = q14Value;
 
     showView('section5-view');
 }
@@ -173,7 +404,13 @@ function submitFinal(e) {
     // Capturar datos de Sección 5
     const form5 = document.getElementById('form-section5');
     const formData5 = new FormData(form5);
-    window.surveyData.seccion5.propuesta = formData5.get('propuesta') || '';
+    const propuesta = formData5.get('propuesta') || '';
+
+    if (!propuesta.trim()) {
+        return showError('Por favor escribe tu propuesta para mejorar la transición (Pregunta 26).', 'error-p26', document.querySelector('textarea[name="propuesta"]'));
+    }
+
+    window.surveyData.seccion5.propuesta = propuesta;
 
     // Mostrar vista de agradecimiento
     showView('thank-you-view');
@@ -260,6 +497,34 @@ if (q13Checkboxes.length > 0) {
     });
 }
 
+// --- NUEVA LÓGICA: VALIDACIÓN "OTRO" (Q5, Q6, Q7) ---
+
+function setupOtherToggle(radioName, textInputName, otherValue) {
+    const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+    const textInput = document.querySelector(`input[name="${textInputName}"]`);
+
+    if (!textInput) return;
+
+    radios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === otherValue) {
+                textInput.disabled = false;
+                textInput.required = true;
+                textInput.focus();
+            } else {
+                textInput.disabled = true;
+                textInput.required = false;
+                textInput.value = ''; // Limpiar si cambia de opción
+            }
+        });
+    });
+}
+
+// Inicializar listeners para Q5, Q6, Q7
+setupOtherToggle('anio_ingreso', 'anio_ingreso_otro', 'Otro');
+setupOtherToggle('modalidad_ingreso', 'modalidad_ingreso_otra', 'Otra'); // Ojo: value en HTML es 'Otra'
+setupOtherToggle('tiempo_terminar', 'tiempo_terminar_otro', 'Otro');
+
 
 
 function updateQ14Options() {
@@ -304,6 +569,9 @@ function updateQ14Options() {
     }
 }
 
+// --- VALIDADCIÓN Q10 (Dummy Removed) ---
+// La validación se hace directamente en goToSection2 con lógica visual explícita
+
 // --- LÓGICA APP MALLA (Mantenida intacta) ---
 const semesterData = [
     { id: "s1", title: "1er Semestre", subjects: ["Filosofía", "Estadística I", "Sociología I", "Antropología Cultural", "Psicología I", "Biopsicología", "Estrategias de Aprendizaje"] },
@@ -343,6 +611,7 @@ const icons = { aprobado: '<i class="fas fa-check text-[10px] absolute top-1 rig
 function init() {
     loadLists();
     renderSemesters();
+    renderBottomRows();
     renderBottomRows();
     updateProgress();
     setTool('aprobado');
@@ -1020,7 +1289,7 @@ if (inputRegistro) {
             errorDiv.classList.add('hidden');
             this.classList.remove('invalid');
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '✓ Continuar <i class="fas fa-arrow-right ml-2"></i>';
+            submitBtn.innerHTML = 'Continuar <i class="fas fa-arrow-right ml-2"></i>';
             // Cerrar modal si existe
             const modal = document.getElementById('duplicate-registry-modal');
             if (modal && !modal.classList.contains('hidden')) {
@@ -1033,7 +1302,7 @@ if (inputRegistro) {
             errorDiv.classList.remove('hidden');
             this.classList.add('invalid');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '❌ Formato inválido';
+            submitBtn.innerHTML = 'Formato inválido';
             return;
         }
 
@@ -1076,14 +1345,13 @@ function closeDuplicateModal() {
         modal.style.display = 'none';
     }
 }
-
 function verificarRegistroDuplicado(registro) {
     return new Promise((resolve) => {
-        console.log('🔥 Iniciando verificación en Firebase para registro:', registro);
+        console.log('Verificando registro duplicado:', registro);
 
         // Verificar en Firebase si este registro ya completó la encuesta
         if (window.db && window.firebaseModules) {
-            console.log('✅ Firebase disponible globalmente');
+            console.log('Firebase disponible globalmente');
 
             const { collection, query, where, getDocs } = window.firebaseModules;
 
@@ -1093,90 +1361,95 @@ function verificarRegistroDuplicado(registro) {
                         collection(window.db, 'encuestas_estudiantes'),
                         where('personal.registro', '==', registro)
                     );
-                    console.log('🔎 Ejecutando consulta Firebase...');
+                    console.log(' Ejecutando consulta Firebase...');
 
                     getDocs(q).then(querySnapshot => {
-                        console.log('📊 Resultado de consulta:', querySnapshot.size, 'documentos encontrados');
+                        console.log(' Resultado de consulta:', querySnapshot.size, 'documentos encontrados');
 
                         if (!querySnapshot.empty) {
                             // Ya existe
                             const docData = querySnapshot.docs[0].data();
                             const personal = docData.personal || {};
-                            console.log('⚠️ DUPLICADO ENCONTRADO:', personal.nombre, personal.apellidos);
+                            console.log(' DUPLICADO ENCONTRADO:', personal.nombre, personal.apellidos);
 
                             // DEV: Devolver toooooodos los datos para poder generar el PDF
                             resolve({
                                 existe: true,
                                 nombre: personal.nombre || '-',
                                 apellidos: personal.apellidos || '-',
-                                fullData: docData // <--- GUARDAMOS TODO AQUÍ
+                                fullData: docData // <--- GUARDAMOS TODO AQU
                             });
                         } else {
-                            console.log('✅ Registro disponible (no hay duplicado)');
+                            console.log(' Registro disponible (no hay duplicado)');
                             resolve({ existe: false });
                         }
                     }).catch(err => {
-                        console.error('❌ Error en consulta Firebase:', err);
+                        console.error(' Error en consulta Firebase:', err);
                         resolve({ existe: false });
                     });
                 } catch (err) {
-                    console.error('❌ Error preparando consulta:', err);
+                    console.error(' Error preparando consulta:', err);
                     resolve({ existe: false });
                 }
             } else {
-                console.error('❌ Módulos Firebase NO completos');
+                console.error(' Módulos Firebase NO completos');
                 resolve({ existe: false });
             }
         } else {
-            console.error('❌ window.db no existe. Disponible:', window.db ? 'db' : 'NO db', window.firebaseModules ? 'modules' : 'NO modules');
+            console.error(' window.db no existe. Disponible:', window.db ? 'db' : 'NO db', window.firebaseModules ? 'modules' : 'NO modules');
             resolve({ existe: false });
         }
     });
 }
 
 function validarRegistroEnTiempoReal(registro, inputElement) {
-    console.log('🚀 VALIDACIÓN INICIADA para registro:', registro);
+    console.log(' VALIDACIÓN INICIADA para registro:', registro);
 
     // Si aún no se cargaron los registros, esperar
     if (!window.registrosCargados) {
-        console.warn('⏳ Aún procesando registros...');
+        console.warn(' Aún procesando registros...');
         if (errorDiv) {
             errorDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Cargando base de datos...</span>';
             errorDiv.classList.remove('hidden');
         }
+        // Ocultar éxito si estaba
+        const successDiv = document.getElementById('success-registro');
+        if (successDiv) successDiv.classList.add('hidden');
+
         if (submitBtn) submitBtn.disabled = true;
 
         // Reintentar cuando estén listos
         const intentar = setInterval(() => {
             if (window.registrosCargados) {
                 clearInterval(intentar);
-                console.log('✅ Registros listos, reintentando validación...');
+                console.log(' Registros listos, reintentando validación...');
                 validarRegistroEnTiempoReal(registro, inputElement);
             }
         }, 100);
         return;
     }
 
-    console.log('📊 Registros cargados. Total en memoria:', window.registrosValidos?.size || 0);
+    console.log(' Registros cargados. Total en memoria:', window.registrosValidos?.size || 0);
 
     // Validar contra los registros cargados
     const existe = window.registrosValidos && window.registrosValidos.has(registro);
+    const successDiv = document.getElementById('success-registro');
 
-    console.log(`🔍 Validando: ${registro} → ${existe ? '✅ VÁLIDO EN DATOS.TXT' : '❌ NO VÁLIDO EN DATOS.TXT'}`);
+    console.log(` Validando: ${registro}  ${existe ? ' VÁLIDO EN DATOS.TXT' : ' NO VÁLIDO EN DATOS.TXT'}`);
 
     if (existe) {
-        console.log('✅ Registro existe en datos.txt. Verificando duplicado en Firebase...');
+        console.log(' Registro existe en datos.txt. Verificando duplicado en Firebase...');
         // Registro válido - Ahora verificar si es duplicado en Firebase INMEDIATAMENTE
         verificarRegistroDuplicado(registro).then(resultado => {
-            console.log('📌 Resultado Firebase:', resultado);
+            console.log(' Resultado Firebase:', resultado);
 
             if (resultado.existe) {
                 // GUARDAR DATOS GLOBALES PARA EL PDF
                 window.existingSurveyData = resultado.fullData;
-                console.log("💾 Datos previos cargados para reporte PDF:", window.existingSurveyData);
+                console.log(" Datos previos cargados para reporte PDF:", window.existingSurveyData);
 
                 // MOSTRAR MODAL INMEDIATAMENTE - BLOQUEADOR
-                console.warn('🛑 DUPLICADO ENCONTRADO - Mostrando modal');
+                console.warn(' DUPLICADO ENCONTRADO - Mostrando modal');
                 const modal = document.getElementById('duplicate-registry-modal');
                 console.log('Modal element existe:', !!modal);
 
@@ -1201,7 +1474,7 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
 
-                    console.log('✅ Modal visible - Clases aplicadas');
+                    console.log(' Modal visible - Clases aplicadas');
 
                     // Auto-scroll al modal
                     setTimeout(() => {
@@ -1209,9 +1482,12 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
                     }, 50);
                 }
 
+                // Ocultar mensaje de éxito
+                if (successDiv) successDiv.classList.add('hidden');
+
                 // Mensaje de error prominente
                 if (errorDiv) {
-                    errorDiv.innerHTML = '<i class="fas fa-times-circle"></i> <span style="font-weight: bold;">⚠️ Este registro ya fue utilizado</span>';
+                    errorDiv.innerHTML = '<i class="fas fa-times-circle"></i> <span style="font-weight: bold;"> Este registro ya fue utilizado</span>';
                     errorDiv.classList.remove('hidden');
                     errorDiv.style.backgroundColor = '#fee2e2';
                     errorDiv.style.borderColor = '#dc2626';
@@ -1224,7 +1500,7 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
                     submitBtn.disabled = true;
                     submitBtn.style.opacity = '0.4';
                     submitBtn.style.cursor = 'not-allowed';
-                    submitBtn.innerHTML = '🚫 Registro no disponible';
+                    submitBtn.innerHTML = 'Registro no disponible';
                 }
 
                 // Estilo rojo oscuro
@@ -1232,20 +1508,29 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
                 inputElement.style.backgroundColor = '#fef2f2';
                 inputElement.style.boxShadow = '0 0 0 3px rgba(220, 38, 38, 0.2)';
             } else {
-                console.log('✅ Registro disponible (sin duplicado)');
+                console.log(' Registro disponible (sin duplicado)');
                 // Registro válido y NO duplicado - DESBLOQUEAR
                 const modal = document.getElementById('duplicate-registry-modal');
                 if (modal && !modal.classList.contains('hidden')) {
                     closeDuplicateModal();
                 }
 
-                if (errorDiv) errorDiv.classList.add('hidden');
+                // Feedback Visual: OCULTAR ERROR, MOSTRAR ÉXITO
+                if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                    errorDiv.removeAttribute('style');
+                }
+
+                if (successDiv) {
+                    successDiv.classList.remove('hidden');
+                }
+
                 inputElement.classList.remove('invalid');
                 if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.style.opacity = '1';
                     submitBtn.style.cursor = 'pointer';
-                    submitBtn.innerHTML = '✓ Continuar <i class="fas fa-arrow-right ml-2"></i>';
+                    submitBtn.innerHTML = 'Continuar <i class="fas fa-arrow-right ml-2"></i>';
                 }
 
                 inputElement.style.borderColor = '#10b981';
@@ -1253,19 +1538,26 @@ function validarRegistroEnTiempoReal(registro, inputElement) {
                 inputElement.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.2)';
             }
         }).catch(err => {
-            console.error('❌ Error en Promise:', err);
+            console.error('Error en Promise:', err);
         });
     } else {
-        console.log('❌ Registro NO existe en datos.txt');
+        console.log('Registro NO existe en datos.txt');
         // Registro inválido - NO ESTÁ EN LA BASE DE DATOS
+
+        // Feedback Visual: MOSTRAR ERROR, OCULTAR ÉXITO
+        if (successDiv) successDiv.classList.add('hidden');
+
         if (errorDiv) {
-            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>No estás registrado como estudiante de Psicología</span>';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> <span>El registro no está registrado en la carrera de Psicología</span>';
             errorDiv.classList.remove('hidden');
+            errorDiv.removeAttribute('style');
+            errorDiv.className = 'text-red-500 text-sm mt-1';
         }
+
         inputElement.classList.add('invalid');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '❌ Registro no válido';
+            submitBtn.innerHTML = 'Registro no válido';
         }
 
         inputElement.style.borderColor = '#ef4444';
@@ -1293,7 +1585,7 @@ if (formSection1) {
                 e.preventDefault();
                 errorDiv.classList.remove('hidden');
                 inputRegistro.classList.add('invalid');
-                console.error('❌ Intento de envío con registro inválido:', registro);
+                console.error('Intento de envío con registro inválido:', registro);
                 return false;
             }
 
@@ -1308,12 +1600,12 @@ if (formSection1) {
                     void modal.offsetWidth;
                     modal.classList.add('animate-in');
                 }
-                console.error('❌ Intento de reenvío con registro duplicado:', registro);
+                console.error('Intento de reenvío con registro duplicado:', registro);
                 return false;
             }
         }
 
-        console.log('✅ Formulario válido, procediendo con envío...');
+        console.log(' Formulario válido, procediendo con envío...');
         // Llamar a goToSection2 manualmente si no es un submit nativo
         goToSection2(e);
         return true;
@@ -1322,7 +1614,7 @@ if (formSection1) {
 
 // Escuchar evento de carga de registros
 window.addEventListener('registrosCargados', (e) => {
-    console.log(`📊 Registros listos: ${e.detail.cantidad} estudiantes cargados`);
+    console.log(` Registros listos: ${e.detail.cantidad} estudiantes cargados`);
 
     // Si el usuario ya escribió algo, validar inmediatamente
     if (inputRegistro) {
@@ -1335,14 +1627,14 @@ window.addEventListener('registrosCargados', (e) => {
 
 // --- FUNCIÓN AUXILIAR: Capturar datos de formularios dinámicamente ---
 function capturarTodosDatos() {
-    console.log('🔄 CAPTURANDO TODOS LOS DATOS DE FORMULARIOS...');
+    console.log(' CAPTURANDO TODOS LOS DATOS DE FORMULARIOS...');
 
     // Obtener datos base de window.surveyData
     let allData = JSON.parse(JSON.stringify(window.surveyData));
 
     // Si la malla está vacía, intentar capturarla del DOM
     if (!allData.malla || allData.malla.length === 0) {
-        console.log('📚 Malla vacía en surveyData, intentando capturar del DOM...');
+        console.log(' Malla vacía en surveyData, intentando capturar del DOM...');
         const mallaCards = document.querySelectorAll('.materia-card');
         if (mallaCards.length > 0) {
             allData.malla = Array.from(mallaCards).map(card => ({
@@ -1350,14 +1642,14 @@ function capturarTodosDatos() {
                 nombre: card.innerText,
                 estado: card.dataset.status
             }));
-            console.log('✅ Malla capturada del DOM:', allData.malla);
+            console.log(' Malla capturada del DOM:', allData.malla);
         }
     }
 
     // Capturar datos de Section 1 si los formularios aún están disponibles
     const form1 = document.getElementById('form-section1');
     if (form1 && Object.keys(allData.personal).length === 0) {
-        console.log('📝 Personal vacío, capturando de form-section1...');
+        console.log(' Personal vacío, capturando de form-section1...');
         const formData1 = new FormData(form1);
         const semestresSeleccionados = formData1.getAll('semestre');
         const veranoAprobadas = formData1.getAll('materias_verano_aprobadas');
@@ -1389,26 +1681,26 @@ function capturarTodosDatos() {
             horas_estudio: formData1.get('horas_estudio') || '',
             avance: formData1.get('avance') || ''
         };
-        console.log('✅ Personal capturado de form-section1:', allData.personal);
+        console.log(' Personal capturado de form-section1:', allData.personal);
     }
 
     // Capturar Section 2 si está disponible
     const form10 = document.getElementById('form-q10');
     if (form10 && Object.keys(allData.seccion2_cierre).length === 0) {
-        console.log('📝 Sección 2 vacía, capturando de form-q10...');
+        console.log(' Sección 2 vacía, capturando de form-q10...');
         const formData10 = new FormData(form10);
         allData.seccion2_cierre.q10 = formData10.get('q10') || '';
         const q10Text = document.getElementById('q10-text');
         if (q10Text && !q10Text.disabled) {
             allData.seccion2_cierre.explicacion = q10Text.value || '';
         }
-        console.log('✅ Sección 2 capturada:', allData.seccion2_cierre);
+        console.log(' Sección 2 capturada:', allData.seccion2_cierre);
     }
 
     // Capturar Section 3 si está disponible
     const form3 = document.querySelector('form[data-section="3"]');
     if (form3 && Object.keys(allData.seccion3).length === 0) {
-        console.log('📝 Sección 3 vacía, capturando de formulario...');
+        console.log(' Sección 3 vacía, capturando de formulario...');
         allData.seccion3.q11 = document.querySelector('input[name="q11"]:checked')?.value || '';
         const q12Option = document.querySelector('input[name="q12"]:checked')?.value;
         allData.seccion3.q12 = q12Option || '';
@@ -1416,13 +1708,13 @@ function capturarTodosDatos() {
             const q12Text = document.getElementById('q12-text');
             allData.seccion3.q12_otra = q12Text?.value || '';
         }
-        console.log('✅ Sección 3 capturada:', allData.seccion3);
+        console.log(' Sección 3 capturada:', allData.seccion3);
     }
 
     // Capturar Section 4 si está disponible
     const form4 = document.querySelector('form[data-section="4"]');
     if (form4 && Object.keys(allData.seccion4).length === 0) {
-        console.log('📝 Sección 4 vacía, capturando de formulario...');
+        console.log(' Sección 4 vacía, capturando de formulario...');
         const q13Selected = Array.from(document.querySelectorAll('.q13-check:checked')).map(c => c.value);
         allData.seccion4.q13 = q13Selected;
         const checkOtros = document.getElementById('q13-otros');
@@ -1431,33 +1723,33 @@ function capturarTodosDatos() {
             allData.seccion4.q13_otros = q13Text?.value || '';
         }
         allData.seccion4.prioridad = document.querySelector('input[name="q14"]:checked')?.value || '';
-        console.log('✅ Sección 4 capturada:', allData.seccion4);
+        console.log(' Sección 4 capturada:', allData.seccion4);
     }
 
     // Capturar Section 5 si está disponible
     const form5 = document.getElementById('form-section5');
     if (form5 && Object.keys(allData.seccion5).length === 0) {
-        console.log('📝 Sección 5 vacía, capturando de form-section5...');
+        console.log(' Sección 5 vacía, capturando de form-section5...');
         const formData5 = new FormData(form5);
         allData.seccion5.propuesta = formData5.get('propuesta') || '';
-        console.log('✅ Sección 5 capturada:', allData.seccion5);
+        console.log(' Sección 5 capturada:', allData.seccion5);
     }
 
-    console.log('✅ TODOS LOS DATOS CAPTURADOS:', allData);
+    console.log(' TODOS LOS DATOS CAPTURADOS:', allData);
     return allData;
 }
 
 // --- FUNCIÓN PARA DESCARGAR REPORTE PDF ---
 function descargarReportePDF() {
-    console.log('📄 INICIANDO DESCARGA DE PDF...');
+    console.log(' INICIANDO DESCARGA DE PDF...');
 
     // 1. Determinar fuente de datos: ¿Nueva encuesta o Datos cargados de Firebase?
     let allData;
     if (window.existingSurveyData) {
-        console.log('📂 Usando datos existentes cargados desde Firebase');
+        console.log(' Usando datos existentes cargados desde Firebase');
         allData = window.existingSurveyData;
     } else {
-        console.log('📝 Usando datos de la sesión actual');
+        console.log(' Usando datos de la sesión actual');
         allData = capturarTodosDatos();
     }
 
@@ -1468,7 +1760,7 @@ function descargarReportePDF() {
     const seccion4 = allData.seccion4 || {};
     const seccion5 = allData.seccion5 || {};
 
-    console.log('✅ Datos para PDF listos:', allData);
+    console.log(' Datos para PDF listos:', allData);
 
     const nombre = data.nombre || '-';
     const apellidos = data.apellidos || '-';
@@ -1562,7 +1854,7 @@ function descargarReportePDF() {
 
     // 2. Llenar columnas con datos ESTÁTICOS (La malla vacía completa)
 
-    // Semestres 1-8 (Índices 0-7)
+    // Semestres 1-8 (ndices 0-7)
     for (let i = 0; i <= 7; i++) {
         const semInfo = semesterData[i]; // { title: "...", subjects: [...] }
         if (semInfo && semInfo.subjects) {
@@ -1574,7 +1866,7 @@ function descargarReportePDF() {
         }
     }
 
-    // Semestres 9-10 (Índices 8-9) - Dependen de la modalidad
+    // Semestres 9-10 (ndices 8-9) - Dependen de la modalidad
     // Usamos abordajesData global
     const abordaje = abordajesData[userModality] || abordajesData['humanista'];
 
@@ -1642,9 +1934,9 @@ function descargarReportePDF() {
 
     // Colores exactos del Admin Panel adaptados a estilos inline
     const stylesMap = {
-        aprobado: { bg: '#dcfce7', text: '#14532d', border: '#86efac', icon: '✓' },
-        reprobado: { bg: '#fee2e2', text: '#7f1d1d', border: '#fca5a5', icon: '✗' },
-        levantamiento: { bg: '#e0f2fe', text: '#0c4a6e', border: '#7dd3fc', icon: '↑' },
+        aprobado: { bg: '#dcfce7', text: '#14532d', border: '#86efac', icon: '' },
+        reprobado: { bg: '#fee2e2', text: '#7f1d1d', border: '#fca5a5', icon: '' },
+        levantamiento: { bg: '#e0f2fe', text: '#0c4a6e', border: '#7dd3fc', icon: '' },
         pendiente: { bg: '#ffffff', text: '#94a3b8', border: '#e2e8f0', icon: '' }
     };
 
@@ -1774,7 +2066,7 @@ function descargarReportePDF() {
 
         <!-- Section 1: Personal -->
         <div class="section keep-together">
-            <div class="section-header"><span>👤</span> Datos Personales y Académicos</div>
+            <div class="section-header"><span></span> Datos Personales y Académicos</div>
             
             <div class="grid-3">
                 <div class="field-box">
@@ -1820,7 +2112,7 @@ function descargarReportePDF() {
 
         <!-- Section 2: Historial -->
         <div class="section keep-together">
-            <div class="section-header"><span>📊</span> Historial y Rendimiento</div>
+            <div class="section-header"><span></span> Historial y Rendimiento</div>
             <div class="grid-3">
                 <div class="field-box">
                     <div class="label">PPA Aprox.</div>
@@ -1875,7 +2167,7 @@ function descargarReportePDF() {
         <!-- Section 3: Malla -->
         <div class="section">
             <div class="section-header">
-                <div><span>📚</span> Mapa de Avance Curricular</div>
+                <div><span></span> Mapa de Avance Curricular</div>
             </div>
             
             <div class="legend">
@@ -1890,7 +2182,7 @@ function descargarReportePDF() {
 
         <!-- Section 4: Expectativas -->
         <div class="section keep-together">
-             <div class="section-header"><span>🎯</span> Percepción y Expectativas</div>
+             <div class="section-header"><span></span> Percepción y Expectativas</div>
              
              <div class="field-box">
                 <div class="label">¿Cómo te sientes respecto al nuevo currículo?</div>
@@ -1911,7 +2203,7 @@ function descargarReportePDF() {
 
         <!-- Section 5: Medidas -->
         <div class="section keep-together">
-             <div class="section-header"><span>🛠️</span> Medidas de Transición Preferidas</div>
+             <div class="section-header"><span></span> Medidas de Transición Preferidas</div>
              
              <div class="field-box">
                 <div class="label">Medidas seleccionadas</div>
@@ -1926,7 +2218,7 @@ function descargarReportePDF() {
 
         <!-- Section 6: Propuesta -->
         <div class="section keep-together">
-             <div class="section-header"><span>💡</span> Tu Propuesta / Comentario Final</div>
+             <div class="section-header"><span>¡</span> Tu Propuesta / Comentario Final</div>
              <div class="propuesta-box">
                 "${propuesta}"
              </div>
@@ -1958,15 +2250,15 @@ function descargarReportePDF() {
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // Evitar cortes feos
     };
 
-    console.log('⏳ Generando PDF...');
+    console.log('Generando PDF...');
 
     // Usar Worker si está disponible (html2pdf lo maneja)
     html2pdf().set(opt).from(element).save()
         .then(() => {
-            console.log('✅ PDF Generado con éxito!');
+            console.log(' PDF Generado con éxito!');
         })
         .catch(err => {
-            console.error('❌ Error generando PDF:', err);
+            console.error('Error generando PDF:', err);
             alert('Hubo un error generando el reporte. Por favor intente de nuevo.');
         });
 }
@@ -2131,5 +2423,3 @@ function toggleCustomInput(select) {
         input.value = ''; // Clean up
     }
 }
-// terminado
-
