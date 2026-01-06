@@ -1450,14 +1450,14 @@
                         <thead
                             class="bg-slate-50 border-b border-slate-200 text-[10px] md:text-xs uppercase text-slate-500 font-semibold tracking-wider">
                             <tr>
-                                
+
                                 <th class="p-2 md:p-4">Estudiante</th>
                                 <th class="p-4 hidden md:table-cell">Registro</th>
                                 <th class="p-2 md:p-4">Celular</th>
                                 <th class="p-2 md:p-4">Semestre</th>
-                                
+
                                 <th class="p-4 hidden md:table-cell">Estado</th>
-                                
+
                                 <th class="p-2 md:p-4 text-center">Mat.</th>
                                 <th class="p-2 md:p-4">Fecha</th>
                                 <th
@@ -2071,27 +2071,27 @@
 
                 <!-- Tarjetas de Resumen -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div
-                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div id="card-stat-total" onclick="setSpecialFilter('all')"
+                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-md transition-all">
                         <span class="text-3xl font-bold text-slate-800" id="stat-total">0</span>
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">Total Casos</span>
                     </div>
-                    <div
-                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <div id="card-stat-low" onclick="setSpecialFilter('low')"
+                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden cursor-pointer hover:shadow-md transition-all">
                         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                         <span class="text-3xl font-bold text-blue-600" id="stat-low">0</span>
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">Solo Sem. 1 al
                             6</span>
                     </div>
-                    <div
-                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <div id="card-stat-high" onclick="setSpecialFilter('high')"
+                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden cursor-pointer hover:shadow-md transition-all">
                         <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
                         <span class="text-3xl font-bold text-purple-600" id="stat-high">0</span>
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">Solo Sem. 7 al
                             10</span>
                     </div>
-                    <div
-                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
+                    <div id="card-stat-mixed" onclick="setSpecialFilter('mixed')"
+                        class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden cursor-pointer hover:shadow-md transition-all">
                         <div class="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
                         <span class="text-3xl font-bold text-red-600" id="stat-mixed">0</span>
                         <span class="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">Ambos

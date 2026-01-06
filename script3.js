@@ -1,6 +1,7 @@
 // script3.js - Lógica para "Casos Especiales" V5 (Estadísticas)
 
 let cachedSpecialCasesList = null;
+let currentSpecialFilter = 'all'; // 'all', 'low', 'high', 'mixed'
 
 // Helper Fecha
 const formatTimestamp = (ts) => {
@@ -114,12 +115,17 @@ const analyzeSpecialCases = () => {
             const hasLow = activeDebtSemesters.some(s => s <= 6);
             const hasHigh = activeDebtSemesters.some(s => s >= 7);
 
+            let classification = 'unknown';
+
             if (hasLow && hasHigh) {
                 countMixed++;
+                classification = 'mixed';
             } else if (hasLow) {
                 countLow++;
+                classification = 'low';
             } else if (hasHigh) {
                 countHigh++;
+                classification = 'high';
             }
 
             const sortedSems = activeDebtSemesters.sort((a, b) => a - b);
@@ -149,6 +155,7 @@ const analyzeSpecialCases = () => {
                 rawTimestamp: student.timestamp,
                 currentSem: semestresSeleccionados.join(', '),
                 summaryHTML: summaryHTML,
+                classification: classification,
                 excelDetails: sortedSems.map(sem => {
                     const subs = debtDetailsMap[sem].map(s => `${s.name} (${s.status})`).join(', ');
                     return `SEM ${sem}: ${subs}`;
@@ -166,6 +173,37 @@ const analyzeSpecialCases = () => {
     document.getElementById('stat-mixed').textContent = countMixed;
 };
 
+// Función para establecer el filtro desde la UI
+window.setSpecialFilter = (filterType) => {
+    currentSpecialFilter = filterType;
+    updateSpecialCasesView();
+    updateFilterStyles();
+};
+
+function updateFilterStyles() {
+    // ids de las tarjetas (que agregaremos en el HTML)
+    const filters = ['all', 'low', 'high', 'mixed'];
+    const ids = {
+        'all': 'card-stat-total',
+        'low': 'card-stat-low',
+        'high': 'card-stat-high',
+        'mixed': 'card-stat-mixed'
+    };
+
+    filters.forEach(f => {
+        const el = document.getElementById(ids[f]);
+        if (el) {
+            if (f === currentSpecialFilter) {
+                el.classList.add('ring-2', 'ring-offset-2', 'ring-blue-400', 'bg-slate-50', 'bg-slate-100');
+                el.classList.remove('bg-white');
+            } else {
+                el.classList.remove('ring-2', 'ring-offset-2', 'ring-blue-400', 'bg-slate-50', 'bg-slate-100');
+                el.classList.add('bg-white');
+            }
+        }
+    });
+}
+
 // 2. Renderizado / Actualización de Vista
 window.updateSpecialCasesView = () => {
     const container = document.getElementById('special-cases-list');
@@ -174,8 +212,17 @@ window.updateSpecialCasesView = () => {
     const searchTerm = document.getElementById('special-search')?.value.toLowerCase() || '';
 
     const filtered = cachedSpecialCasesList.filter(item => {
-        return item.nombre.toLowerCase().includes(searchTerm) ||
+        // 1. Check Text Search
+        const matchSearch = item.nombre.toLowerCase().includes(searchTerm) ||
             item.registro.toLowerCase().includes(searchTerm);
+
+        // 2. Check Category Filter
+        let matchFilter = true;
+        if (currentSpecialFilter !== 'all') {
+            matchFilter = (item.classification === currentSpecialFilter);
+        }
+
+        return matchSearch && matchFilter;
     });
 
     if (filtered.length === 0) {
@@ -186,7 +233,7 @@ window.updateSpecialCasesView = () => {
             </td></tr>`;
         } else {
             container.innerHTML = `<tr><td colspan="5" class="p-12 text-center text-slate-400">
-                <p>No hay coincidencias para tu búsqueda.</p>
+                <p>No hay coincidencias para tu búsqueda/filtro.</p>
             </td></tr>`;
         }
         return;
@@ -227,11 +274,15 @@ window.updateSpecialCasesView = () => {
             </tr>
         `;
     }).join('');
+
+    // Update visuals if calling directly (case initialization)
+    // updateFilterStyles(); // Not strictly needed here if called from setSpecialFilter, but good for init.
 };
 
 window.renderSpecialCases = () => {
     analyzeSpecialCases();
     updateSpecialCasesView();
+    updateFilterStyles();
 };
 
 window.downloadSpecialCasesExcel = () => {
@@ -242,8 +293,16 @@ window.downloadSpecialCasesExcel = () => {
 
     const searchTerm = document.getElementById('special-search')?.value.toLowerCase() || '';
     const dataToExport = cachedSpecialCasesList.filter(item => {
-        return item.nombre.toLowerCase().includes(searchTerm) ||
+        // Apply only search AND current filter (WYSIWYG export)
+        const matchSearch = item.nombre.toLowerCase().includes(searchTerm) ||
             item.registro.toLowerCase().includes(searchTerm);
+
+        let matchFilter = true;
+        if (currentSpecialFilter !== 'all') {
+            matchFilter = (item.classification === currentSpecialFilter);
+        }
+
+        return matchSearch && matchFilter;
     });
 
     if (dataToExport.length === 0) {
