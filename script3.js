@@ -269,6 +269,10 @@ window.updateSpecialCasesView = () => {
                                 class="px-3 py-1.5 bg-red-50 text-red-600 rounded text-xs font-bold hover:bg-red-100 transition-colors text-center w-full shadow-sm">
                             <i class="fas fa-download mr-1"></i> PDF
                         </button>
+                        <button onclick="downloadRoadmapPDF('${item.studentId}')" 
+                                class="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded text-xs font-bold hover:bg-indigo-100 transition-colors text-center w-full shadow-sm">
+                            <i class="fas fa-map-signs mr-1"></i> Hoja Ruta
+                        </button>
                     </div>
                 </td>
             </tr>

@@ -503,3 +503,264 @@ window.downloadStudentPDF = (studentId) => {
             alert('Hubo un error generando el reporte. Por favor intente de nuevo.');
         });
 };
+
+// Función para descargar la HOJA DE RUTA (Roadmap) desde el Admin Panel
+window.downloadRoadmapPDF = (studentId) => {
+    console.log('🗺️ Generando Hoja de Ruta para:', studentId);
+
+    // 1. Buscar estudiante en allSurveys
+    const surveys = window.allSurveys || [];
+    const student = surveys.find(s => s.id === studentId);
+
+    if (!student) {
+        alert('Error: No se encontró el estudiante con ID ' + studentId);
+        return;
+    }
+
+    const personal = student.personal || student; // Fallback si está plano
+    const malla = student.malla || [];
+
+    // 2. Lógica idéntica a index.html (generateBlankPDF)
+
+    // Set de materias aprobadas para búsqueda rápida
+    const aprobadasSet = new Set();
+    malla.forEach(m => {
+        if (m.estado === 'aprobado' || m.estado === 'convalidado') {
+            aprobadasSet.add(m.nombre.trim().toLowerCase());
+        }
+    });
+
+    // Datos de la malla (Copia local)
+    const localSemesterData = [
+        { id: "s1", title: "1er Semestre", subjects: ["Filosofía", "Estadística I", "Sociología I", "Antropología Cultural", "Psicología I", "Biopsicología", "Estrategias de Aprendizaje"] },
+        { id: "s2", title: "2do Semestre", subjects: ["Epistemología", "Estadística II", "Sociología II", "Antropología Cultural Boliviana", "Psicología II", "Psicofisiología"] },
+        { id: "s3", title: "3er Semestre", subjects: ["Investigación I", "Psicología Social", "Psicología Etnoecológica", "Desarrollo Humano I", "Teorías y Sistemas I", "Neuropsicología I", "Aprendizaje"] },
+        { id: "s4", title: "4to Semestre", subjects: ["Investigación II", "Psicología Grupal y Organizacional", "Desarrollo Humano II", "Teorías y Sistemas II", "Neuropsicología II", "Etología"] },
+        { id: "s5", title: "5to Semestre", subjects: ["Investigación III", "Comportamiento y Sociedad", "Psicología de la Personalidad I", "Evaluación Psicológica I", "Psicopatología I", "Psicología Cognitiva I"] },
+        { id: "s6", title: "6to Semestre", subjects: ["Investigación IV", "Diagnóstico de Necesidades", "Psicología de la Personalidad II", "Evaluación Psicológica II", "Psicopatología II", "Psicoanálisis", "Psicología Cognitiva II"] },
+        { id: "s7", title: "7mo Semestre", subjects: ["Investigación V", "Proyectos I", "Tec. de Int. Socio - Organizacional I", "Técnicas Proyectivas", "Tec. de Int. Clínica I", "Tec. de Int. Educativa I"] },
+        { id: "s8", title: "8vo Semestre", subjects: ["Investigación VI", "Proyectos II", "Tec. de Int. Socio - Organizacional II", "Psicodiagnóstico", "Tec. de Int. Clínica II", "Tec. de Int. Educativa II"] },
+        { id: "s9", title: "9no Semestre", subjects: ["Ética Profesional I"] }, // Se llenará dinámicamente
+        { id: "s10", title: "10mo Semestre", subjects: ["Ética Profesional II"] } // Se llenará dinámicamente
+    ];
+
+    // Detectar modalidad si existe, o usar Humanista por defecto
+    const modality = personal.modalidad_graduacion || 'humanista';
+
+    // Datos de abordajes
+    const abordajesDataLocal = {
+        humanista: { sem9: ["Abordaje Clínico I", "Abordaje Educativo I", "Abordaje Socio Organizacional I"], sem10: ["Abordaje Clínico II", "Abordaje Educativo II", "Abordaje Socio Organizacional II"] },
+        cognitivo: { sem9: ["Abordaje Clínico I", "Abordaje Educativo I", "Abordaje Socio Organizacional I"], sem10: ["Abordaje Clínico II", "Abordaje Educativo II", "Abordaje Socio Organizacional II"] },
+        ambiental: { sem9: ["Psicología Ambiental I", "Psicología Comunitaria I", "Psicología de las Organizaciones I"], sem10: ["Psicología Ambiental II", "Psicología Comunitaria II", "Psicología de las Organizaciones II"] },
+        psicoanalitico: { sem9: ["Abordaje Clínico I", "Abordaje Educativo I", "Abordaje Socio Organizacional I"], sem10: ["Abordaje Clínico II", "Abordaje Educativo II", "Abordaje Socio Organizacional II"] }
+    };
+
+    const selectedAbordaje = abordajesDataLocal[modality] || abordajesDataLocal['humanista'];
+
+    // Agregar materias de abordaje a S9 y S10
+    localSemesterData[8].subjects.push(...selectedAbordaje.sem9);
+    localSemesterData[9].subjects.push(...selectedAbordaje.sem10);
+
+    // Construcción del filas de la tabla
+    let tableRows = '';
+    let totalAprobadas = 0;
+    let totalFaltantesNivelacion = 0;
+    let totalMaterias = 0;
+
+    localSemesterData.forEach((sem, index) => {
+        const semesterNum = index + 1;
+        const isNivelacion = semesterNum <= 6;
+
+        // Estilos para la etiqueta del semestre
+        let semLabelStyle = isNivelacion
+            ? "background-color: #dbeafe; color: #1e3a8a; font-weight: bold; border-right: 2px solid #3b82f6;"
+            : "background-color: #f1f5f9; color: #334155; font-weight: bold;";
+
+        let rowCells = `<td style="padding: 4px; border: 1px solid #cbd5e1; width: 80px; text-align: center; font-size: 10px; ${semLabelStyle}">${sem.title}</td>`;
+
+        // Celdas de materias
+        sem.subjects.forEach(subject => {
+            totalMaterias++;
+            const isApproved = aprobadasSet.has(subject.trim().toLowerCase());
+
+            let cellStyle = "padding: 2px; border: 1px solid #cbd5e1; font-size: 9px; line-height: 1.1; text-align: center; vertical-align: middle; height: 35px; width: 85px; overflow: hidden;";
+
+            if (isApproved) {
+                // Aprobado: Verde
+                cellStyle += "background-color: #bbf7d0; color: #14532d; font-weight: bold; border-color: #4ade80;";
+                totalAprobadas++;
+            } else if (isNivelacion) {
+                // Pendiente en Nivelación (S1-S6): Rojo
+                cellStyle += "background-color: #fee2e2; color: #991b1b; font-weight: bold; border-color: #fca5a5;";
+                totalFaltantesNivelacion++;
+            } else {
+                // Pendiente en Ciclo Superior: Gris/Blanco
+                cellStyle += "background-color: #f8fafc; color: #64748b;";
+            }
+
+            rowCells += `
+                <td style="${cellStyle}">
+                    ${subject}
+                </td>
+            `;
+        });
+
+        // Rellenar celdas vacías
+        const maxCols = 7;
+        for (let i = sem.subjects.length; i < maxCols; i++) {
+            rowCells += `<td style="padding: 2px; border: 1px solid #f1f5f9; background-color: #f8fafc;"></td>`;
+        }
+
+        tableRows += `<tr>${rowCells}</tr>`;
+
+        // Separador visual después del semestre 6
+        if (semesterNum === 6) {
+            tableRows += `<tr style="background-color: #1e3a8a; color: white;"><td colspan="${maxCols + 1}" style="padding: 1px; text-align: center; font-weight: bold; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;"></td></tr>`;
+        }
+    });
+
+    // --- LÓGICA DE PROYECCIÓN / REGULARIZACIÓN ---
+    // 1. Aplanar lista de materias pendientes ordenadas por semestre
+    let allPending = [];
+    localSemesterData.forEach((sem, idx) => {
+        sem.subjects.forEach(subjName => {
+            const cleanName = subjName.trim().toLowerCase();
+            if (!aprobadasSet.has(cleanName)) {
+                allPending.push({ name: subjName, semester: idx + 1 });
+            }
+        });
+    });
+
+    // 2. Generar sugerencia (Top 7 para G1, Siguientes 7 para G2)
+    // Asumimos carga máxima de 7 materias para regularizar
+    const maxSubjects = 7;
+    const planG1 = allPending.slice(0, maxSubjects);
+    const planG2 = allPending.slice(maxSubjects, maxSubjects * 2);
+
+    // Helper HTML lista
+    const renderPlanList = (list) => {
+        if (list.length === 0) return '<div style="font-style:italic; color:#94a3b8;">¡Al día! Sin materias pendientes.</div>';
+        return list.map(item => `
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding: 2px 0;">
+                <span>${item.name}</span>
+                <span style="font-size: 8px; background: #f1f5f9; padding: 1px 4px; border-radius: 4px; color: #64748b;">Sem ${item.semester}</span>
+            </div>
+        `).join('');
+    };
+
+
+    // Elemento Contenedor para PDF
+    const element = document.createElement('div');
+    element.innerHTML = `
+        <div style="padding: 20px; font-family: 'Helvetica', sans-serif; height: 100%; width: 100%; background: white;">
+            
+            <!-- Encabezado -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px;">
+                <div>
+                    <h1 style="color: #1e3a8a; margin: 0; font-size: 18px; text-transform: uppercase;">Hoja de Ruta Académica</h1>
+                    <p style="color: #64748b; font-size: 12px; margin: 2px 0;">Psicología UAGRM - Plan Nivelación - ${personal.registro || student.id}</p>
+                </div>
+                <div style="text-align: right; font-size: 10px; color: #475569;">
+                    <p style="margin: 0;"><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+            </div>
+
+            <!-- Datos Estudiante -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 15px;">
+                <h2 style="font-size: 12px; color: #1e40af; margin: 0 0 5px 0; text-transform: uppercase;">Datos del Estudiante</h2>
+                <div style="display: flex; gap: 20px; font-size: 10px; color: #334155;">
+                    <div><strong>Nombre:</strong> ${personal.nombre} ${personal.apellidos || ''}</div>
+                    <div><strong>CI:</strong> ${personal.CI || (personal.ci || '-')}</div>
+                    <div><strong>Celular:</strong> ${personal.celular || '-'}</div>
+                    <div><strong>Modalidad:</strong> ${modality.toUpperCase()}</div>
+                </div>
+            </div>
+
+            <!-- Leyenda -->
+            <div style="margin-bottom: 10px; display: flex; gap: 15px; font-size: 8px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="width: 8px; height: 8px; background: #bbf7d0; border: 1px solid #4ade80;"></span>
+                    <span>Materia Aprobada</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="width: 8px; height: 8px; background: #fee2e2; border: 1px solid #f87171;"></span>
+                    <span>Pendiente (Nivelación - Prioridad)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="width: 8px; height: 8px; background: #f8fafc; border: 1px solid #cbd5e1;"></span>
+                    <span>Pendiente</span>
+                </div>
+            </div>
+
+            <!-- Tabla Malla -->
+            <table style="width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 15px;">
+                ${tableRows}
+            </table>
+
+            <!-- Resumen Créditos -->
+            <div style="background: #eff6ff; border-left: 3px solid #3b82f6; padding: 8px; font-size: 10px; display: flex; justify-content: space-around; margin-bottom: 20px;">
+                <div style="text-align: center;">
+                    <span style="display: block; font-weight: bold; color: #1e3a8a; font-size: 14px;">${totalAprobadas}</span>
+                    <span style="color: #64748b;">Materias Vencidas</span>
+                </div>
+                <div style="text-align: center;">
+                    <span style="display: block; font-weight: bold; color: #dc2626; font-size: 14px;">${totalFaltantesNivelacion}</span>
+                    <span style="color: #dc2626;">Faltantes Nivelación (S1-S6)</span>
+                </div>
+                <div style="text-align: center;">
+                    <span style="display: block; font-weight: bold; color: #475569; font-size: 14px;">${totalMaterias}</span>
+                    <span style="color: #64748b;">Total Materias</span>
+                </div>
+            </div>
+
+            <!-- PLAN DE REGULARIZACION -->
+            <div style="margin-top: 10px; page-break-inside: avoid;">
+                <h3 style="font-size: 12px; color: #be123c; text-transform: uppercase; border-bottom: 1px solid #fecdd3; padding-bottom: 5px; margin-bottom: 10px;">
+                    📅 Plan Sugerido de Regularización (Nivelación)
+                </h3>
+                
+                <div style="display: flex; gap: 20px;">
+                    <!-- Gestion 1 -->
+                    <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                        <div style="background: #f1f5f9; padding: 5px 10px; font-weight: bold; color: #475569; font-size: 10px; border-bottom: 1px solid #e2e8f0;">
+                            GESTION 1 / 2026
+                        </div>
+                        <div style="padding: 10px; font-size: 9px; line-height: 1.4; color: #334155;">
+                            ${renderPlanList(planG1)}
+                        </div>
+                    </div>
+
+                    <!-- Gestion 2 -->
+                    <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                        <div style="background: #f1f5f9; padding: 5px 10px; font-weight: bold; color: #475569; font-size: 10px; border-bottom: 1px solid #e2e8f0;">
+                            GESTION 2 / 2026
+                        </div>
+                        <div style="padding: 10px; font-size: 9px; line-height: 1.4; color: #334155;">
+                             ${renderPlanList(planG2)}
+                        </div>
+                    </div>
+                </div>
+                <p style="margin-top: 8px; font-size: 8px; color: #94a3b8; font-style: italic;">
+                    * Este plan es una sugerencia automática basada en priorizar las materias de semestres inferiores pendientes (arrastres). 
+                    No verifica choques de horarios ni correquisitos específicos de la nueva malla.
+                </p>
+            </div>
+
+            <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; pt-2 text-center text-[8px] text-slate-400">
+                Documento generado automáticamente por sistema Psiconet 360 - Dirección de Carrera.
+            </div>
+        </div>
+    `;
+
+    // Configuración PDF
+    const opt = {
+        margin: 0.3,
+        filename: `Hoja_Ruta_${personal.registro || 'student'}_Regularizacion.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }
+    };
+
+    // Generar
+    html2pdf().set(opt).from(element).save();
+};

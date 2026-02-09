@@ -1081,13 +1081,13 @@
                     60904656
                 </a>
                 <a href="https://wa.me/59173683548" target="_blank"
-                class="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-600 transition-colors mb-6">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path
-                        d="M16.59 14.25c-.27-.13-1.6-.79-1.85-.88-.25-.09-.44-.13-.63.13s-.72.88-.88 1.06-.33.2-.6.07c-.27-.13-1.14-.42-2.17-1.33-.8-.71-1.34-1.59-1.5-1.86s-.02-.44.11-.57c.11-.11.25-.28.38-.42.13-.13.17-.22.27-.37.09-.15.04-.28-.02-.42-.07-.13-.63-1.51-.86-2.07-.23-.54-.46-.46-.63-.47l-.54-.01c-.17 0-.44.06-.67.28s-.88.86-.88 2.08.9 2.42 1.02 2.58c.13.17 1.76 2.7 4.27 3.78 2.51 1.08 2.51.72 2.97.68.46-.04 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.21-.06-.13-.22-.2-.48-.33z" />
-                </svg>
-                73683548
-            </a>
+                    class="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-600 transition-colors mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M16.59 14.25c-.27-.13-1.6-.79-1.85-.88-.25-.09-.44-.13-.63.13s-.72.88-.88 1.06-.33.2-.6.07c-.27-.13-1.14-.42-2.17-1.33-.8-.71-1.34-1.59-1.5-1.86s-.02-.44.11-.57c.11-.11.25-.28.38-.42.13-.13.17-.22.27-.37.09-.15.04-.28-.02-.42-.07-.13-.63-1.51-.86-2.07-.23-.54-.46-.46-.63-.47l-.54-.01c-.17 0-.44.06-.67.28s-.88.86-.88 2.08.9 2.42 1.02 2.58c.13.17 1.76 2.7 4.27 3.78 2.51 1.08 2.51.72 2.97.68.46-.04 1.5-.61 1.71-1.2.21-.59.21-1.1.15-1.21-.06-.13-.22-.2-.48-.33z" />
+                    </svg>
+                    73683548
+                </a>
 
                 <!-- Botones de acción -->
                 <div class="flex flex-col gap-3">
@@ -1227,6 +1227,119 @@
     <!-- DATALIST PARA SUGERENCIAS -->
     <datalist id="materias-list"></datalist>
 
+    <!-- BOF MODAL HOJA DE RUTA -->
+    <div id="roadmap-modal"
+        class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center z-[3000] p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in relative">
+
+            <!-- Header -->
+            <div class="bg-blue-900 p-6 text-center relative">
+                <h2 class="text-white text-xl font-bold uppercase tracking-wide">
+                    <i class="fas fa-map-signs mr-2"></i> Hoja de Ruta
+                </h2>
+                <p class="text-blue-200 text-sm mt-1">Consulta tu estado y descarga tu reporte</p>
+                <button onclick="closeRoadmapModal()"
+                    class="absolute top-4 right-4 text-white/70 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 md:p-8 space-y-6">
+
+                <!-- Search Form -->
+                <div id="roadmap-search-section">
+                    <label class="block text-slate-700 font-bold mb-2 text-sm uppercase text-center">
+                        Ingrese su Registro Universitario
+                    </label>
+                    <div class="relative">
+                        <input type="number" id="roadmap-registry-input"
+                            class="w-full text-center text-2xl font-bold tracking-widest border-2 border-slate-200 rounded-xl py-3 focus:border-blue-900 focus:outline-none transition-colors placeholder-slate-300"
+                            placeholder="Ej: 200012345" onkeypress="if(event.key === 'Enter') searchRoadmapRegistry()">
+                        <button onclick="searchRoadmapRegistry()"
+                            class="absolute right-2 top-2 bottom-2 bg-blue-900 text-white rounded-lg px-4 hover:bg-blue-800 transition shadow-md">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <p id="roadmap-error" class="text-red-500 text-xs text-center mt-2 hidden font-bold animate-pulse">
+                    </p>
+                </div>
+
+                <!-- Results Section (Hidden by default) -->
+                <div id="roadmap-result-section" class="hidden space-y-4">
+
+                    <!-- Responded: Show Name & Download -->
+                    <div id="roadmap-found" class="hidden text-center space-y-4">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                            <h3 class="text-green-800 font-bold text-lg">¡Encuesta Completada!</h3>
+                            <div class="mt-2 text-slate-700">
+                                <p class="text-sm uppercase tracking-wide text-slate-500">Estudiante</p>
+                                <p id="roadmap-student-name"
+                                    class="font-bold text-xl text-slate-800 break-words leading-tight">Juan Perez</p>
+                                <p id="roadmap-student-reg"
+                                    class="font-mono text-sm bg-white inline-block px-2 py-1 rounded border mt-1">
+                                    200012345</p>
+                            </div>
+                        </div>
+
+                        <button onclick="generateBlankPDF()"
+                            class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                            <i class="fas fa-file-pdf fa-lg"></i>
+                            DESCARGAR HOJA DE RUTA
+                        </button>
+                        <p class="text-xs text-slate-400">El PDF se generará en blanco por el momento.</p>
+                    </div>
+
+                    <!-- Not Responded: Valid ID but no survey -->
+                    <div id="roadmap-not-found-valid" class="hidden text-center space-y-4">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <i class="fas fa-exclamation-triangle text-4xl text-yellow-500 mb-2"></i>
+                            <h3 class="text-yellow-800 font-bold text-lg">Pendiente de Respuesta</h3>
+                            <p class="text-slate-600 text-sm mt-1">
+                                El registro <span id="roadmap-valid-reg" class="font-bold font-mono"></span> es válido,
+                                pero aún no ha respondido el cuestionario.
+                            </p>
+                        </div>
+                        <button onclick="closeRoadmapModal()"
+                            class="w-full py-3 px-4 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-[1.02]">
+                            COMENZAR ENCUESTA
+                        </button>
+                    </div>
+
+                    <!-- Invalid ID -->
+                    <div id="roadmap-invalid" class="hidden text-center space-y-4">
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <i class="fas fa-times-circle text-4xl text-red-500 mb-2"></i>
+                            <h3 class="text-red-800 font-bold text-lg">Registro No Encontrado</h3>
+                            <p class="text-slate-600 text-sm mt-1">
+                                No encontramos el registro ingresado en nuestra base de datos.
+                            </p>
+                        </div>
+                        <button onclick="resetRoadmapSearch()" class="text-blue-600 font-bold hover:underline text-sm">
+                            Intentar nuevamente
+                        </button>
+                    </div>
+
+                    <!-- Back Button -->
+                    <button onclick="resetRoadmapSearch()" id="roadmap-back-btn"
+                        class="hidden text-slate-400 hover:text-slate-600 text-xs underline w-full text-center mt-2">
+                        <i class="fas fa-arrow-left"></i> Volver a buscar
+                    </button>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="roadmap-loading" class="hidden flex flex-col items-center py-4">
+                    <i class="fas fa-circle-notch fa-spin text-3xl text-blue-900"></i>
+                    <p class="text-slate-500 text-sm mt-2 font-medium">Buscando...</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <!-- EOF MODAL HOJA DE RUTA -->
+
+
     <script src="script.js"></script>
 
     <script>
@@ -1271,6 +1384,397 @@
         document.getElementById("codigoInput").addEventListener("keyup", e => {
             if (e.key === "Enter") verificarCodigo();
         });
+    </script>
+    <!-- LOGICA MODAL HOJA DE RUTA -->
+    <script>
+        // Mostrar modal al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pequeño delay para asegurar carga de estilos y firebase
+            setTimeout(() => {
+                const modal = document.getElementById('roadmap-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    const input = document.getElementById('roadmap-registry-input');
+                    if (input) input.focus();
+                }
+            }, 500);
+        });
+
+        function closeRoadmapModal() {
+            const modal = document.getElementById('roadmap-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function resetRoadmapSearch() {
+            document.getElementById('roadmap-search-section').classList.remove('hidden');
+            document.getElementById('roadmap-result-section').classList.add('hidden');
+
+            ['roadmap-found', 'roadmap-not-found-valid', 'roadmap-invalid', 'roadmap-back-btn'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+
+            const input = document.getElementById('roadmap-registry-input');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            document.getElementById('roadmap-error').classList.add('hidden');
+        }
+
+        // Variable global para almacenar datos del estudiante encontrado
+        window.foundStudentData = null;
+
+        async function searchRoadmapRegistry() {
+            const input = document.getElementById('roadmap-registry-input');
+            const errorMsg = document.getElementById('roadmap-error');
+            const regBuffer = input.value.trim();
+
+            if (!regBuffer) {
+                errorMsg.textContent = "Ingrese un número de registro.";
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            errorMsg.classList.add('hidden');
+
+            // UI Loading
+            document.getElementById('roadmap-search-section').classList.add('hidden');
+            document.getElementById('roadmap-loading').classList.remove('hidden');
+
+            try {
+                // 1. Buscar en Firebase (Ya respondió?)
+                let foundInFirebase = false;
+                let studentData = null;
+
+                // Esperar un poco a que Firebase inicialice si es necesario
+                if (!window.db && !window.firebaseModules) {
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+                if (window.firebaseModules && window.db) {
+                    const { collection, query, where, getDocs } = window.firebaseModules;
+
+                    // Intento 1: String en personal.registro
+                    let q = query(collection(window.db, "encuestas_estudiantes"), where("personal.registro", "==", String(regBuffer)));
+                    let querySnapshot = await getDocs(q);
+
+                    if (querySnapshot.empty) {
+                        // Intento 2: Number en personal.registro
+                        q = query(collection(window.db, "encuestas_estudiantes"), where("personal.registro", "==", Number(regBuffer)));
+                        querySnapshot = await getDocs(q);
+                    }
+
+                    // Fallback: búsqueda en raíz
+                    if (querySnapshot.empty) {
+                        let qRoot = query(collection(window.db, "encuestas_estudiantes"), where("registro", "==", String(regBuffer)));
+                        querySnapshot = await getDocs(qRoot);
+                    }
+
+                    if (!querySnapshot.empty) {
+                        foundInFirebase = true;
+                        studentData = querySnapshot.docs[0].data();
+                    }
+                } else {
+                    console.warn("Firebase no está disponible todavía.");
+                }
+
+                document.getElementById('roadmap-loading').classList.add('hidden');
+                document.getElementById('roadmap-result-section').classList.remove('hidden');
+
+                if (foundInFirebase) {
+                    // CASO: YA RESPONDIÓ
+                    window.foundStudentData = studentData; // Guardar para PDF
+
+                    document.getElementById('roadmap-found').classList.remove('hidden');
+                    document.getElementById('roadmap-back-btn').classList.remove('hidden');
+
+                    const nombre = studentData.personal?.nombre || studentData.nombre || "Estudiante";
+                    const apellidos = studentData.personal?.apellidos || studentData.apellidos || "";
+                    const registro = studentData.personal?.registro || studentData.registro || regBuffer;
+
+                    document.getElementById('roadmap-student-name').textContent = `${nombre} ${apellidos}`;
+                    document.getElementById('roadmap-student-reg').textContent = registro;
+
+                } else {
+                    // Validar en local
+                    if (!window.registrosCargados && window.registrosValidos.size === 0) {
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+
+                    const isValidLocal = window.registrosValidos && (window.registrosValidos.has(String(regBuffer)) || window.registrosValidos.has(Number(regBuffer)));
+
+                    if (isValidLocal) {
+                        document.getElementById('roadmap-not-found-valid').classList.remove('hidden');
+                        document.getElementById('roadmap-valid-reg').textContent = regBuffer;
+                        document.getElementById('roadmap-back-btn').classList.remove('hidden');
+                    } else {
+                        document.getElementById('roadmap-invalid').classList.remove('hidden');
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error en búsqueda:", error);
+                document.getElementById('roadmap-loading').classList.add('hidden');
+                resetRoadmapSearch();
+                alert("Ocurrió un error al buscar. Intente nuevamente.");
+            }
+        }
+
+        function generateBlankPDF() {
+            if (!window.foundStudentData) {
+                alert("No hay datos cargados para generar el PDF.");
+                return;
+            }
+
+            const student = window.foundStudentData;
+            const personal = student.personal || student;
+            const malla = student.malla || [];
+
+            // Set de materias aprobadas para búsqueda rápida
+            // Normalizamos nombres (trim y lower) para evitar errores de tipeo ligeros
+            const aprobadasSet = new Set();
+            malla.forEach(m => {
+                if (m.estado === 'aprobado' || m.estado === 'convalidado') {
+                    aprobadasSet.add(m.nombre.trim().toLowerCase());
+                }
+            });
+
+            // Datos de la malla (Copia local para asegurar disponibilidad)
+            const localSemesterData = [
+                { id: "s1", title: "1er Semestre", subjects: ["Filosofía", "Estadística I", "Sociología I", "Antropología Cultural", "Psicología I", "Biopsicología", "Estrategias de Aprendizaje"] },
+                { id: "s2", title: "2do Semestre", subjects: ["Epistemología", "Estadística II", "Sociología II", "Antropología Cultural Boliviana", "Psicología II", "Psicofisiología"] },
+                { id: "s3", title: "3er Semestre", subjects: ["Investigación I", "Psicología Social", "Psicología Etnoecológica", "Desarrollo Humano I", "Teorías y Sistemas I", "Neuropsicología I", "Aprendizaje"] },
+                { id: "s4", title: "4to Semestre", subjects: ["Investigación II", "Psicología Grupal y Organizacional", "Desarrollo Humano II", "Teorías y Sistemas II", "Neuropsicología II", "Etología"] },
+                { id: "s5", title: "5to Semestre", subjects: ["Investigación III", "Comportamiento y Sociedad", "Psicología de la Personalidad I", "Evaluación Psicológica I", "Psicopatología I", "Psicología Cognitiva I"] },
+                { id: "s6", title: "6to Semestre", subjects: ["Investigación IV", "Diagnóstico de Necesidades", "Psicología de la Personalidad II", "Evaluación Psicológica II", "Psicopatología II", "Psicoanálisis", "Psicología Cognitiva II"] },
+                { id: "s7", title: "7mo Semestre", subjects: ["Investigación V", "Proyectos I", "Tec. de Int. Socio - Organizacional I", "Técnicas Proyectivas", "Tec. de Int. Clínica I", "Tec. de Int. Educativa I"] },
+                { id: "s8", title: "8vo Semestre", subjects: ["Investigación VI", "Proyectos II", "Tec. de Int. Socio - Organizacional II", "Psicodiagnóstico", "Tec. de Int. Clínica II", "Tec. de Int. Educativa II"] },
+                { id: "s9", title: "9no Semestre", subjects: ["Ética Profesional I"] }, // Se llenará dinámicamente
+                { id: "s10", title: "10mo Semestre", subjects: ["Ética Profesional II"] } // Se llenará dinámicamente
+            ];
+
+            // Detectar modalidad si existe, o usar Humanista por defecto para mostrar estructura
+            const modality = personal.modalidad_graduacion || 'humanista';
+
+            // Datos de abordajes (Hardcoded aquí para asegurar disponibilidad en el modal sin depender de script.js externo si no carga)
+            const abordajesDataLocal = {
+                humanista: { sem9: ["Abordaje Clínico I", "Abordaje Educativo I", "Abordaje Socio Organizacional I"], sem10: ["Abordaje Clínico II", "Abordaje Educativo II", "Abordaje Socio Organizacional II"] },
+                cognitivo: { sem9: ["Abordaje Clínico I", "Abordaje Educativo I", "Abordaje Socio Organizacional I"], sem10: ["Abordaje Clínico II", "Abordaje Educativo II", "Abordaje Socio Organizacional II"] },
+                ambiental: { sem9: ["Psicología Ambiental I", "Psicología Comunitaria I", "Psicología de las Organizaciones I"], sem10: ["Psicología Ambiental II", "Psicología Comunitaria II", "Psicología de las Organizaciones II"] },
+                psicoanalitico: { sem9: ["Abordaje Clínico I", "Abordaje Educativo I", "Abordaje Socio Organizacional I"], sem10: ["Abordaje Clínico II", "Abordaje Educativo II", "Abordaje Socio Organizacional II"] }
+            };
+
+            const selectedAbordaje = abordajesDataLocal[modality] || abordajesDataLocal['humanista'];
+
+            // Agregar materias de abordaje a S9 y S10
+            localSemesterData[8].subjects.push(...selectedAbordaje.sem9);
+            localSemesterData[9].subjects.push(...selectedAbordaje.sem10);
+
+            // Construcción del filas de la tabla
+            let tableRows = '';
+            let totalAprobadas = 0;
+            let totalFaltantesNivelacion = 0;
+            let totalMaterias = 0;
+
+            localSemesterData.forEach((sem, index) => {
+                const semesterNum = index + 1;
+                const isNivelacion = semesterNum <= 6;
+
+                // Estilos para la etiqueta del semestre
+                // isNivelacion: Azul claro, borde azul
+                // Ciclo Superior: Gris claro
+                let semLabelStyle = isNivelacion
+                    ? "background-color: #dbeafe; color: #1e3a8a; font-weight: bold; border-right: 2px solid #3b82f6;"
+                    : "background-color: #f1f5f9; color: #334155; font-weight: bold;";
+
+                let rowCells = `<td style="padding: 4px; border: 1px solid #cbd5e1; width: 80px; text-align: center; font-size: 10px; ${semLabelStyle}">${sem.title}</td>`;
+
+                // Celdas de materias
+                sem.subjects.forEach(subject => {
+                    totalMaterias++;
+                    const isApproved = aprobadasSet.has(subject.trim().toLowerCase());
+
+                    let cellStyle = "padding: 2px; border: 1px solid #cbd5e1; font-size: 9px; line-height: 1.1; text-align: center; vertical-align: middle; height: 35px; width: 85px; overflow: hidden;";
+
+                    if (isApproved) {
+                        // Aprobado: Verde
+                        cellStyle += "background-color: #bbf7d0; color: #14532d; font-weight: bold; border-color: #4ade80;";
+                        totalAprobadas++;
+                    } else if (isNivelacion) {
+                        // Pendiente en Nivelación (S1-S6): Rojo
+                        cellStyle += "background-color: #fee2e2; color: #991b1b; font-weight: bold; border-color: #fca5a5;";
+                        totalFaltantesNivelacion++;
+                    } else {
+                        // Pendiente en Ciclo Superior: Gris/Blanco
+                        cellStyle += "background-color: #f8fafc; color: #64748b;";
+                    }
+
+                    rowCells += `
+                        <td style="${cellStyle}">
+                            ${subject}
+                        </td>
+                    `;
+                });
+
+                // Rellenar celdas vacías
+                const maxCols = 7;
+                for (let i = sem.subjects.length; i < maxCols; i++) {
+                    rowCells += `<td style="padding: 2px; border: 1px solid #f1f5f9; background-color: #f8fafc;"></td>`;
+                }
+
+                tableRows += `<tr>${rowCells}</tr>`;
+
+                // Separador visual después del semestre 6
+                if (semesterNum === 6) {
+                    tableRows += `<tr style="background-color: #1e3a8a; color: white;"><td colspan="${maxCols + 1}" style="padding: 1px; text-align: center; font-weight: bold; font-size: 10px; text-transform: uppercase; letter-spacing: 2px;"></td></tr>`;
+                }
+            });
+
+
+            // --- LÓGICA DE PROYECCIÓN / REGULARIZACIÓN ---
+            // 1. Aplanar lista de materias pendientes ordenadas por semestre
+            let allPending = [];
+            localSemesterData.forEach((sem, idx) => {
+                sem.subjects.forEach(subjName => {
+                    const cleanName = subjName.trim().toLowerCase();
+                    if (!aprobadasSet.has(cleanName)) {
+                        allPending.push({ name: subjName, semester: idx + 1 });
+                    }
+                });
+            });
+
+            // 2. Generar sugerencia (Top 7 para G1, Siguientes 7 para G2)
+            const maxSubjects = 7;
+            const planG1 = allPending.slice(0, maxSubjects);
+            const planG2 = allPending.slice(maxSubjects, maxSubjects * 2);
+
+            // Helper HTML lista
+            const renderPlanList = (list) => {
+                if (list.length === 0) return '<div style="font-style:italic; color:#94a3b8;">¡Al día! Sin materias pendientes.</div>';
+                return list.map(item => `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #e2e8f0; padding: 2px 0;">
+                        <span>${item.name}</span>
+                        <span style="font-size: 8px; background: #f1f5f9; padding: 1px 4px; border-radius: 4px; color: #64748b;">Sem ${item.semester}</span>
+                    </div>
+                `).join('');
+            };
+
+            // Elemento Contenedor para PDF
+            const element = document.createElement('div');
+            // Estilos inline para asegurar rendering en html2pdf
+            element.innerHTML = `
+                <div style="padding: 20px; font-family: 'Helvetica', sans-serif; height: 100%; width: 100%; background: white;">
+                    
+                    <!-- Encabezado -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px;">
+                        <div>
+                            <h1 style="color: #1e3a8a; margin: 0; font-size: 18px; text-transform: uppercase;">Hoja de Ruta Académica</h1>
+                            <p style="color: #64748b; font-size: 12px; margin: 2px 0;">Psicología UAGRM - Plan Nivelación</p>
+                        </div>
+                        <div style="text-align: right; font-size: 10px; color: #475569;">
+                            <p style="margin: 0;"><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</p>
+                            <p style="margin: 0;"><strong>Registro:</strong> ${personal.registro}</p>
+                        </div>
+                    </div>
+
+                    <!-- Datos Estudiante -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 20px;">
+                        <h2 style="font-size: 14px; color: #1e40af; margin: 0 0 5px 0; text-transform: uppercase;">Datos del Estudiante</h2>
+                        <div style="display: flex; gap: 20px; font-size: 12px; color: #334155;">
+                            <div><strong>Nombre:</strong> ${personal.nombre} ${personal.apellidos || ''}</div>
+                            <div><strong>CI:</strong> ${personal.CI || '-'}</div>
+                            <div><strong>Celular:</strong> ${personal.celular || '-'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Leyenda -->
+                    <div style="margin-bottom: 10px; display: flex; gap: 15px; font-size: 10px;">
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="width: 12px; height: 12px; background: #bbf7d0; border: 1px solid #4ade80;"></span>
+                            <span>Materia Aprobada</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="width: 12px; height: 12px; background: #fee2e2; border: 1px solid #f87171;"></span>
+                            <span>Pendiente (Nivelación - Prioridad)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="width: 12px; height: 12px; background: #f8fafc; border: 1px solid #cbd5e1;"></span>
+                            <span>Pendiente</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabla Malla -->
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 20px;">
+                        ${tableRows}
+                    </table>
+
+                    <!-- Resumen -->
+                    <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px; font-size: 12px; display: flex; justify-content: space-around;">
+                        <div style="text-align: center;">
+                            <span style="display: block; font-weight: bold; color: #1e3a8a; font-size: 16px;">${totalAprobadas}</span>
+                            <span style="color: #64748b;">Materias Vencidas</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <span style="display: block; font-weight: bold; color: #dc2626; font-size: 16px;">${totalFaltantesNivelacion}</span>
+                            <span style="color: #dc2626;">Faltantes Nivelación (S1-S6)</span>
+                        </div>
+                        <div style="text-align: center;">
+                            <span style="display: block; font-weight: bold; color: #475569; font-size: 16px;">${totalMaterias}</span>
+                            <span style="color: #64748b;">Total Materias</span>
+                        </div>
+                    </div>
+
+                    <!-- PLAN DE REGULARIZACION -->
+                    <div style="margin-top: 10px; page-break-inside: avoid;">
+                        <h3 style="font-size: 12px; color: #be123c; text-transform: uppercase; border-bottom: 1px solid #fecdd3; padding-bottom: 5px; margin-bottom: 10px;">
+                            📅 Plan Sugerido de Regularización (Nivelación)
+                        </h3>
+                        
+                        <div style="display: flex; gap: 20px;">
+                            <!-- Gestion 1 -->
+                            <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                                <div style="background: #f1f5f9; padding: 5px 10px; font-weight: bold; color: #475569; font-size: 10px; border-bottom: 1px solid #e2e8f0;">
+                                    GESTION 1 / 2026
+                                </div>
+                                <div style="padding: 10px; font-size: 9px; line-height: 1.4; color: #334155;">
+                                    ${renderPlanList(planG1)}
+                                </div>
+                            </div>
+
+                            <!-- Gestion 2 -->
+                            <div style="flex: 1; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
+                                <div style="background: #f1f5f9; padding: 5px 10px; font-weight: bold; color: #475569; font-size: 10px; border-bottom: 1px solid #e2e8f0;">
+                                    GESTION 2 / 2026
+                                </div>
+                                <div style="padding: 10px; font-size: 9px; line-height: 1.4; color: #334155;">
+                                     ${renderPlanList(planG2)}
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin-top: 8px; font-size: 8px; color: #94a3b8; font-style: italic;">
+                            * Este plan es una sugerencia automática basada en priorizar las materias de semestres inferiores pendientes (arrastres). 
+                            No verifica choques de horarios ni correquisitos específicos de la nueva malla.
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; pt-2 text-center text-[8px] text-slate-400">
+                        Documento generado automáticamente por sistema Psiconet 360.
+                    </div>
+                </div>
+            `;
+
+            // Configuración PDF
+            const opt = {
+                margin: 0.3,
+                filename: `Hoja_Ruta_${personal.registro}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' } // Landscape para mejor visualización
+            };
+
+            // Generar
+            html2pdf().set(opt).from(element).save();
+        }
     </script>
 </body>
 
